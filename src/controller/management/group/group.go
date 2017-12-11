@@ -156,7 +156,7 @@ func (GroupManager) DeleteGroup(groupId string) (int, map[string]interface{}, er
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	err = dbManager.DeleteGroup(groupId)
+	err := dbManager.DeleteGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

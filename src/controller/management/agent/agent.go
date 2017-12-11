@@ -23,24 +23,26 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	"db/mongo/model/agent"
+	"db/modelinterface"
+	agentDB "db/mongo/model/agent"
 	"encoding/json"
 )
 
 const (
-	AGENTS                      = "agents"       // used to indicate a list of agents.
-	ID                          = "id"           // used to indicate an agent id.
-	HOST                        = "host"         // used to indicate an agent address.
-	PORT                        = "port"         // used to indicate an agent port.
-	DEFAULT_SDA_PORT            = "48098"        // default service deployment agent port.
+	AGENTS           = "agents"    // used to indicate a list of agents.
+	ID               = "id"        // used to indicate an agent id.
+	HOST             = "host"      // used to indicate an agent address.
+	PORT             = "port"      // used to indicate an agent port.
+	DEFAULT_SDA_PORT = "48098"     // default service deployment agent port.
+	STATUS_CONNECTED = "connected" // used to update agent status with connected.
 )
 
 type AgentManager struct{}
 
-var dbManager agent.DBManager
+var dbManager modelinterface.AgentInterface
 
 func init() {
-	dbManager = agent.DBManager{}
+	dbManager = agentDB.DBManager{}
 }
 
 // AddAgent inserts a new agent with ip which is passed in call to function.
@@ -105,16 +107,11 @@ func (AgentManager) DeleteAgent(agentId string) (int, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Delete agent specified by agentId parameter.
-	err = dbManager.DeleteAgent(agentId)
+	err := dbManager.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-
-	if timers[agentId] != nil {
-		timers[agentId] <- true
-	}
-	delete(timers, agentId)
 
 	return results.OK, err
 }
@@ -154,6 +151,23 @@ func (AgentManager) GetAgents() (int, map[string]interface{}, error) {
 	res[AGENTS] = agents
 
 	return results.OK, res, err
+}
+
+// UpdateAgentStatus returns the agent's status.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func (AgentManager) UpdateAgentStatus(agentId string, status string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get agent specified by agentId parameter.
+	err := dbManager.UpdateAgentStatus(agentId, status)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return err
+	}
+
+	return err
 }
 
 // convertJsonToMap converts JSON data into a map.

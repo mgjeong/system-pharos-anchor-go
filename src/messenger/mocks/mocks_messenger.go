@@ -86,20 +86,20 @@ func (m *MockMessengerInterface) EXPECT() *MockMessengerInterfaceMockRecorder {
 }
 
 // SendHttpRequest mocks base method
-func (m *MockMessengerInterface) SendHttpRequest(method, url string, dataOptional ...[]byte) (int, string, error) {
-	varargs := []interface{}{method, url}
+func (m *MockMessengerInterface) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
+	varargs := []interface{}{method, urls}
 	for _, a := range dataOptional {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SendHttpRequest", varargs...)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret0, _ := ret[0].([]int)
+	ret1, _ := ret[1].([]string)
+	return ret0, ret1
 }
 
 // SendHttpRequest indicates an expected call of SendHttpRequest
-func (mr *MockMessengerInterfaceMockRecorder) SendHttpRequest(method, url interface{}, dataOptional ...interface{}) *gomock.Call {
-	varargs := append([]interface{}{method, url}, dataOptional...)
+func (mr *MockMessengerInterfaceMockRecorder) SendHttpRequest(method, urls interface{}, dataOptional ...interface{}) *gomock.Call {
+	varargs := append([]interface{}{method, urls}, dataOptional...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHttpRequest", reflect.TypeOf((*MockMessengerInterface)(nil).SendHttpRequest), varargs...)
 }
+
