@@ -35,7 +35,7 @@ const (
 	DEFAULT_SDA_PORT            = "48098"        // default service deployment agent port.
 )
 
-type AgentController struct{}
+type AgentManager struct{}
 
 var dbManager agent.DBManager
 
@@ -46,7 +46,7 @@ func init() {
 // AddAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (AgentController) AddAgent(ip string, body string) (int, map[string]interface{}, error) {
+func (AgentManager) AddAgent(ip string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -100,7 +100,7 @@ func (AgentController) AddAgent(ip string, body string) (int, map[string]interfa
 // DeleteAgent deletes the agent with a primary key matching the agentId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) DeleteAgent(agentId string) (int, error) {
+func (AgentManager) DeleteAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -122,7 +122,7 @@ func (AgentController) DeleteAgent(agentId string) (int, error) {
 // GetAgent returns the agent with a primary key matching the agentId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) GetAgent(agentId string) (int, map[string]interface{}, error) {
+func (AgentManager) GetAgent(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -139,7 +139,7 @@ func (AgentController) GetAgent(agentId string) (int, map[string]interface{}, er
 // GetAgents returns all agents in databases as an array.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) GetAgents() (int, map[string]interface{}, error) {
+func (AgentManager) GetAgents() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

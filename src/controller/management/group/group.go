@@ -31,7 +31,7 @@ const (
 	GROUPS        = "groups"      // used to indicate a list of groups.
 )
 
-type GroupController struct{}
+type GroupManager struct{}
 
 var dbManager group.DBManager
 
@@ -41,7 +41,7 @@ func init() {
 
 // CreateGroup inserts a new group to databases.
 // This function returns a unique id in case of success and an error otherwise.
-func (GroupController) CreateGroup() (int, map[string]interface{}, error) {
+func (GroupManager) CreateGroup() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -57,7 +57,7 @@ func (GroupController) CreateGroup() (int, map[string]interface{}, error) {
 // GetGroup returns the information of the group specified by groupId parameter.
 // If response code represents success, returns information about the group.
 // Otherwise, an appropriate error will be returned.
-func (GroupController) GetGroup(groupId string) (int, map[string]interface{}, error) {
+func (GroupManager) GetGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -73,7 +73,7 @@ func (GroupController) GetGroup(groupId string) (int, map[string]interface{}, er
 // GetGroups returns a list of groups that is created on databases.
 // If response code represents success, returns a list of groups.
 // Otherwise, an appropriate error will be returned.
-func (GroupController) GetGroups() (int, map[string]interface{}, error) {
+func (GroupManager) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -92,7 +92,7 @@ func (GroupController) GetGroups() (int, map[string]interface{}, error) {
 // JoinGroup adds the agent to a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) JoinGroup(groupId string, body string) (int, map[string]interface{}, error) {
+func (GroupManager) JoinGroup(groupId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -122,7 +122,7 @@ func (GroupController) JoinGroup(groupId string, body string) (int, map[string]i
 // LeaveGroup removes the agent from a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) LeaveGroup(groupId string, body string) (int, map[string]interface{}, error) {
+func (GroupManager) LeaveGroup(groupId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -152,7 +152,7 @@ func (GroupController) LeaveGroup(groupId string, body string) (int, map[string]
 // DeleteGroup deletes the group with a primary key matching the groupId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) DeleteGroup(groupId string) (int, map[string]interface{}, error) {
+func (GroupManager) DeleteGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
