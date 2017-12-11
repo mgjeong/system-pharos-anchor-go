@@ -33,6 +33,7 @@ const (
 	HOST                        = "host"         // used to indicate an agent address.
 	PORT                        = "port"         // used to indicate an agent port.
 	DEFAULT_SDA_PORT            = "48098"        // default service deployment agent port.
+	STATUS_CONNECTED            = "connected"    // used to update agent status with connected.
 )
 
 type AgentManager struct{}
@@ -105,16 +106,11 @@ func (AgentManager) DeleteAgent(agentId string) (int, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Delete agent specified by agentId parameter.
-	err = dbManager.DeleteAgent(agentId)
+	err := dbManager.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-
-	if timers[agentId] != nil {
-		timers[agentId] <- true
-	}
-	delete(timers, agentId)
 
 	return results.OK, err
 }

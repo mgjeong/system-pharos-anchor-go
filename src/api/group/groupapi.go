@@ -25,7 +25,7 @@ import (
 	"commons/results"
 	URL "commons/url"
 	groupmanager "controller/management/group"
-	deployment "controller/deployment/agent"
+	deployment "controller/deployment/group"
 	"net/http"
 	"strings"
 )
@@ -48,8 +48,8 @@ var deploymentCtrl deployment.DeploymentInterface
 func init() {
 	SdamGroupHandle = sdamH
 	SdamGroup = sdam
-	sdamGroupManager = groupmanager.GroupController{}
-	deploymentCtrl = deployment.AgentController{}
+	sdamGroupManager = groupmanager.GroupManager{}
+	deploymentCtrl = deployment.GroupController{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
