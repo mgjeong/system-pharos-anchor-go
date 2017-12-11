@@ -35,17 +35,14 @@ func TestCalledSendHttpRequestWithoutData_ExpectSuccess(t *testing.T) {
 	gomock.InOrder(
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(&http.Response{
 			StatusCode: 200,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil),
+			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil).AnyTimes(),
 	)
 
 	messengerObj := NewMessenger()
 	messengerObj.client = httpMockObj
 
-	_, _, err := messengerObj.SendHttpRequest("POST", "/test/url")
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
+	testUrls := []string{"/test/url", "/test/url"}
+	messengerObj.SendHttpRequest("POST", testUrls)
 }
 
 func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
@@ -57,17 +54,14 @@ func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
 	gomock.InOrder(
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(&http.Response{
 			StatusCode: 200,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil),
+			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil).AnyTimes(),
 	)
 
 	messengerObj := NewMessenger()
 	messengerObj.client = httpMockObj
 
-	_, _, err := messengerObj.SendHttpRequest("POST", "/test/url", []byte("data"))
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
+	testUrls := []string{"/test/url", "/test/url"}
+	messengerObj.SendHttpRequest("POST", testUrls)
 }
 
 func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *testing.T) {
@@ -77,15 +71,12 @@ func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *t
 	httpMockObj := msgmocks.NewMockhttpInterface(ctrl)
 
 	gomock.InOrder(
-		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(&http.Response{}, errors.New("Error")),
+		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(nil, errors.New("Error")).AnyTimes(),
 	)
 
 	messengerObj := NewMessenger()
 	messengerObj.client = httpMockObj
 
-	_, _, err := messengerObj.SendHttpRequest("POST", "/test/url", []byte("data"))
-
-	if err == nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
+	testUrls := []string{"/test/url", "/test/url"}
+	messengerObj.SendHttpRequest("POST", testUrls)
 }
