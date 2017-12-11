@@ -231,7 +231,7 @@ func (DBManager) LeaveGroup(group_id string, agent_id string) error {
 // GetGroupMembers returns all agents who belong to the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client *DBManager) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
+func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -268,7 +268,7 @@ func (client *DBManager) GetGroupMembers(group_id string) ([]map[string]interfac
 // by the given appid on the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client *DBManager) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
+func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
