@@ -22,9 +22,9 @@ import (
 	"commons/logger"
 	"commons/results"
 	"controller/management/agent"
+	"encoding/json"
 	"strconv"
 	"time"
-	"encoding/json"
 )
 
 const (
@@ -43,6 +43,22 @@ var timers map[string]chan bool
 func init() {
 	agentManager = agent.AgentManager{}
 	timers = make(map[string]chan bool)
+}
+
+// RegisterAgent inserts a new agent with ip which is passed in call to function.
+// If successful, a unique id that is created automatically will be returned.
+// otherwise, an appropriate error will be returned.
+func (AgentRegistrator) RegisterAgent(ip string, body string) (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	result, res, err := agentManager.AddAgent(ip, body)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	return result, res, err
 }
 
 // PingAgent starts timer with received interval.
@@ -102,7 +118,7 @@ func (AgentRegistrator) PingAgent(agentId string, ip string, body string) (int, 
 		// Block until timer finishes.
 		case <-timer.C:
 			logger.Logging(logger.ERROR, "ping request is not received in interval time")
-			
+
 			// Status is updated with 'disconnected'.
 			err = agentManager.UpdateAgentStatus(agentId, STATUS_DISCONNECTED)
 			if err != nil {
@@ -132,4 +148,3 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 	}
 	return result, err
 }
-
