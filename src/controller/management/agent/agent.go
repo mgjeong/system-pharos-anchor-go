@@ -54,41 +54,20 @@ func (AgentManager) AddAgent(ip string, body string) (int, map[string]interface{
 
 	// If body is not empty, try to get agent id from body.
 	// This code will be used to update the information of agent without changing id.
-	if body != "" {
-		bodyMap, err := convertJsonToMap(body)
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return results.ERROR, nil, err
-		}
+	bodyMap, err := convertJsonToMap(body)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
 
-		// Check whether 'id' is included.
-		_, exists := bodyMap["id"]
-		if !exists {
-			return results.ERROR, nil, errors.InvalidJSON{"id field is required"}
-		}
-
-		// Update the information of agent with given ip.
-		agentId := bodyMap["id"].(string)
-		err = dbManager.UpdateAgentAddress(agentId, ip, DEFAULT_SDA_PORT)
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return results.ERROR, nil, err
-		}
-
-		// Status is updated with 'connected'.
-		err = dbManager.UpdateAgentStatus(agentId, STATUS_CONNECTED)
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return results.ERROR, nil, err
-		}
-
-		res := make(map[string]interface{})
-		res[ID] = agentId
-		return results.OK, res, err
+	// Check whether 'ip' is included.
+	_, exists := bodyMap["ip"]
+	if !exists {
+		return results.ERROR, nil, errors.InvalidJSON{"ip field is required"}
 	}
 
 	// Add new agent to database with given ip, port, status.
-	agent, err := dbManager.AddAgent(ip, DEFAULT_SDA_PORT, STATUS_CONNECTED)
+	agent, err := dbManager.AddAgent(bodyMap["ip"].(string), DEFAULT_SDA_PORT, STATUS_CONNECTED)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

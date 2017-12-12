@@ -26,6 +26,7 @@ import (
 	URL "commons/url"
 	agentmanager "controller/management/agent"
 	deployment "controller/deployment/agent"
+	"controller/registration"
 	"net/http"
 	"strings"
 )
@@ -44,12 +45,14 @@ var sdamH _SDAMAgentApisHandler
 var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.AgentInterface
 var deploymentCtrl deployment.DeploymentInterface
+var registrator registration.RegistrationInterface
 
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
 	sdamAgentManager = agentmanager.AgentManager{}
 	deploymentCtrl = deployment.AgentController{}
+	registrator = registration.AgentRegistrator{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
@@ -168,7 +171,7 @@ func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	result, resp, err := sdamAgentManager.AddAgent(ip, body)
+	result, resp, err := registrator.RegisterAgent(ip, body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -180,7 +183,7 @@ func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Reques
 func (sdam _SDAMAgentApis) agentUnregister(w http.ResponseWriter, req *http.Request, agentID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Unregister New Service Deployment Agent")
 
-	result, err := sdamAgentManager.DeleteAgent(agentID)
+	result, err := registrator.UnRegisterAgent(agentID)
 	common.MakeResponse(w, result, nil, err)
 }
 
@@ -189,20 +192,18 @@ func (sdam _SDAMAgentApis) agentUnregister(w http.ResponseWriter, req *http.Requ
 //    paths: '/api/v1/agents/{agentID}/ping'
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
-//func (sdam _SDAMAgentApis) agentPing(w http.ResponseWriter, req *http.Request, agentID string) {
-//	logger.Logging(logger.DEBUG, "[AGENT] Ping From Service Deployment Agent")
-//
-//	ip := strings.Split(req.RemoteAddr, ":")[0]
-//
-//	body, err := common.GetBodyFromReq(req)
-//	if err != nil {
-//		common.MakeResponse(w, results.ERROR, nil, err)
-//		return
-//	}
-//
-//	result, err := sdamAgentController.PingAgent(agentID, ip, body)
-//	common.MakeResponse(w, result, nil, err)
-//}
+func (sdam _SDAMAgentApis) agentPing(w http.ResponseWriter, req *http.Request, agentID string) {
+	logger.Logging(logger.DEBUG, "[AGENT] Ping From Service Deployment Agent")
+
+	body, err := common.GetBodyFromReq(req)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	result, err := registrator.PingAgent(agentID, body)
+	common.MakeResponse(w, result, nil, err)
+}
 
 // agents handles requests which is used to get information of agent identified by the given agentID.
 //
