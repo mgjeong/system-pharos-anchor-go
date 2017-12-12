@@ -29,7 +29,7 @@ import (
 const (
 	DB_NAME          = "DeploymentManagerDB"
 	GROUP_COLLECTION = "GROUP"
-	DB_URL           = "localhost:27017"
+	DB_URL           = "127.0.0.1:27017"
 )
 
 type Group struct {
@@ -231,19 +231,13 @@ func (DBManager) LeaveGroup(group_id string, agent_id string) error {
 // GetGroupMembers returns all agents who belong to the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
+func (client *DBManager) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	session, err := connect(DB_URL)
-	if err != nil {
-		return nil, err
-	}
-	defer close(session)
-
 	// Verify id is ObjectId, otherwise fail
 	if !bson.IsObjectIdHex(group_id) {
-		err = errors.InvalidObjectId{group_id}
+		err := errors.InvalidObjectId{group_id}
 		return nil, err
 	}
 
@@ -255,7 +249,7 @@ func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
 	for i, agent_id := range group["members"].([]string) {
 		var agent map[string]interface{}
-		agent, err = agentDBManager.GetAgent(agent_id)
+		agent, err := agentDBManager.GetAgent(agent_id)
 		if err != nil {
 			return nil, err
 		}
@@ -268,19 +262,13 @@ func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface
 // by the given appid on the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
+func (client *DBManager) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	session, err := connect(DB_URL)
-	if err != nil {
-		return nil, err
-	}
-	defer close(session)
-
 	// Verify id is ObjectId, otherwise fail
 	if !bson.IsObjectIdHex(group_id) {
-		err = errors.InvalidObjectId{group_id}
+		err := errors.InvalidObjectId{group_id}
 		return nil, err
 	}
 
@@ -292,12 +280,13 @@ func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) (
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
 	for i, agent_id := range group["members"].([]string) {
 		var agent map[string]interface{}
-		agent, err = agentDBManager.GetAgentByAppID(agent_id, app_id)
+		agent, err := agentDBManager.GetAgentByAppID(agent_id, app_id)
 		if err != nil {
 			return nil, err
 		}
 		result[i] = agent
 	}
+
 	return result, err
 }
 
