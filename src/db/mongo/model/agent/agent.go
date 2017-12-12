@@ -27,7 +27,7 @@ import (
 const (
 	DB_NAME          = "DeploymentManagerDB"
 	AGENT_COLLECTION = "AGENT"
-	DB_URL           = "localhost:27017"
+	DB_URL           = "127.0.0.1:27017"
 )
 
 type Agent struct {
@@ -105,6 +105,7 @@ func (DBManager) AddAgent(host string, port string, status string) (map[string]i
 	}
 
 	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Insert(agent)
+
 	if err != nil {
 		return nil, ConvertMongoError(err)
 	}
