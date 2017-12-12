@@ -183,7 +183,7 @@ func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Reques
 func (sdam _SDAMAgentApis) agentUnregister(w http.ResponseWriter, req *http.Request, agentID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Unregister New Service Deployment Agent")
 
-	result, err := sdamAgentManager.DeleteAgent(agentID)
+	result, err := registrator.UnRegisterAgent(agentID)
 	common.MakeResponse(w, result, nil, err)
 }
 
@@ -195,15 +195,13 @@ func (sdam _SDAMAgentApis) agentUnregister(w http.ResponseWriter, req *http.Requ
 func (sdam _SDAMAgentApis) agentPing(w http.ResponseWriter, req *http.Request, agentID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Ping From Service Deployment Agent")
 
-	ip := strings.Split(req.RemoteAddr, ":")[0]
-
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
 	}
 
-	result, err := registrator.PingAgent(agentID, ip, body)
+	result, err := registrator.PingAgent(agentID, body)
 	common.MakeResponse(w, result, nil, err)
 }
 

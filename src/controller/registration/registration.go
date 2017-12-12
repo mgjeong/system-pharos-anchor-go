@@ -18,10 +18,13 @@
 package registration
 
 import (
+	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/url"
 	"controller/management/agent"
+	"messenger"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -38,11 +41,13 @@ const (
 type AgentRegistrator struct{}
 
 var agentManager agent.AgentManager
+var httpRequester messenger.MessengerInterface
 var timers map[string]chan bool
 
 func init() {
 	agentManager = agent.AgentManager{}
 	timers = make(map[string]chan bool)
+	httpRequester = messenger.NewMessenger()
 }
 
 // RegisterAgent inserts a new agent with ip which is passed in call to function.
@@ -61,28 +66,65 @@ func (AgentRegistrator) RegisterAgent(ip string, body string) (int, map[string]i
 	return result, res, err
 }
 
-// PingAgent starts timer with received interval.
-// If agent does not send next healthcheck message in interval time,
-// change the status of device from connected to disconnected.
-// If successful, this function returns an error as nil.
+// UnregisterAgent send unregister request to target-agent.
+// And then stop the ping process and delete agent in db.
+// IF successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentRegistrator) PingAgent(agentId string, ip string, body string) (int, error) {
+func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
-
+	
 	// Get agent specified by agentId parameter.
 	_, agent, err := agentManager.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
+	
+	address := getAgentAddress(agent)
+	urls := makeRequestUrl(address, url.Unregister())
+	
+	codes, _ := httpRequester.SendHttpRequest("POST", urls)
 
-	storedIP := agent["host"].(string)
-	if ip != storedIP {
-		logger.Logging(logger.ERROR, "address does not match")
-		return results.ERROR, errors.NotFound{"address does not match, try registration again"}
+	result := codes[0]
+	if !isSuccessCode(result) {
+		return results.ERROR, err
 	}
+	
+	// Stop timer and close the channel for ping.
+	if timers[agentId] != nil {
+		timers[agentId] <- true
+		close(timers[agentId])
+	}
+	delete(timers, agentId)
+	
+	
+	// Delete agent 
+	result, err = agentManager.DeleteAgent(agentId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+	
+	return results.OK, err
+}
 
+// PingAgent starts timer with received interval.
+// If agent does not send next healthcheck message in interval time,
+// change the status of device from connected to disconnected.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get agent specified by agentId parameter.
+	_, _, err := agentManager.GetAgent(agentId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+	
 	bodyMap, err := convertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
@@ -148,3 +190,40 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 	}
 	return result, err
 }
+
+// isSuccessCode returns true in case of success and false otherwise.
+func isSuccessCode(code int) bool {
+	if code >= 200 && code <= 299 {
+		return true
+	}
+	return false
+}
+
+// makeRequestUrl make a list of urls that can be used to send a http request.
+func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
+	var httpTag string = "http://"
+	var full_url bytes.Buffer
+
+	for i := range address {
+		full_url.Reset()
+		full_url.WriteString(httpTag + address[i]["host"].(string) +
+			":" + address[i]["port"].(string) +
+			url.Base())
+		for _, api_part := range api_parts {
+			full_url.WriteString(api_part)
+		}
+		urls = append(urls, full_url.String())
+	}
+	return urls
+}
+
+// getAgentAddress returns an address as an array.
+func getAgentAddress(agent map[string]interface{}) []map[string]interface{} {
+	result := make([]map[string]interface{}, 1)
+	result[0] = map[string]interface{}{
+		"host": agent["host"],
+		"port": agent["port"],
+	}
+	return result
+}
+
