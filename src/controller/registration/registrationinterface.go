@@ -17,7 +17,7 @@
 package registration
 
 type RegistrationInterface interface {
-	RegisterAgent(ip string, body string) (int, map[string]interface{}, error)
+	RegisterAgent(body string) (int, map[string]interface{}, error)
 	UnRegisterAgent(agentId string) (int, error)
 	PingAgent(agentId string, body string) (int, error)
 }

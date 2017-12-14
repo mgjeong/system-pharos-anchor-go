@@ -18,8 +18,9 @@
 package agent
 
 type AgentInterface interface {
-	AddAgent(ip string, body string) (int, map[string]interface{}, error)
+	AddAgent(body string) (int, map[string]interface{}, error)
 	DeleteAgent(agentId string) (int, error)
 	GetAgent(agentId string) (int, map[string]interface{}, error)
 	GetAgents() (int, map[string]interface{}, error)
+	UpdateAgentStatus(agentId string, status string) error
 }

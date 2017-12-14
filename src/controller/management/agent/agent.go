@@ -48,7 +48,7 @@ func init() {
 // AddAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) AddAgent(ip string, body string) (int, map[string]interface{}, error) {
+func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
