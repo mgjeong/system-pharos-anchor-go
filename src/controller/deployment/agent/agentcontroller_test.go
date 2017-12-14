@@ -30,21 +30,19 @@ const (
 	status  = "connected"
 	appId   = "000000000000000000000000"
 	agentId = "000000000000000000000001"
-	host    = "127.0.0.1"
+	ip    = "127.0.0.1"
 	port    = "48098"
 )
 
 var (
 	agent = map[string]interface{}{
 		"id":   agentId,
-		"host": host,
-		"port": port,
+		"ip": ip,
 		"apps": []string{},
 	}
 	address = []map[string]interface{}{
 		map[string]interface{}{
-			"host": host,
-			"port": port,
+			"ip": ip,
 		}}
 	body             = `{"description":"description"}`
 	respCode         = []int{results.OK}
@@ -67,7 +65,7 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"id":"000000000000000000000000"}`}
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000000",
 	}
@@ -132,7 +130,7 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -166,7 +164,7 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
@@ -203,7 +201,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"description":"description"}`}
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps"}
 	expectedRes := map[string]interface{}{
 		"description": "description",
 	}
@@ -238,7 +236,7 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps"}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -302,7 +300,7 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"description":"description"}`}
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	expectedRes := map[string]interface{}{
 		"description": "description",
 	}
@@ -337,7 +335,7 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -400,7 +398,7 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -459,7 +457,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -493,7 +491,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/update"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -552,7 +550,7 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/update"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -586,7 +584,7 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/start"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -643,7 +641,7 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/start"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -677,7 +675,7 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/stop"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -736,7 +734,7 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId + "/stop"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -770,7 +768,7 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -830,7 +828,7 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCode_ExpectSuccess(t *testing.T
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -858,7 +856,7 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCodeWithInvalidResponse_ExpectS
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
@@ -892,7 +890,7 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)

@@ -24,8 +24,8 @@ import (
 	"commons/results"
 	"commons/url"
 	"controller/management/agent"
-	"messenger"
 	"encoding/json"
+	"messenger"
 	"strconv"
 	"time"
 )
@@ -36,6 +36,7 @@ const (
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
 	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
+	DEFAULT_AGENT_PORT          = "48098"        // used to indicate a default system-management-agent port.
 )
 
 type AgentRegistrator struct{}
@@ -73,39 +74,38 @@ func (AgentRegistrator) RegisterAgent(ip string, body string) (int, map[string]i
 func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
-	
+
 	// Get agent specified by agentId parameter.
 	_, agent, err := agentManager.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-	
+
 	address := getAgentAddress(agent)
 	urls := makeRequestUrl(address, url.Unregister())
-	
+
 	codes, _ := httpRequester.SendHttpRequest("POST", urls)
 
 	result := codes[0]
 	if !isSuccessCode(result) {
 		return results.ERROR, err
 	}
-	
+
 	// Stop timer and close the channel for ping.
 	if timers[agentId] != nil {
 		timers[agentId] <- true
 		close(timers[agentId])
 	}
 	delete(timers, agentId)
-	
-	
-	// Delete agent 
+
+	// Delete agent
 	result, err = agentManager.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-	
+
 	return results.OK, err
 }
 
@@ -124,7 +124,7 @@ func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-	
+
 	bodyMap, err := convertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
@@ -206,9 +206,8 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["host"].(string) +
-			":" + address[i]["port"].(string) +
-			url.Base())
+		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+			":" + DEFAULT_AGENT_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}
@@ -221,9 +220,7 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 func getAgentAddress(agent map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		"host": agent["host"],
-		"port": agent["port"],
+		"ip": agent["ip"],
 	}
 	return result
 }
-

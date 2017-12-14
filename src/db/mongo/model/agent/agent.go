@@ -32,10 +32,10 @@ const (
 
 type Agent struct {
 	ID     bson.ObjectId `bson:"_id,omitempty"`
-	Host   string
-	Port   string
+	IP     string
 	Apps   []string
 	Status string
+	Config map[string]interface{}
 }
 
 type DBManager struct {
@@ -77,17 +77,17 @@ func getCollection(mgoSession Session, dbname string, collectionName string) Col
 func (agent Agent) convertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"id":     agent.ID.Hex(),
-		"host":   agent.Host,
-		"port":   agent.Port,
+		"ip":     agent.IP,
 		"apps":   agent.Apps,
 		"status": agent.Status,
+		"config": agent.Config,
 	}
 }
 
 // AddAgent inserts new agent to 'agent' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddAgent(host string, port string, status string) (map[string]interface{}, error) {
+func (DBManager) AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -99,9 +99,9 @@ func (DBManager) AddAgent(host string, port string, status string) (map[string]i
 
 	agent := Agent{
 		ID:     bson.NewObjectId(),
-		Host:   host,
-		Port:   port,
+		IP:     ip,
 		Status: status,
+		Config: config,
 	}
 
 	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Insert(agent)
