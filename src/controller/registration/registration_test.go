@@ -21,8 +21,8 @@ import (
 	"commons/errors"
 	"commons/results"
 	agentmocks "controller/management/agent/mocks"
-	msgmocks "messenger/mocks"
 	"github.com/golang/mock/gomock"
+	msgmocks "messenger/mocks"
 	"testing"
 )
 
@@ -30,22 +30,24 @@ const (
 	status  = "connected"
 	appId   = "000000000000000000000000"
 	agentId = "000000000000000000000001"
-	host    = "127.0.0.1"
+	ip      = "127.0.0.1"
 	port    = "48098"
 )
 
 var (
 	agent = map[string]interface{}{
-		"id":   agentId,
-		"host": host,
-		"port": port,
-		"apps": []string{},
+		"id":     agentId,
+		"ip":     ip,
+		"apps":   []string{},
+		"config": configuration,
 	}
 	address = []map[string]interface{}{
 		map[string]interface{}{
-			"host": host,
-			"port": port,
+			"ip": ip,
 		}}
+	configuration = map[string]interface{}{
+		"key": "value",
+	}
 	invalidKeyBody   = `{"key":"value"}`
 	invalidValueBody = `{"interval":"value"}`
 	respCode         = []int{results.OK}
@@ -66,14 +68,14 @@ func init() {
 func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	body := `{"ip":"127.0.0.1"}`
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
 
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().AddAgent(body).Return(results.OK, nil, nil),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, _, err := registrator.RegisterAgent(body)
@@ -90,14 +92,14 @@ func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 func TestCalledRegisterAgentWhenDBHasDuplicatedAgent_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	body := `{"ip":"127.0.0.1"}`
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
 
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().AddAgent(body).Return(results.ERROR, nil, dbOperationError),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, _, err := registrator.RegisterAgent(body)
@@ -120,9 +122,9 @@ func TestCalledRegisterAgentWhenDBHasDuplicatedAgent_ExpectErrorReturn(t *testin
 func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
-	expectedUrl := []string{"http://" + host + ":" + port + "/api/v1/unregister"}
-	
+
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/unregister"}
+
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
 	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
 
@@ -131,7 +133,7 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 		agentManagerMockObj.EXPECT().DeleteAgent(agentId).Return(results.OK, nil),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 	httpRequester = msgMockObj
 
@@ -149,13 +151,13 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 func TestCalledUnRegisterAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
 
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().GetAgent(agentId).Return(results.ERROR, nil, notFoundError),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, err := registrator.UnRegisterAgent(agentId)
@@ -178,13 +180,13 @@ func TestCalledUnRegisterAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 func TestCalledPingAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
 
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().GetAgent(agentId).Return(results.ERROR, nil, notFoundError),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, err := registrator.PingAgent(agentId, "")
@@ -213,7 +215,7 @@ func TestCalledPingAgentWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().GetAgent(agentId).Return(results.OK, nil, nil),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, err := registrator.PingAgent(agentId, invalidKeyBody)
@@ -242,7 +244,7 @@ func TestCalledPingAgentWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().GetAgent(agentId).Return(results.OK, nil, nil),
 	)
-	// pass mockObj to a real object.	
+	// pass mockObj to a real object.
 	agentManager = agentManagerMockObj
 
 	code, err := registrator.PingAgent(agentId, invalidValueBody)
@@ -261,4 +263,3 @@ func TestCalledPingAgentWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	case errors.InvalidJSON:
 	}
 }
-

@@ -70,7 +70,7 @@ func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
 	if !exists {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
-	
+
 	// Add new agent to database with given ip, port, status.
 	agent, err := dbManager.AddAgent(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
