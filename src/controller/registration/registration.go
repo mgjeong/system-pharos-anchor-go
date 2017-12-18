@@ -23,7 +23,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"controller/management/agent"
+	agentManagement "controller/management/agent"
 	"encoding/json"
 	"messenger"
 	"strconv"
@@ -41,12 +41,12 @@ const (
 
 type AgentRegistrator struct{}
 
-var agentManager agent.AgentManager
+var agentManager agentManagement.AgentInterface
 var httpRequester messenger.MessengerInterface
 var timers map[string]chan bool
 
 func init() {
-	agentManager = agent.AgentManager{}
+	agentManager = agentManagement.AgentManager{}
 	timers = make(map[string]chan bool)
 	httpRequester = messenger.NewMessenger()
 }
@@ -81,8 +81,13 @@ func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
+	
+	address, err := getAgentAddress(agent)
+	if err != nil {		
+		logger.Logging(logger.ERROR, err.Error())		
+		return results.ERROR, err		
+	}		
 
-	address := getAgentAddress(agent)
 	urls := makeRequestUrl(address, url.Unregister())
 
 	codes, _ := httpRequester.SendHttpRequest("POST", urls)
@@ -130,8 +135,20 @@ func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
+	
+	// Check whether 'interval' is included.
+	_, exists := bodyMap[INTERVAL]
+	if !exists {
+		return results.ERROR, errors.InvalidJSON{"interval field is required"}
+	}
+	
+	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
+	}
 
-	_, exists := timers[agentId]
+	_, exists = timers[agentId]
 	if !exists {
 		logger.Logging(logger.DEBUG, "first ping request is received from agent")
 	} else {
@@ -147,9 +164,8 @@ func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
 			}
 		}
 	}
-
+	
 	// Start timer with received interval time.
-	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
 	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
@@ -217,10 +233,20 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 }
 
 // getAgentAddress returns an address as an array.
-func getAgentAddress(agent map[string]interface{}) []map[string]interface{} {
+func getAgentAddress(agent map[string]interface{}) ([]map[string]interface{}, error) {
 	result := make([]map[string]interface{}, 1)
+	
+	_, exists := agent["host"]
+	if !exists {
+		return nil, errors.InvalidJSON{"host field is required"}
+	}
+	_, exists = agent["port"]
+	if !exists {
+		return nil, errors.InvalidJSON{"port field is required"}
+	}
+	
 	result[0] = map[string]interface{}{
 		"ip": agent["ip"],
 	}
-	return result
+	return result, nil
 }
