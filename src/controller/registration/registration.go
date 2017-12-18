@@ -54,11 +54,11 @@ func init() {
 // RegisterAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (AgentRegistrator) RegisterAgent(ip string, body string) (int, map[string]interface{}, error) {
+func (AgentRegistrator) RegisterAgent(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	result, res, err := agentManager.AddAgent(ip, body)
+	result, res, err := agentManager.AddAgent(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

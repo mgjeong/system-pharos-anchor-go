@@ -163,15 +163,13 @@ func (sdamH _SDAMAgentApisHandler) Handle(w http.ResponseWriter, req *http.Reque
 func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "[AGENT] Register New Service Deployment Agent")
 
-	ip := strings.Split(req.RemoteAddr, ":")[0]
-
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
 	}
 
-	result, resp, err := registrator.RegisterAgent(ip, body)
+	result, resp, err := registrator.RegisterAgent(body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
