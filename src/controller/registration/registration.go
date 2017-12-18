@@ -23,7 +23,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"controller/management/agent"
+	agentManagement "controller/management/agent"
 	"encoding/json"
 	"messenger"
 	"strconv"
@@ -81,8 +81,13 @@ func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
+	
+	address, err := getAgentAddress(agent)
+	if err != nil {		
+		logger.Logging(logger.ERROR, err.Error())		
+		return results.ERROR, err		
+	}		
 
-	address := getAgentAddress(agent)
 	urls := makeRequestUrl(address, url.Unregister())
 
 	codes, _ := httpRequester.SendHttpRequest("POST", urls)
