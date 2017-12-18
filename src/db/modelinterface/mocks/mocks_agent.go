@@ -50,16 +50,16 @@ func (m *MockAgentInterface) EXPECT() *MockAgentInterfaceMockRecorder {
 }
 
 // AddAgent mocks base method
-func (m *MockAgentInterface) AddAgent(host, port, status string) (map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "AddAgent", host, port, status)
+func (m *MockAgentInterface) AddAgent(ip, status string, config map[string]interface{}) (map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "AddAgent", ip, status, config)
 	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddAgent indicates an expected call of AddAgent
-func (mr *MockAgentInterfaceMockRecorder) AddAgent(host, port, status interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAgent", reflect.TypeOf((*MockAgentInterface)(nil).AddAgent), host, port, status)
+func (mr *MockAgentInterfaceMockRecorder) AddAgent(ip, status, config interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddAgent", reflect.TypeOf((*MockAgentInterface)(nil).AddAgent), ip, status, config)
 }
 
 // UpdateAgentAddress mocks base method

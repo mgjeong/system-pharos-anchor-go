@@ -40,6 +40,18 @@ var (
 	dummySession       = mgomocks.MockSession{}
 	connectionError    = errors.DBConnectionError{}
 	invalidObjectError = errors.InvalidObjectId{invalidObjectId}
+
+	configuration = map[string]interface{}{
+		"devicename":   "Edge Device #1",
+		"deviceid":     "54919CA5-4101-4AE4-595B-353C51AA983C",
+		"manufacturer": "Manufacturer Name",
+		"modelnumber":  "Model number as designated by the manufacturer",
+		"serialnumber": "Serial number",
+		"platform":     "Platform name and version",
+		"os":           "Operationg system name and version",
+		"location":     "Human readable location",
+		"pinginterval": "10",
+	}
 )
 
 func TestCalledConnectWithEmptyURL_ExpectErrorReturn(t *testing.T) {
@@ -122,8 +134,7 @@ func TestCalledAddAgent_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	host := "192.168.0.1"
-	port := "8080"
+	ip := "192.168.0.1"
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -141,7 +152,7 @@ func TestCalledAddAgent_ExpectSuccess(t *testing.T) {
 	mgoDial = connectionMockObj
 	dbManager := DBManager{}
 
-	_, err := dbManager.AddAgent(host, port, status)
+	_, err := dbManager.AddAgent(ip, status, configuration)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -152,8 +163,7 @@ func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	host := "192.168.0.1"
-	port := "8080"
+	ip := "192.168.0.1"
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -170,7 +180,7 @@ func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	dbManager := DBManager{}
-	_, err := dbManager.AddAgent(host, port, status)
+	_, err := dbManager.AddAgent(ip, status, configuration)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -367,13 +377,13 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
-	arg := Agent{ID: bson.ObjectIdHex(agentId), Host: "192.168.0.1", Port: "8888", Apps: []string{}, Status: status}
+	arg := Agent{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
 		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
+		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
+		"config": configuration,
 	}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -469,13 +479,13 @@ func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	args := []Agent{{ID: bson.ObjectIdHex(agentId), Host: "192.168.0.1", Port: "8888", Apps: []string{}, Status: status}}
+	args := []Agent{{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}}
 	expectedRes := []map[string]interface{}{{
 		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
+		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
+		"config": configuration,
 	}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -545,13 +555,13 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(agentId), "apps": bson.M{"$in": []string{appId}}}
-	arg := Agent{ID: bson.ObjectIdHex(agentId), Host: "192.168.0.1", Port: "8888", Apps: []string{}, Status: status}
+	arg := Agent{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
 		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
+		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
+		"config": configuration,
 	}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)

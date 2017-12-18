@@ -34,15 +34,16 @@ import (
 )
 
 const (
-	AGENTS        = "agents"      // used to indicate a list of agents.
-	GROUPS        = "groups"      // used to indicate a list of groups.
-	MEMBERS       = "members"     // used to indicate a list of members.
-	APPS          = "apps"        // used to indicate a list of apps.
-	ID            = "id"          // used to indicate an id.
-	RESPONSE_CODE = "code"        // used to indicate a code.
-	ERROR_MESSAGE = "message"     // used to indicate a message.
-	RESPONSES     = "responses"   // used to indicate a list of responses.
-	DESCRIPTION   = "description" // used to indicate a description.
+	AGENTS             = "agents"      // used to indicate a list of agents.
+	GROUPS             = "groups"      // used to indicate a list of groups.
+	MEMBERS            = "members"     // used to indicate a list of members.
+	APPS               = "apps"        // used to indicate a list of apps.
+	ID                 = "id"          // used to indicate an id.
+	RESPONSE_CODE      = "code"        // used to indicate a code.
+	ERROR_MESSAGE      = "message"     // used to indicate a message.
+	RESPONSES          = "responses"   // used to indicate a list of responses.
+	DESCRIPTION        = "description" // used to indicate a description.
+	DEFAULT_AGENT_PORT = "48098"       // used to indicate a default system-management-agent port.
 )
 
 type GroupController struct{}
@@ -442,8 +443,7 @@ func getMemberAddress(members []map[string]interface{}) []map[string]interface{}
 	result := make([]map[string]interface{}, len(members))
 	for i, agent := range members {
 		result[i] = map[string]interface{}{
-			"host": agent["host"],
-			"port": agent["port"],
+			"ip": agent["ip"],
 		}
 	}
 	return result
@@ -526,9 +526,8 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["host"].(string) +
-			":" + address[i]["port"].(string) +
-			url.Base())
+		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+			":" + DEFAULT_AGENT_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}
