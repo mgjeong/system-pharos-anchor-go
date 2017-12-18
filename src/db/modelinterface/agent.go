@@ -18,7 +18,7 @@ package modelinterface
 
 type AgentInterface interface {
 	// AddAgent insert new Agent.
-	AddAgent(host string, port string, status string) (map[string]interface{}, error)
+	AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error)
 
 	// UpdateAgentAddress updates ip,port of agent from db related to agent.
 	UpdateAgentAddress(agent_id string, host string, port string) error

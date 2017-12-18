@@ -31,6 +31,10 @@ import (
 	"messenger"
 )
 
+const (
+	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-agent port.
+)
+
 type AgentController struct{}
 
 var agentDbManager modelinterface.AgentInterface
@@ -326,8 +330,7 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 func getAgentAddress(agent map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		"host": agent["host"],
-		"port": agent["port"],
+		"ip": agent["ip"],
 	}
 	return result
 }
@@ -359,9 +362,8 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["host"].(string) +
-			":" + address[i]["port"].(string) +
-			url.Base())
+		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+			":" + DEFAULT_AGENT_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}

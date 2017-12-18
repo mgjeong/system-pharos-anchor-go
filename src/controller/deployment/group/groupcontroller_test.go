@@ -30,21 +30,19 @@ const (
 	appId   = "000000000000000000000000"
 	agentId = "000000000000000000000001"
 	groupId = "000000000000000000000002"
-	host    = "192.168.0.1"
-	port    = "8888"
+	ip    = "192.168.0.1"
+	port    = "48098"
 )
 
 var (
 	agent = map[string]interface{}{
 		"id":   agentId,
-		"host": host,
-		"port": port,
+		"ip": ip,
 		"apps": []string{appId},
 	}
 	members = []map[string]interface{}{agent, agent}
 	address = map[string]interface{}{
-		"host": host,
-		"port": port,
+		"ip": ip,
 	}
 	membersAddress = []map[string]interface{}{address, address}
 	group          = map[string]interface{}{
@@ -53,8 +51,8 @@ var (
 	}
 
 	body                   = `{"description":"description"}`
-	deployUrl              = "http://" + host + ":" + port + "/api/v1/deploy"
-	baseUrl                = "http://" + host + ":" + port + "/api/v1/apps/" + appId
+	deployUrl              = "http://" + ip + ":" + port + "/api/v1/deploy"
+	baseUrl                = "http://" + ip + ":" + port + "/api/v1/apps/" + appId
 	respCode               = []int{results.OK, results.OK}
 	partialSuccessRespCode = []int{results.OK, results.ERROR}
 	errorRespCode          = []int{results.ERROR, results.ERROR}

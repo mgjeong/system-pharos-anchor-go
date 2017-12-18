@@ -33,7 +33,6 @@ const (
 	ID               = "id"        // used to indicate an agent id.
 	HOST             = "host"      // used to indicate an agent address.
 	PORT             = "port"      // used to indicate an agent port.
-	DEFAULT_SDA_PORT = "48098"     // default service deployment agent port.
 	STATUS_CONNECTED = "connected" // used to update agent status with connected.
 )
 
@@ -61,13 +60,19 @@ func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Check whether 'ip' is included.
-	_, exists := bodyMap["ip"]
+	ip, exists := bodyMap["ip"].(string)
 	if !exists {
 		return results.ERROR, nil, errors.InvalidJSON{"ip field is required"}
 	}
 
+	// Check whether 'config' is included.
+	config, exists := bodyMap["config"]
+	if !exists {
+		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
+	}
+	
 	// Add new agent to database with given ip, port, status.
-	agent, err := dbManager.AddAgent(bodyMap["ip"].(string), DEFAULT_SDA_PORT, STATUS_CONNECTED)
+	agent, err := dbManager.AddAgent(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
