@@ -81,12 +81,12 @@ func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-	
+
 	address, err := getAgentAddress(agent)
-	if err != nil {		
-		logger.Logging(logger.ERROR, err.Error())		
-		return results.ERROR, err		
-	}		
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
 
 	urls := makeRequestUrl(address, url.Unregister())
 
@@ -135,13 +135,13 @@ func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-	
+
 	// Check whether 'interval' is included.
 	_, exists := bodyMap[INTERVAL]
 	if !exists {
 		return results.ERROR, errors.InvalidJSON{"interval field is required"}
 	}
-	
+
 	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
@@ -164,7 +164,7 @@ func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
 			}
 		}
 	}
-	
+
 	// Start timer with received interval time.
 	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
@@ -235,16 +235,12 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 // getAgentAddress returns an address as an array.
 func getAgentAddress(agent map[string]interface{}) ([]map[string]interface{}, error) {
 	result := make([]map[string]interface{}, 1)
-	
-	_, exists := agent["host"]
+
+	_, exists := agent["ip"]
 	if !exists {
-		return nil, errors.InvalidJSON{"host field is required"}
+		return nil, errors.InvalidJSON{"ip field is required"}
 	}
-	_, exists = agent["port"]
-	if !exists {
-		return nil, errors.InvalidJSON{"port field is required"}
-	}
-	
+
 	result[0] = map[string]interface{}{
 		"ip": agent["ip"],
 	}

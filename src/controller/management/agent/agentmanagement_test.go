@@ -29,22 +29,24 @@ const (
 	status  = "connected"
 	appId   = "000000000000000000000000"
 	agentId = "000000000000000000000001"
-	ip    = "127.0.0.1"
+	ip      = "127.0.0.1"
 	port    = "48098"
 )
 
 var (
 	agent = map[string]interface{}{
-		"id":   agentId,
-		"host": ip,
-		"port": port,
-		"apps": []string{},
+		"id":     agentId,
+		"ip":     ip,
+		"apps":   []string{},
+		"config": configuration,
 	}
 	address = []map[string]interface{}{
 		map[string]interface{}{
-			"host": ip,
-			"port": port,
+			"ip": ip,
 		}}
+	configuration = map[string]interface{}{
+		"key": "value",
+	}
 	body             = `{"description":"description"}`
 	respCode         = []int{results.OK}
 	errorRespCode    = []int{results.ERROR}
@@ -65,19 +67,19 @@ func TestCalledAddAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	body := `{"ip":"127.0.0.1"}`
+	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000001",
 	}
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().AddAgent(ip, port, status).Return(agent, nil),
+		dbManagerMockObj.EXPECT().AddAgent(ip, status, configuration).Return(agent, nil),
 	)
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
-	
+
 	code, res, err := manager.AddAgent(body)
 
 	if err != nil {
@@ -121,7 +123,7 @@ func TestCalledAddAgentWithInvalidBodyNotIncludingIPField_ExpectErrorReturn(t *t
 	defer ctrl.Finish()
 
 	invalidBody := `{"key":"value"}`
-	
+
 	code, _, err := manager.AddAgent(invalidBody)
 
 	if code != results.ERROR {
@@ -142,17 +144,17 @@ func TestCalledAddAgentWithInvalidBodyNotIncludingIPField_ExpectErrorReturn(t *t
 func TestCalledAddAgentWhenFailedToInsertNewAgentToDB_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().AddAgent(ip, port, status).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().AddAgent(ip, status, configuration).Return(nil, notFoundError),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
-	body := `{"ip":"127.0.0.1"}`
+	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
 	code, _, err := manager.AddAgent(body)
 
 	if code != results.ERROR {
@@ -173,13 +175,13 @@ func TestCalledAddAgentWhenFailedToInsertNewAgentToDB_ExpectErrorReturn(t *testi
 func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().DeleteAgent(agentId).Return(nil),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -197,13 +199,13 @@ func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 func TestCalledDeleteAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().DeleteAgent(agentId).Return(notFoundError),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -229,11 +231,11 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -255,13 +257,13 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 func TestCalledGetAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -289,11 +291,11 @@ func TestCalledGetAgents_ExpectSuccess(t *testing.T) {
 	agents := []map[string]interface{}{agent}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAllAgents().Return(agents, nil),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -315,13 +317,13 @@ func TestCalledGetAgents_ExpectSuccess(t *testing.T) {
 func TestCalledGetAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAllAgents().Return(nil, notFoundError),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -347,11 +349,11 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().UpdateAgentStatus(agentId, status).Return(nil),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
@@ -365,18 +367,18 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	
+
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	
+
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().UpdateAgentStatus(agentId, status).Return(notFoundError),
 	)
-	
+
 	// pass mockObj to a real object.
 	dbManager = dbManagerMockObj
 
 	err := manager.UpdateAgentStatus(agentId, status)
-	
+
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
 	}
