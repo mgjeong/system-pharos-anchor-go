@@ -26,6 +26,7 @@ import (
 	URL "commons/url"
 	agentmanager "controller/management/agent"
 	deployment "controller/deployment/agent"
+	resource "controller/resource/agent"
 	"controller/registration"
 	"net/http"
 	"strings"
@@ -46,12 +47,14 @@ var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.AgentInterface
 var deploymentCtrl deployment.DeploymentInterface
 var registrator registration.RegistrationInterface
+var resourceCtrl resource.ResourceInterface
 
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
 	sdamAgentManager = agentmanager.AgentManager{}
 	deploymentCtrl = deployment.AgentController{}
+	resourceCtrl = resource.AgentController
 	registrator = registration.AgentRegistrator{}
 }
 
@@ -109,6 +112,12 @@ func (sdamH _SDAMAgentApisHandler) Handle(w http.ResponseWriter, req *http.Reque
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
+		} else if "/"+split[2] == URL.Resource() {
+			if req.Method == GET {
+				SdamAgent.agentGetResourceInfo(w, req, agentID)
+			} else {
+				common.WriteError(w, errors.InvalidMethod{req.Method})
+			}	
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})
 		}
@@ -129,6 +138,13 @@ func (sdamH _SDAMAgentApisHandler) Handle(w http.ResponseWriter, req *http.Reque
 			default:
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
+		} else if "/"+split[3] == URL.Performance() {
+			agentID := split[1]
+			if req.Method == GET {
+				SdamAgent.agentGetPerformanceInfo(w, req, agentID)
+			} else {
+				common.WriteError(w, errors.InvalidMethod{req.Method})
+			}	
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})
 		}
@@ -329,5 +345,29 @@ func (sdam _SDAMAgentApis) agentStopApp(w http.ResponseWriter, req *http.Request
 func (sdam _SDAMAgentApis) agentUpdateApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Update App")
 	result, resp, err := deploymentCtrl.UpdateApp(agentID, appID)
+	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+// agentGetResourceInfo handles requests related to get agent's resource informaion
+// identified by the given agentID.
+//
+//    paths: '/api/v1/agents/{agentID}/resource'
+//    method: GET
+//    responses: if successful, 200 status code will be returned.
+func (sdam _SDAMAgentApis) agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
+	logger.Logging(logger.DEBUG, "[AGENT] Get Resource Info")
+	result, resp, err := resourceCtrl.GetResourceInfo(agentId)
+	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+// agentGetPerformanceInfo handles requests related to get agent's resource performance informaion
+// identified by the given agentID.
+//
+//    paths: '/api/v1/agents/{agentID}/resource/performance'
+//    method: GET
+//    responses: if successful, 200 status code will be returned.
+func (sdam _SDAMAgentApis) agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
+	logger.Logging(logger.DEBUG, "[AGENT] Get Performance Info")
+	result, resp, err := resourceCtrl.GetPerformanceInfo(agentId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }

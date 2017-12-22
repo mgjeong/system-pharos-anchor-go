@@ -59,3 +59,9 @@ func Unregister() string { return "/unregister" }
 
 // Base returns the ping url as a type of string.
 func Ping() string { return "/ping" }
+
+// Base returns the resource url as a type of string.
+func Resource() string { return "/resource" }
+
+// Base returns the performance url as a type of string.
+func Performance() string { return "/performance" }
