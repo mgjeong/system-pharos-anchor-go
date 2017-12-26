@@ -61,7 +61,7 @@ func (agentController) GetResourceInfo(agentId string) (int, map[string]interfac
 	address := getAgentAddress(agent)
 	urls := makeRequestUrl(address, url.Resource())
 
-	// Request an deployment of edge services to a specific agent.
+	// Request to return agent's resource information.
 	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
@@ -92,7 +92,7 @@ func (agentController) GetPerformanceInfo(agentId string) (int, map[string]inter
 	address := getAgentAddress(agent)
 	urls := makeRequestUrl(address, url.Resource(), url.Performance())
 
-	// Request an deployment of edge services to a specific agent.
+	// Request to return agent's performance information.
 	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
