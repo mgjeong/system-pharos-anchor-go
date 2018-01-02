@@ -26,31 +26,31 @@ import (
 	reflect "reflect"
 )
 
-// MockhttpInterface is a mock of httpInterface interface
-type MockhttpInterface struct {
+// MockhttpWrapper is a mock of httpWrapper interface
+type MockhttpWrapper struct {
 	ctrl     *gomock.Controller
-	recorder *MockhttpInterfaceMockRecorder
+	recorder *MockhttpWrapperMockRecorder
 }
 
-// MockhttpInterfaceMockRecorder is the mock recorder for MockhttpInterface
-type MockhttpInterfaceMockRecorder struct {
-	mock *MockhttpInterface
+// MockhttpWrapperMockRecorder is the mock recorder for MockhttpWrapper
+type MockhttpWrapperMockRecorder struct {
+	mock *MockhttpWrapper
 }
 
-// NewMockhttpInterface creates a new mock instance
-func NewMockhttpInterface(ctrl *gomock.Controller) *MockhttpInterface {
-	mock := &MockhttpInterface{ctrl: ctrl}
-	mock.recorder = &MockhttpInterfaceMockRecorder{mock}
+// NewMockhttpWrapper creates a new mock instance
+func NewMockhttpWrapper(ctrl *gomock.Controller) *MockhttpWrapper {
+	mock := &MockhttpWrapper{ctrl: ctrl}
+	mock.recorder = &MockhttpWrapperMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockhttpInterface) EXPECT() *MockhttpInterfaceMockRecorder {
+func (m *MockhttpWrapper) EXPECT() *MockhttpWrapperMockRecorder {
 	return m.recorder
 }
 
 // DoWrapper mocks base method
-func (m *MockhttpInterface) DoWrapper(req *http.Request) (*http.Response, error) {
+func (m *MockhttpWrapper) DoWrapper(req *http.Request) (*http.Response, error) {
 	ret := m.ctrl.Call(m, "DoWrapper", req)
 	ret0, _ := ret[0].(*http.Response)
 	ret1, _ := ret[1].(error)
@@ -58,35 +58,35 @@ func (m *MockhttpInterface) DoWrapper(req *http.Request) (*http.Response, error)
 }
 
 // DoWrapper indicates an expected call of DoWrapper
-func (mr *MockhttpInterfaceMockRecorder) DoWrapper(req interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoWrapper", reflect.TypeOf((*MockhttpInterface)(nil).DoWrapper), req)
+func (mr *MockhttpWrapperMockRecorder) DoWrapper(req interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoWrapper", reflect.TypeOf((*MockhttpWrapper)(nil).DoWrapper), req)
 }
 
-// MockMessengerInterface is a mock of MessengerInterface interface
-type MockMessengerInterface struct {
+// MockCommand is a mock of Command interface
+type MockCommand struct {
 	ctrl     *gomock.Controller
-	recorder *MockMessengerInterfaceMockRecorder
+	recorder *MockCommandMockRecorder
 }
 
-// MockMessengerInterfaceMockRecorder is the mock recorder for MockMessengerInterface
-type MockMessengerInterfaceMockRecorder struct {
-	mock *MockMessengerInterface
+// MockCommandMockRecorder is the mock recorder for MockCommand
+type MockCommandMockRecorder struct {
+	mock *MockCommand
 }
 
-// NewMockMessengerInterface creates a new mock instance
-func NewMockMessengerInterface(ctrl *gomock.Controller) *MockMessengerInterface {
-	mock := &MockMessengerInterface{ctrl: ctrl}
-	mock.recorder = &MockMessengerInterfaceMockRecorder{mock}
+// NewMockCommand creates a new mock instance
+func NewMockCommand(ctrl *gomock.Controller) *MockCommand {
+	mock := &MockCommand{ctrl: ctrl}
+	mock.recorder = &MockCommandMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockMessengerInterface) EXPECT() *MockMessengerInterfaceMockRecorder {
+func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 	return m.recorder
 }
 
 // SendHttpRequest mocks base method
-func (m *MockMessengerInterface) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
+func (m *MockCommand) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
 	varargs := []interface{}{method, urls}
 	for _, a := range dataOptional {
 		varargs = append(varargs, a)
@@ -98,8 +98,7 @@ func (m *MockMessengerInterface) SendHttpRequest(method string, urls []string, d
 }
 
 // SendHttpRequest indicates an expected call of SendHttpRequest
-func (mr *MockMessengerInterfaceMockRecorder) SendHttpRequest(method, urls interface{}, dataOptional ...interface{}) *gomock.Call {
+func (mr *MockCommandMockRecorder) SendHttpRequest(method, urls interface{}, dataOptional ...interface{}) *gomock.Call {
 	varargs := append([]interface{}{method, urls}, dataOptional...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHttpRequest", reflect.TypeOf((*MockMessengerInterface)(nil).SendHttpRequest), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendHttpRequest", reflect.TypeOf((*MockCommand)(nil).SendHttpRequest), varargs...)
 }
-

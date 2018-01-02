@@ -45,7 +45,7 @@ type _SDAMAgentApis struct{}
 var sdamH _SDAMAgentApisHandler
 var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.AgentInterface
-var deploymentCtrl deployment.DeploymentInterface
+var deploymentCtrl deployment.Command
 var registrator registration.RegistrationInterface
 var resourceCtrl resource.ResourceInterface
 

@@ -50,12 +50,40 @@ type GroupController struct{}
 
 var agentDbManager modelinterface.AgentInterface
 var groupDbManager modelinterface.GroupInterface
-var httpRequester messenger.MessengerInterface
+var httpRequester messenger.Command
 
 func init() {
 	agentDbManager = agentDB.DBManager{}
 	groupDbManager = groupDB.DBManager{}
 	httpRequester = messenger.NewMessenger()
+}
+
+// Command is an interface of group deployment operations.
+type Command interface {
+	// DeployApp request an deployment of edge services to a group specified by groupId parameter.
+	DeployApp(groupId string, body string) (int, map[string]interface{}, error)
+
+	// GetApps request a list of applications that is deployed to a group specified by groupId parameter.
+	GetApps(groupId string) (int, map[string]interface{}, error)
+
+	// GetApp gets the application's information of the group specified by groupId parameter.
+	GetApp(groupId string, appId string) (int, map[string]interface{}, error)
+
+	// UpdateApp request to update an application specified by appId parameter to all members of the group.
+	UpdateAppInfo(groupId string, appId string, body string) (int, map[string]interface{}, error)
+
+	// DeleteApp request to delete an application specified by appId parameter to all members of the group.
+	DeleteApp(groupId string, appId string) (int, map[string]interface{}, error)
+
+	// UpdateAppInfo request to update all of images which is included an application specified by
+	// appId parameter to all members of the group.
+	UpdateApp(groupId string, appId string) (int, map[string]interface{}, error)
+
+	// StartApp request to start an application specified by appId parameter to all members of the group.
+	StartApp(groupId string, appId string) (int, map[string]interface{}, error)
+
+	// StopApp request to stop an application specified by appId parameter to all members of the group.
+	StopApp(groupId string, appId string) (int, map[string]interface{}, error)
 }
 
 // DeployApp request an deployment of edge services to a group specified by groupId parameter.

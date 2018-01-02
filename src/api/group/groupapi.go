@@ -43,7 +43,7 @@ type _SDAMGroupApis struct{}
 var sdamH _SDAMGroupApisHandler
 var sdam _SDAMGroupApis
 var sdamGroupManager groupmanager.GroupInterface
-var deploymentCtrl deployment.DeploymentInterface
+var deploymentCtrl deployment.Command
 
 func init() {
 	SdamGroupHandle = sdamH
