@@ -40,4 +40,6 @@ type SDAMAgentAPIInterface interface {
 	agentStartApp(w http.ResponseWriter, req *http.Request, agentID string, appID string)
 	agentStopApp(w http.ResponseWriter, req *http.Request, agentID string, appID string)
 	agentUpdateApp(w http.ResponseWriter, req *http.Request, agentID string, appID string)
+	agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string)
+	agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string)
 }
