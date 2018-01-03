@@ -47,14 +47,14 @@ var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.AgentInterface
 var deploymentCtrl deployment.Command
 var registrator registration.RegistrationInterface
-var resourceCtrl resource.ResourceInterface
+var resourceCtrl resource.Command
 
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
 	sdamAgentManager = agentmanager.AgentManager{}
 	deploymentCtrl = deployment.AgentController{}
-	resourceCtrl = resource.AgentController
+	resourceCtrl = resource.Executor
 	registrator = registration.AgentRegistrator{}
 }
 
