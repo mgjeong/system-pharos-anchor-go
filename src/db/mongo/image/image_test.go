@@ -140,9 +140,9 @@ func TestCalledAddDockerImage_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
+	Executor := Executor{}
 
-	_, err := dbManager.AddDockerImage(image)
+	_, err := Executor.AddDockerImage(image)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -167,9 +167,9 @@ func TestCalledAddDockerImageWhenDBReturnsError_ExpectErrorReturn(t *testing.T) 
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
+	Executor := Executor{}
 
-	_, err := dbManager.AddDockerImage(image)
+	_, err := Executor.AddDockerImage(image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -208,8 +208,8 @@ func TestCalledUpdateDockerImage_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(imageId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(imageId, image)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -229,9 +229,9 @@ func TestCalledUpdateDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
+	Executor := Executor{}
 
-	err := dbManager.UpdateDockerImage(invalidObjectId, image)
+	err := Executor.UpdateDockerImage(invalidObjectId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -269,8 +269,8 @@ func TestCalledUpdateDockerImageWhenDBReturnsError_ExpectErrorReturn(t *testing.
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(imageId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(imageId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -322,8 +322,8 @@ func TestCalledGetDockerImage_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	res, err := dbManager.GetDockerImage(imageId)
+	Executor := Executor{}
+	res, err := Executor.GetDockerImage(imageId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -348,8 +348,8 @@ func TestCalledGetDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing.T)
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerImage(invalidObjectId)
+	Executor := Executor{}
+	_, err := Executor.GetDockerImage(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -383,8 +383,8 @@ func TestCalledGetDockerImageWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testi
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerImage(imageId)
+	Executor := Executor{}
+	_, err := Executor.GetDockerImage(imageId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -418,8 +418,8 @@ func TestCalledDeleteDockerImage_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(imageId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(imageId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -440,8 +440,8 @@ func TestCalledDeleteDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(invalidObjectId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -473,8 +473,8 @@ func TestCalledDeleteDockerImageWhenDBReturnsError_ExpectErrorReturn(t *testing.
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(imageId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(imageId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

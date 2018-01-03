@@ -19,7 +19,7 @@ package group
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/modelinterface/mocks"
+	groupdbmocks "db/mongo/group/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -70,7 +70,7 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().CreateGroup().Return(group, nil),
@@ -97,7 +97,7 @@ func TestCalledCreateGroupWhenFailedToInsertGroupToDB_ExpectErrorReturn(t *testi
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().CreateGroup().Return(nil, notFoundError),
@@ -126,7 +126,7 @@ func TestCalledGetGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetGroup(groupId).Return(group, nil),
@@ -153,7 +153,7 @@ func TestCalledGetGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetGroup(groupId).Return(nil, notFoundError),
@@ -184,7 +184,7 @@ func TestCalledGetGroups_ExpectSuccess(t *testing.T) {
 
 	groups := []map[string]interface{}{group}
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAllGroups().Return(groups, nil),
@@ -211,7 +211,7 @@ func TestCalledGetGroupsWhenFailedToGetGroupsFromDB_ExpectErrorReturn(t *testing
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAllGroups().Return(nil, notFoundError),
@@ -240,7 +240,7 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().JoinGroup(groupId, agentId).Return(nil),
@@ -286,7 +286,7 @@ func TestCalledJoinGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().JoinGroup(groupId, agentId).Return(notFoundError),
@@ -316,7 +316,7 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().LeaveGroup(groupId, agentId).Return(nil),
@@ -362,7 +362,7 @@ func TestCalledLeaveGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().LeaveGroup(groupId, agentId).Return(notFoundError),
@@ -392,7 +392,7 @@ func TestCalledDeleteGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().DeleteGroup(groupId).Return(nil),
@@ -415,7 +415,7 @@ func TestCalledDeleteGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	dbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().DeleteGroup(groupId).Return(notFoundError),

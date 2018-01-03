@@ -22,8 +22,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"db/modelinterface"
-	agentDB "db/mongo/model/agent"
+	agentDB "db/mongo/agent"
 	"encoding/json"
 	"messenger"
 )
@@ -34,13 +33,13 @@ const (
 
 type agentController struct{}
 
-var agentDbManager modelinterface.AgentInterface
+var agentDbManager agentDB.Command
 var AgentController agentController
 
 var httpRequester messenger.Command
 
 func init() {
-	agentDbManager = agentDB.DBManager{}
+	agentDbManager = agentDB.Executor{}
 	httpRequester = messenger.NewMessenger()
 }
 

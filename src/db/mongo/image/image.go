@@ -19,10 +19,23 @@ package image
 import (
 	"commons/errors"
 	"commons/logger"
-	. "db/modelinterface"
 	. "db/mongo/wrapper"
 	"gopkg.in/mgo.v2/bson"
 )
+
+type Command interface {
+	// AddDockerImage insert a new docker image.
+	AddDockerImage(image map[string]interface{}) (map[string]interface{}, error)
+
+	// DeleteDockerImage delete a specific image from db related to image.
+	DeleteDockerImage(imageId string) error
+
+	// UpdateDockerImage update status of docker image from db related to image.
+	UpdateDockerImage(imageId string, image map[string]interface{}) error
+
+	// GetDockerImage returns a single document from db related to image.
+	GetDockerImage(imageId string) (map[string]interface{}, error)
+}
 
 const (
 	DB_NAME          = "DeploymentManagerDB"
@@ -39,9 +52,7 @@ type Image struct {
 	Timestamp  string
 }
 
-type DBManager struct {
-	ImageInterface
-}
+type Executor struct {}
 
 var mgoDial Connection
 
@@ -89,7 +100,7 @@ func (image Image) convertToMap() map[string]interface{} {
 // AddDockerImage insert a new agent to 'image' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddDockerImage(image map[string]interface{}) (map[string]interface{}, error) {
+func (Executor) AddDockerImage(image map[string]interface{}) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -121,7 +132,7 @@ func (DBManager) AddDockerImage(image map[string]interface{}) (map[string]interf
 // UpdateDockerImage update status of docker image specified by imageId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) UpdateDockerImage(imageId string, image map[string]interface{}) error {
+func (Executor) UpdateDockerImage(imageId string, image map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -155,7 +166,7 @@ func (DBManager) UpdateDockerImage(imageId string, image map[string]interface{})
 // GetDockerImage returns a single document specified by imageId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetDockerImage(imageId string) (map[string]interface{}, error) {
+func (Executor) GetDockerImage(imageId string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -185,7 +196,7 @@ func (DBManager) GetDockerImage(imageId string) (map[string]interface{}, error) 
 // DeleteDockerImage delete a single document from 'image' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteDockerImage(imageId string) error {
+func (Executor) DeleteDockerImage(imageId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

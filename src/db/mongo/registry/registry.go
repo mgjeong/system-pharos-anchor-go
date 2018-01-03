@@ -19,11 +19,36 @@ package registry
 import (
 	"commons/errors"
 	"commons/logger"
-	. "db/modelinterface"
-	imageDB "db/mongo/model/image"
+	imageDB "db/mongo/image"
 	. "db/mongo/wrapper"
 	"gopkg.in/mgo.v2/bson"
 )
+
+type Command interface {
+	// AddDockerRegistry insert a new docker registry information.
+	AddDockerRegistry(url string) (map[string]interface{}, error)
+
+	// GetDockerRegistries returns all documents from db related to docker registry.
+	GetDockerRegistries() ([]map[string]interface{}, error)
+
+	// GetDockerRegistry returns a single document from db related to docker registry.
+	GetDockerRegistry(url string) (map[string]interface{}, error)
+
+	// DeleteDockerRegistry delete a specific docker registry information from db related to registry.
+	DeleteDockerRegistry(registryId string) error
+
+	// AddDockerImages add a specific docker image to the target registry.
+	AddDockerImages(registryId string, images []map[string]interface{}) error
+
+	// GetDockerImages returns all docker images which belong to the target registry.
+	GetDockerImages(registryId string) ([]map[string]interface{}, error)
+
+	// UpdateDockerImage update status of docker image which belong to the target registry.
+	UpdateDockerImage(registryId string, image map[string]interface{}) error
+
+	// DeleteDockerImage delete a specific docker image from the target registry.
+	DeleteDockerImage(registryId string, image map[string]interface{})
+}
 
 const (
 	DB_NAME             = "DeploymentManagerDB"
@@ -37,16 +62,14 @@ type Registry struct {
 	Images []string
 }
 
-type DBManager struct {
-	ImageInterface
-}
+type Executor struct {}
 
 var mgoDial Connection
-var imageDBManager ImageInterface
+var imageExecutor imageDB.Command
 
 func init() {
 	mgoDial = MongoDial{}
-	imageDBManager = imageDB.DBManager{}
+	imageExecutor = imageDB.Executor{}
 }
 
 // Try to connect with mongo db server.
@@ -86,7 +109,7 @@ func (registry Registry) convertToMap() map[string]interface{} {
 // AddDockerRegistry insert a new docker registry information to 'registry' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddDockerRegistry(url string) (map[string]interface{}, error) {
+func (Executor) AddDockerRegistry(url string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -114,7 +137,7 @@ func (DBManager) AddDockerRegistry(url string) (map[string]interface{}, error) {
 // GetDockerRegistries returns all documents.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetDockerRegistries() ([]map[string]interface{}, error) {
+func (Executor) GetDockerRegistries() ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -142,7 +165,7 @@ func (DBManager) GetDockerRegistries() ([]map[string]interface{}, error) {
 // GetDockerRegistry returns a single document specified by url parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetDockerRegistry(url string) (map[string]interface{}, error) {
+func (Executor) GetDockerRegistry(url string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -168,7 +191,7 @@ func (DBManager) GetDockerRegistry(url string) (map[string]interface{}, error) {
 // DeleteDockerRegistry delete a single document from 'registry' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteDockerRegistry(registryId string) error {
+func (Executor) DeleteDockerRegistry(registryId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -200,7 +223,7 @@ func (DBManager) DeleteDockerRegistry(registryId string) error {
 
 	// Delete all docker images included in the target registry from database.
 	for _, imageId := range registry.Images {
-		imageDBManager.DeleteDockerImage(imageId)
+		imageExecutor.DeleteDockerImage(imageId)
 	}
 	return nil
 }
@@ -209,7 +232,7 @@ func (DBManager) DeleteDockerRegistry(registryId string) error {
 // and add it to the list of image ids in the target 'registry' document.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddDockerImages(registryId string, images []map[string]interface{}) error {
+func (Executor) AddDockerImages(registryId string, images []map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -242,13 +265,13 @@ func (DBManager) AddDockerImages(registryId string, images []map[string]interfac
 			query := bson.M{"_id": bson.ObjectIdHex(registryId)}
 			update := bson.M{"$pull": bson.M{"images": image["id"].(string)}}
 			getCollection(session, DB_NAME, REGISTRY_COLLECTION).Update(query, update)
-			imageDBManager.DeleteDockerImage(image["id"].(string))
+			imageExecutor.DeleteDockerImage(image["id"].(string))
 		}
 	}
 
 	for _, image := range images {
 		// Insert a new docker image information to 'image' collection.
-		newImage, err := imageDBManager.AddDockerImage(image)
+		newImage, err := imageExecutor.AddDockerImage(image)
 		if err != nil {
 			// Delete docker images already added to database.
 			cleanup()
@@ -272,7 +295,7 @@ func (DBManager) AddDockerImages(registryId string, images []map[string]interfac
 // GetDockerImages returns all images document included in the target registry.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetDockerImages(registryId string) ([]map[string]interface{}, error) {
+func (Executor) GetDockerImages(registryId string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -298,7 +321,7 @@ func (DBManager) GetDockerImages(registryId string) ([]map[string]interface{}, e
 
 	result := make([]map[string]interface{}, len(registry.Images))
 	for i, imageId := range registry.Images {
-		image, err := imageDBManager.GetDockerImage(imageId)
+		image, err := imageExecutor.GetDockerImage(imageId)
 		if err != nil {
 			return nil, err
 		}
@@ -312,7 +335,7 @@ func (DBManager) GetDockerImages(registryId string) ([]map[string]interface{}, e
 // UpdateDockerImage update status of docker image included in the target registry.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client DBManager) UpdateDockerImage(registryId string, image map[string]interface{}) error {
+func (client Executor) UpdateDockerImage(registryId string, image map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -337,7 +360,7 @@ func (client DBManager) UpdateDockerImage(registryId string, image map[string]in
 	}
 
 	for _, imageId := range registry.Images {
-		targetImage, err := imageDBManager.GetDockerImage(imageId)
+		targetImage, err := imageExecutor.GetDockerImage(imageId)
 		if err != nil {
 			return err
 		}
@@ -345,7 +368,7 @@ func (client DBManager) UpdateDockerImage(registryId string, image map[string]in
 		// If the repository name specified by image parameter is the same as targetImage,
 		// update status of docker image from 'image' collection.
 		if targetImage["repository"].(string) == image["repository"].(string) {
-			err = imageDBManager.UpdateDockerImage(imageId, image)
+			err = imageExecutor.UpdateDockerImage(imageId, image)
 			if err != nil {
 				return err
 			}
@@ -359,7 +382,7 @@ func (client DBManager) UpdateDockerImage(registryId string, image map[string]in
 // and remove it from the list of image ids in the target 'registry' document.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteDockerImage(registryId string, image map[string]interface{}) error {
+func (Executor) DeleteDockerImage(registryId string, image map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -384,7 +407,7 @@ func (DBManager) DeleteDockerImage(registryId string, image map[string]interface
 	}
 
 	for _, imageId := range registry.Images {
-		targetImage, err := imageDBManager.GetDockerImage(imageId)
+		targetImage, err := imageExecutor.GetDockerImage(imageId)
 		if err != nil {
 			return err
 		}
@@ -399,7 +422,7 @@ func (DBManager) DeleteDockerImage(registryId string, image map[string]interface
 				return ConvertMongoError(err)
 			}
 
-			err := imageDBManager.DeleteDockerImage(imageId)
+			err := imageExecutor.DeleteDockerImage(imageId)
 			if err != nil {
 				// Restore already deleted docker image id.
 				query := bson.M{"_id": bson.ObjectIdHex(registryId)}

@@ -23,8 +23,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	"db/modelinterface"
-	agentDB "db/mongo/model/agent"
+	agentDB "db/mongo/agent"
 	"encoding/json"
 )
 
@@ -38,10 +37,10 @@ const (
 
 type AgentManager struct{}
 
-var dbManager modelinterface.AgentInterface
+var dbManager agentDB.Command
 
 func init() {
-	dbManager = agentDB.DBManager{}
+	dbManager = agentDB.Executor{}
 }
 
 // AddAgent inserts a new agent with ip which is passed in call to function.

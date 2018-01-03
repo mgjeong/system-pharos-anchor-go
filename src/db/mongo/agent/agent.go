@@ -19,10 +19,38 @@ package agent
 import (
 	"commons/errors"
 	"commons/logger"
-	. "db/modelinterface"
 	. "db/mongo/wrapper"
 	"gopkg.in/mgo.v2/bson"
 )
+
+type Command interface {
+	// AddAgent insert new Agent.
+	AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error)
+
+	// UpdateAgentAddress updates ip,port of agent from db related to agent.
+	UpdateAgentAddress(agent_id string, host string, port string) error
+
+	// UpdateAgentStatus updates status of agent from db related to agent.
+	UpdateAgentStatus(agent_id string, status string) error
+
+	// GetAgent returns single document from db related to agent.
+	GetAgent(agent_id string) (map[string]interface{}, error)
+
+	// GetAllAgents returns all documents from db related to agent.
+	GetAllAgents() ([]map[string]interface{}, error)
+
+	// GetAgentByAppID returns single document including specific app.
+	GetAgentByAppID(agent_id string, app_id string) (map[string]interface{}, error)
+
+	// AddAppToAgent add specific app to the target agent.
+	AddAppToAgent(agent_id string, app_id string) error
+
+	// DeleteAppFromAgent delete specific app from the target agent.
+	DeleteAppFromAgent(agent_id string, app_id string) error
+
+	// DeleteAgent delete single document from db related to agent.
+	DeleteAgent(agent_id string) error
+}
 
 const (
 	DB_NAME          = "DeploymentManagerDB"
@@ -38,9 +66,7 @@ type Agent struct {
 	Config map[string]interface{}
 }
 
-type DBManager struct {
-	AgentInterface
-}
+type Executor struct {}
 
 var mgoDial Connection
 
@@ -87,7 +113,7 @@ func (agent Agent) convertToMap() map[string]interface{} {
 // AddAgent inserts new agent to 'agent' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
+func (Executor) AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -117,7 +143,7 @@ func (DBManager) AddAgent(ip string, status string, config map[string]interface{
 // UpdateAgentAddress updates ip,port of agent specified by agent_id parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) UpdateAgentAddress(agent_id string, host string, port string) error {
+func (Executor) UpdateAgentAddress(agent_id string, host string, port string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -145,7 +171,7 @@ func (DBManager) UpdateAgentAddress(agent_id string, host string, port string) e
 // UpdateAgentStatus updates status of agent specified by agent_id parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) UpdateAgentStatus(agent_id string, status string) error {
+func (Executor) UpdateAgentStatus(agent_id string, status string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -173,7 +199,7 @@ func (DBManager) UpdateAgentStatus(agent_id string, status string) error {
 // GetAgent returns single document specified by agent_id parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetAgent(agent_id string) (map[string]interface{}, error) {
+func (Executor) GetAgent(agent_id string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -203,7 +229,7 @@ func (DBManager) GetAgent(agent_id string) (map[string]interface{}, error) {
 // GetAllAgents returns all documents from 'agent' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetAllAgents() ([]map[string]interface{}, error) {
+func (Executor) GetAllAgents() ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -230,7 +256,7 @@ func (DBManager) GetAllAgents() ([]map[string]interface{}, error) {
 // If successful, this function returns an error as nil.
 // But if the target agent does not include the given app_id,
 // an appropriate error will be returned.
-func (DBManager) GetAgentByAppID(agent_id string, app_id string) (map[string]interface{}, error) {
+func (Executor) GetAgentByAppID(agent_id string, app_id string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -260,7 +286,7 @@ func (DBManager) GetAgentByAppID(agent_id string, app_id string) (map[string]int
 // AddAppToAgent adds the specific app to the target agent.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) AddAppToAgent(agent_id string, app_id string) error {
+func (Executor) AddAppToAgent(agent_id string, app_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -288,7 +314,7 @@ func (DBManager) AddAppToAgent(agent_id string, app_id string) error {
 // DeleteAppFromAgent deletes the specific app from the target agent.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteAppFromAgent(agent_id string, app_id string) error {
+func (Executor) DeleteAppFromAgent(agent_id string, app_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -316,7 +342,7 @@ func (DBManager) DeleteAppFromAgent(agent_id string, app_id string) error {
 // DeleteAgent deletes single document from 'agent' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteAgent(agent_id string) error {
+func (Executor) DeleteAgent(agent_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

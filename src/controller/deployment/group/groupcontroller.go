@@ -26,9 +26,8 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"db/modelinterface"
-	agentDB "db/mongo/model/agent"
-	groupDB "db/mongo/model/group"
+	agentDB "db/mongo/agent"
+	groupDB "db/mongo/group"
 	"encoding/json"
 	"messenger"
 )
@@ -48,13 +47,13 @@ const (
 
 type GroupController struct{}
 
-var agentDbManager modelinterface.AgentInterface
-var groupDbManager modelinterface.GroupInterface
+var agentDbManager agentDB.Command
+var groupDbManager groupDB.Command
 var httpRequester messenger.Command
 
 func init() {
-	agentDbManager = agentDB.DBManager{}
-	groupDbManager = groupDB.DBManager{}
+	agentDbManager = agentDB.Executor{}
+	groupDbManager = groupDB.Executor{}
 	httpRequester = messenger.NewMessenger()
 }
 

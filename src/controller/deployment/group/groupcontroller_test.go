@@ -19,9 +19,10 @@ package group
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/modelinterface/mocks"
 	"github.com/golang/mock/gomock"
 	msgmocks "messenger/mocks"
+	groupdbmocks "db/mongo/group/mocks"
+	agentdbmocks "db/mongo/agent/mocks"
 	"reflect"
 	"testing"
 )
@@ -77,8 +78,8 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 		"id": "000000000000000000000000",
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
-	agentDbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -110,7 +111,7 @@ func TestCalledDeployAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
@@ -141,7 +142,7 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	expectedUrl := []string{deployUrl, deployUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -176,8 +177,8 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 	expectedUrl := []string{deployUrl, deployUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
-	agentDbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -228,8 +229,8 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
-	agentDbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -268,7 +269,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 		}},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
@@ -295,7 +296,7 @@ func TestCalledGetAppsWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
@@ -337,7 +338,7 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 			}},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -367,7 +368,7 @@ func TestCalledGetAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -399,7 +400,7 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -448,7 +449,7 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -480,7 +481,7 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -506,7 +507,7 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testin
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -538,7 +539,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -586,7 +587,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -618,7 +619,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/update", baseUrl + "/update"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -644,7 +645,7 @@ func TestCalledUpdateAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -676,7 +677,7 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/update", baseUrl + "/update"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -724,7 +725,7 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -756,7 +757,7 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/start", baseUrl + "/start"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -782,7 +783,7 @@ func TestCalledStartAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -814,7 +815,7 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/start", baseUrl + "/start"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -862,7 +863,7 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -894,7 +895,7 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/stop", baseUrl + "/stop"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -920,7 +921,7 @@ func TestCalledStopAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -952,7 +953,7 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/stop", baseUrl + "/stop"}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -1000,7 +1001,7 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -1032,8 +1033,8 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
-	agentDbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -1061,7 +1062,7 @@ func TestCalledDeleteAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
@@ -1093,7 +1094,7 @@ func TestCalledDeleteAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
@@ -1141,8 +1142,8 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := dbmocks.NewMockGroupInterface(ctrl)
-	agentDbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(

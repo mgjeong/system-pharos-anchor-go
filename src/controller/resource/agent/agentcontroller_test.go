@@ -19,8 +19,8 @@ package agent
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/modelinterface/mocks"
 	"github.com/golang/mock/gomock"
+	agentdbmocks "db/mongo/agent/mocks"
 	msgmocks "messenger/mocks"
 	"reflect"
 	"testing"
@@ -60,8 +60,8 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 		"mem":       "00%",
 		"disk":      "00%",
 	}
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
@@ -89,7 +89,7 @@ func TestGetResourceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
@@ -119,8 +119,8 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
@@ -146,8 +146,8 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
@@ -184,8 +184,8 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 		"mem":  "00%",
 		"disk": "00%",
 	}
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
@@ -213,7 +213,7 @@ func TestGetPerformanceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
@@ -243,8 +243,8 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
@@ -270,8 +270,8 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),

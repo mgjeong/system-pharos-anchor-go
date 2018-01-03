@@ -22,8 +22,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	"db/modelinterface"
-	groupDB "db/mongo/model/group"
+	groupDB "db/mongo/group"
 	"encoding/json"
 )
 
@@ -34,10 +33,10 @@ const (
 
 type GroupManager struct{}
 
-var dbManager modelinterface.GroupInterface
+var dbManager groupDB.Command
 
 func init() {
-	dbManager = groupDB.DBManager{}
+	dbManager = groupDB.Executor{}
 }
 
 // CreateGroup inserts a new group to databases.

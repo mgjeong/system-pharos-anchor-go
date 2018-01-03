@@ -18,7 +18,7 @@ package registry
 
 import (
 	errors "commons/errors"
-	dbmocks "db/modelinterface/mocks"
+	imagedbmocks "db/mongo/image/mocks"
 	mgomocks "db/mongo/wrapper/mocks"
 	"github.com/golang/mock/gomock"
 	"gopkg.in/mgo.v2"
@@ -146,9 +146,9 @@ func TestCalledAddDockerRegistry_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
+	Executor := Executor{}
 
-	_, err := dbManager.AddDockerRegistry(registryUrl)
+	_, err := Executor.AddDockerRegistry(registryUrl)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -173,9 +173,9 @@ func TestCalledAddDockerRegistryWhenDBReturnsError_ExpectErrorReturn(t *testing.
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
+	Executor := Executor{}
 
-	_, err := dbManager.AddDockerRegistry(registryUrl)
+	_, err := Executor.AddDockerRegistry(registryUrl)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -215,8 +215,8 @@ func TestCalledGetDockerRegistries_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	res, err := dbManager.GetDockerRegistries()
+	Executor := Executor{}
+	res, err := Executor.GetDockerRegistries()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -248,8 +248,8 @@ func TestCalledGetDockerRegistriesWhenDBReturnsError_ExpectErrorReturn(t *testin
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerRegistries()
+	Executor := Executor{}
+	_, err := Executor.GetDockerRegistries()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -290,8 +290,8 @@ func TestCalledGetDockerRegistry_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	res, err := dbManager.GetDockerRegistry(registryUrl)
+	Executor := Executor{}
+	res, err := Executor.GetDockerRegistry(registryUrl)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -325,8 +325,8 @@ func TestCalledGetDockerRegistryWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *te
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerRegistry(registryUrl)
+	Executor := Executor{}
+	_, err := Executor.GetDockerRegistry(registryUrl)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -366,8 +366,8 @@ func TestCalledDeleteDockerRegistry_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerRegistry(registryId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(registryId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -388,8 +388,8 @@ func TestCalledDeleteDockerRegistryWithInvalidObjectId_ExpectErrorReturn(t *test
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerRegistry(invalidObjectId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -423,8 +423,8 @@ func TestCalledDeleteDockerRegistryWhenDBReturnsError_ExpectErrorReturn(t *testi
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerRegistry(registryId)
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(registryId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -450,7 +450,7 @@ func TestCalledAddDockerImages_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -466,10 +466,10 @@ func TestCalledAddDockerImages_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.AddDockerImages(registryId, images)
+	Executor := Executor{}
+	err := Executor.AddDockerImages(registryId, images)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -490,8 +490,8 @@ func TestCalledAddDockerImagesWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.AddDockerImages(invalidObjectId, images)
+	Executor := Executor{}
+	err := Executor.AddDockerImages(invalidObjectId, images)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -525,8 +525,8 @@ func TestCalledAddDockerImagesWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *t
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.AddDockerImages(registryId, images)
+	Executor := Executor{}
+	err := Executor.AddDockerImages(registryId, images)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -558,7 +558,7 @@ func TestCalledGetDockerImages_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -571,10 +571,10 @@ func TestCalledGetDockerImages_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	res, err := dbManager.GetDockerImages(registryId)
+	Executor := Executor{}
+	res, err := Executor.GetDockerImages(registryId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -599,8 +599,8 @@ func TestCalledGetDockerImagesWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerImages(invalidObjectId)
+	Executor := Executor{}
+	_, err := Executor.GetDockerImages(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -634,8 +634,8 @@ func TestCalledGetDockerImagesWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *t
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetDockerImages(registryId)
+	Executor := Executor{}
+	_, err := Executor.GetDockerImages(registryId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -660,7 +660,7 @@ func TestCalledUpdateDockerImage_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -674,10 +674,10 @@ func TestCalledUpdateDockerImage_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -698,8 +698,8 @@ func TestCalledUpdateDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(invalidObjectId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(invalidObjectId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -733,8 +733,8 @@ func TestCalledUpdateDockerImageWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t 
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -759,7 +759,7 @@ func TestCalledUpdateDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -771,10 +771,10 @@ func TestCalledUpdateDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.UpdateDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -800,7 +800,7 @@ func TestCalledDeleteDockerImage_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -817,10 +817,10 @@ func TestCalledDeleteDockerImage_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -841,8 +841,8 @@ func TestCalledDeleteDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(invalidObjectId, image)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(invalidObjectId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -876,8 +876,8 @@ func TestCalledDeleteDockerImageWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t 
 
 	mgoDial = connectionMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -902,7 +902,7 @@ func TestCalledDeleteDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	imageDBMockObj := dbmocks.NewMockImageInterface(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -914,10 +914,10 @@ func TestCalledDeleteDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn
 	)
 
 	mgoDial = connectionMockObj
-	imageDBManager = imageDBMockObj
+	imageExecutor = imageDBMockObj
 
-	dbManager := DBManager{}
-	err := dbManager.DeleteDockerImage(registryId, image)
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
