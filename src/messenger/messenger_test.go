@@ -38,7 +38,7 @@ func TestCalledSendHttpRequestWithoutData_ExpectSuccess(t *testing.T) {
 			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil).AnyTimes(),
 	)
 
-	messengerObj := NewMessenger()
+	messengerObj := NewExecutor()
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}
@@ -57,7 +57,7 @@ func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
 			Body:       ioutil.NopCloser(bytes.NewBufferString(""))}, nil).AnyTimes(),
 	)
 
-	messengerObj := NewMessenger()
+	messengerObj := NewExecutor()
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}
@@ -74,7 +74,7 @@ func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *t
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(nil, errors.New("Error")).AnyTimes(),
 	)
 
-	messengerObj := NewMessenger()
+	messengerObj := NewExecutor()
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}

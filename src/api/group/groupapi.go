@@ -43,13 +43,13 @@ type _SDAMGroupApis struct{}
 var sdamH _SDAMGroupApisHandler
 var sdam _SDAMGroupApis
 var sdamGroupManager groupmanager.GroupInterface
-var deploymentCtrl deployment.Command
+var deploymentExecutor deployment.Command
 
 func init() {
 	SdamGroupHandle = sdamH
 	SdamGroup = sdam
 	sdamGroupManager = groupmanager.GroupManager{}
-	deploymentCtrl = deployment.GroupController{}
+	deploymentExecutor = deployment.Executor{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
@@ -250,7 +250,7 @@ func (Groupasdam _SDAMGroupApis) groupDeployApp(w http.ResponseWriter, req *http
 		return
 	}
 
-	result, resp, err := deploymentCtrl.DeployApp(groupID, body)
+	result, resp, err := deploymentExecutor.DeployApp(groupID, body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -262,7 +262,7 @@ func (Groupasdam _SDAMGroupApis) groupDeployApp(w http.ResponseWriter, req *http
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupInfoApps(w http.ResponseWriter, req *http.Request, groupID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Get Info Apps")
-	result, resp, err := deploymentCtrl.GetApps(groupID)
+	result, resp, err := deploymentExecutor.GetApps(groupID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -274,7 +274,7 @@ func (Groupasdam _SDAMGroupApis) groupInfoApps(w http.ResponseWriter, req *http.
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupInfoApp(w http.ResponseWriter, req *http.Request, groupID string, appID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Get Info App")
-	result, resp, err := deploymentCtrl.GetApp(groupID, appID)
+	result, resp, err := deploymentExecutor.GetApp(groupID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -292,7 +292,7 @@ func (Groupasdam _SDAMGroupApis) groupUpdateAppInfo(w http.ResponseWriter, req *
 		return
 	}
 
-	result, resp, err := deploymentCtrl.UpdateAppInfo(groupID, appID, body)
+	result, resp, err := deploymentExecutor.UpdateAppInfo(groupID, appID, body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -304,7 +304,7 @@ func (Groupasdam _SDAMGroupApis) groupUpdateAppInfo(w http.ResponseWriter, req *
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupDeleteApp(w http.ResponseWriter, req *http.Request, groupID string, appID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Delete App")
-	result, resp, err := deploymentCtrl.DeleteApp(groupID, appID)
+	result, resp, err := deploymentExecutor.DeleteApp(groupID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -316,7 +316,7 @@ func (Groupasdam _SDAMGroupApis) groupDeleteApp(w http.ResponseWriter, req *http
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupStartApp(w http.ResponseWriter, req *http.Request, groupID string, appID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Start App")
-	result, resp, err := deploymentCtrl.StartApp(groupID, appID)
+	result, resp, err := deploymentExecutor.StartApp(groupID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -328,7 +328,7 @@ func (Groupasdam _SDAMGroupApis) groupStartApp(w http.ResponseWriter, req *http.
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupStopApp(w http.ResponseWriter, req *http.Request, groupID string, appID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Stop App")
-	result, resp, err := deploymentCtrl.StopApp(groupID, appID)
+	result, resp, err := deploymentExecutor.StopApp(groupID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -340,6 +340,6 @@ func (Groupasdam _SDAMGroupApis) groupStopApp(w http.ResponseWriter, req *http.R
 //    responses: if successful, 200 status code will be returned.
 func (Groupasdam _SDAMGroupApis) groupUpdateApp(w http.ResponseWriter, req *http.Request, groupID string, appID string) {
 	logger.Logging(logger.DEBUG, "[GROUP] Update App")
-	result, resp, err := deploymentCtrl.UpdateApp(groupID, appID)
+	result, resp, err := deploymentExecutor.UpdateApp(groupID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }

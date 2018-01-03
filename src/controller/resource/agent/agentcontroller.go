@@ -37,11 +37,11 @@ type agentController struct{}
 var agentDbManager modelinterface.AgentInterface
 var AgentController agentController
 
-var httpRequester messenger.Command
+var httpExecutor messenger.Command
 
 func init() {
 	agentDbManager = agentDB.DBManager{}
-	httpRequester = messenger.NewMessenger()
+	httpExecutor = messenger.NewExecutor()
 }
 
 // GetResourceInfo request an agent resource (os, processor, performance) information.
@@ -62,7 +62,7 @@ func (agentController) GetResourceInfo(agentId string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Resource())
 
 	// Request to return agent's resource information.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -93,7 +93,7 @@ func (agentController) GetPerformanceInfo(agentId string) (int, map[string]inter
 	urls := makeRequestUrl(address, url.Resource(), url.Performance())
 
 	// Request to return agent's performance information.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]

@@ -46,16 +46,16 @@ const (
 	DEFAULT_AGENT_PORT = "48098"       // used to indicate a default system-management-agent port.
 )
 
-type GroupController struct{}
+type Executor struct{}
 
 var agentDbManager modelinterface.AgentInterface
 var groupDbManager modelinterface.GroupInterface
-var httpRequester messenger.Command
+var httpExecutor messenger.Command
 
 func init() {
 	agentDbManager = agentDB.DBManager{}
 	groupDbManager = groupDB.DBManager{}
-	httpRequester = messenger.NewMessenger()
+	httpExecutor = messenger.NewExecutor()
 }
 
 // Command is an interface of group deployment operations.
@@ -89,7 +89,7 @@ type Command interface {
 // DeployApp request an deployment of edge services to a group specified by groupId parameter.
 // If response code represents success, add an app id to a list of installed app and returns it.
 // Otherwise, an appropriate error will be returned.
-func (GroupController) DeployApp(groupId string, body string) (int, map[string]interface{}, error) {
+func (Executor) DeployApp(groupId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -104,7 +104,7 @@ func (GroupController) DeployApp(groupId string, body string) (int, map[string]i
 	urls := makeRequestUrl(address, url.Deploy())
 
 	// Request an deployment of edge services to a specific group.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -147,7 +147,7 @@ func (GroupController) DeployApp(groupId string, body string) (int, map[string]i
 // specified by groupId parameter.
 // If response code represents success, returns a list of applications.
 // Otherwise, an appropriate error will be returned.
-func (GroupController) GetApps(groupId string) (int, map[string]interface{}, error) {
+func (Executor) GetApps(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -192,7 +192,7 @@ func (GroupController) GetApps(groupId string) (int, map[string]interface{}, err
 // GetApp gets the application's information of the group specified by groupId parameter.
 // If response code represents success, returns information of application.
 // Otherwise, an appropriate error will be returned.
-func (GroupController) GetApp(groupId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) GetApp(groupId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -207,7 +207,7 @@ func (GroupController) GetApp(groupId string, appId string) (int, map[string]int
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request get target application's information.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -252,7 +252,7 @@ func (GroupController) GetApp(groupId string, appId string) (int, map[string]int
 // to all members of the group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) UpdateAppInfo(groupId string, appId string, body string) (int, map[string]interface{}, error) {
+func (Executor) UpdateAppInfo(groupId string, appId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -267,7 +267,7 @@ func (GroupController) UpdateAppInfo(groupId string, appId string, body string) 
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request update target application's information.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -291,7 +291,7 @@ func (GroupController) UpdateAppInfo(groupId string, appId string, body string) 
 // to all members of the group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) DeleteApp(groupId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -306,7 +306,7 @@ func (GroupController) DeleteApp(groupId string, appId string) (int, map[string]
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request delete target application.
-	codes, respStr := httpRequester.SendHttpRequest("DELETE", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -341,7 +341,7 @@ func (GroupController) DeleteApp(groupId string, appId string) (int, map[string]
 // specified by appId parameter to all members of the group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) UpdateApp(groupId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) UpdateApp(groupId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -356,7 +356,7 @@ func (GroupController) UpdateApp(groupId string, appId string) (int, map[string]
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -380,7 +380,7 @@ func (GroupController) UpdateApp(groupId string, appId string) (int, map[string]
 // to all members of the group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) StartApp(groupId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) StartApp(groupId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -395,7 +395,7 @@ func (GroupController) StartApp(groupId string, appId string) (int, map[string]i
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -419,7 +419,7 @@ func (GroupController) StartApp(groupId string, appId string) (int, map[string]i
 // to all members of the group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupController) StopApp(groupId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) StopApp(groupId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -434,7 +434,7 @@ func (GroupController) StopApp(groupId string, appId string) (int, map[string]in
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)

@@ -40,12 +40,12 @@ type Command interface {
 	SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string)
 }
 
-type HttpRequester struct {
+type Executor struct {
 	client httpWrapper
 }
 
-func NewMessenger() *HttpRequester {
-	return &HttpRequester{
+func NewExecutor() *Executor {
+	return &Executor{
 		client: httpClient{},
 	}
 }
@@ -75,7 +75,7 @@ func (arr sortRespSlice) Swap(i, j int) {
 }
 
 // sendHttpRequest creates a new request and sends it to target device.
-func (requester HttpRequester) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
+func (executor Executor) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
 	var wg sync.WaitGroup
 	wg.Add(len(urls))
 
@@ -102,7 +102,7 @@ func (requester HttpRequester) SendHttpRequest(method string, urls []string, dat
 				resp.err = err.Error()
 				respChannel <- resp
 			} else {
-				resp.resp, err = requester.client.DoWrapper(req)
+				resp.resp, err = executor.client.DoWrapper(req)
 				if err != nil {
 					resp.err = err.Error()
 				} else {

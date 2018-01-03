@@ -42,13 +42,13 @@ const (
 type AgentRegistrator struct{}
 
 var agentManager agentManagement.AgentInterface
-var httpRequester messenger.Command
+var httpExecutor messenger.Command
 var timers map[string]chan bool
 
 func init() {
 	agentManager = agentManagement.AgentManager{}
 	timers = make(map[string]chan bool)
-	httpRequester = messenger.NewMessenger()
+	httpExecutor = messenger.NewExecutor()
 }
 
 // RegisterAgent inserts a new agent with ip which is passed in call to function.
@@ -90,7 +90,7 @@ func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 
 	urls := makeRequestUrl(address, url.Unregister())
 
-	codes, _ := httpRequester.SendHttpRequest("POST", urls)
+	codes, _ := httpExecutor.SendHttpRequest("POST", urls)
 
 	result := codes[0]
 	if !isSuccessCode(result) {
