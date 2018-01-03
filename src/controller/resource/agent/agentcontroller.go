@@ -37,7 +37,7 @@ type agentController struct{}
 var agentDbManager modelinterface.AgentInterface
 var AgentController agentController
 
-var httpRequester messenger.MessengerInterface
+var httpRequester messenger.Command
 
 func init() {
 	agentDbManager = agentDB.DBManager{}

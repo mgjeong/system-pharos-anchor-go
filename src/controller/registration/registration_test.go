@@ -126,7 +126,7 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/unregister"}
 
 	agentManagerMockObj := agentmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		agentManagerMockObj.EXPECT().GetAgent(agentId).Return(results.OK, agent, nil),

@@ -30,7 +30,7 @@ func TestCalledSendHttpRequestWithoutData_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	httpMockObj := msgmocks.NewMockhttpInterface(ctrl)
+	httpMockObj := msgmocks.NewMockhttpWrapper(ctrl)
 
 	gomock.InOrder(
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(&http.Response{
@@ -49,7 +49,7 @@ func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	httpMockObj := msgmocks.NewMockhttpInterface(ctrl)
+	httpMockObj := msgmocks.NewMockhttpWrapper(ctrl)
 
 	gomock.InOrder(
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(&http.Response{
@@ -68,7 +68,7 @@ func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	httpMockObj := msgmocks.NewMockhttpInterface(ctrl)
+	httpMockObj := msgmocks.NewMockhttpWrapper(ctrl)
 
 	gomock.InOrder(
 		httpMockObj.EXPECT().DoWrapper(gomock.Any()).Return(nil, errors.New("Error")).AnyTimes(),

@@ -42,7 +42,7 @@ const (
 type AgentRegistrator struct{}
 
 var agentManager agentManagement.AgentInterface
-var httpRequester messenger.MessengerInterface
+var httpRequester messenger.Command
 var timers map[string]chan bool
 
 func init() {

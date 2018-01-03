@@ -38,11 +38,41 @@ const (
 type AgentController struct{}
 
 var agentDbManager modelinterface.AgentInterface
-var httpRequester messenger.MessengerInterface
+var httpRequester messenger.Command
 
 func init() {
 	agentDbManager = agentDB.DBManager{}
 	httpRequester = messenger.NewMessenger()
+}
+
+// Command is an interface of agent deployment operations.
+type Command interface {
+	// DeployApp request an deployment of edge services to an agent specified by
+	// agentId parameter.
+	DeployApp(agentId string, body string) (int, map[string]interface{}, error)
+
+	// GetApps request a list of applications that is deployed to an agent specified
+	// by agentId parameter.
+	GetApps(agentId string) (int, map[string]interface{}, error)
+
+	// GetApp gets the application's information of the agent specified by agentId parameter.
+	GetApp(agentId string, appId string) (int, map[string]interface{}, error)
+
+	// UpdateApp request to update an application specified by appId parameter.
+	UpdateAppInfo(agentId string, appId string, body string) (int, map[string]interface{}, error)
+
+	// DeleteApp request to delete an application specified by appId parameter.
+	DeleteApp(agentId string, appId string) (int, map[string]interface{}, error)
+
+	// UpdateAppInfo request to update all of images which is included an application
+	// specified by appId parameter.
+	UpdateApp(agentId string, appId string) (int, map[string]interface{}, error)
+
+	// StartApp request to start an application specified by appId parameter.
+	StartApp(agentId string, appId string) (int, map[string]interface{}, error)
+
+	// StopApp request to stop an application specified by appId parameter.
+	StopApp(agentId string, appId string) (int, map[string]interface{}, error)
 }
 
 // DeployApp request an deployment of edge services to an agent specified by agentId parameter.

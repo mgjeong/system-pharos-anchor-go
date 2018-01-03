@@ -54,7 +54,7 @@ var (
 	invalidJsonError = errors.InvalidJSON{}
 )
 
-var controller DeploymentInterface
+var controller Command
 
 func init() {
 	controller = AgentController{}
@@ -71,7 +71,7 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
@@ -133,7 +133,7 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
@@ -168,7 +168,7 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
@@ -207,7 +207,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
@@ -239,7 +239,7 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps"}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
@@ -306,7 +306,7 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -338,7 +338,7 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -401,7 +401,7 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -427,7 +427,7 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testin
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
@@ -460,7 +460,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -494,7 +494,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -520,7 +520,7 @@ func TestCalledUpdateAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
@@ -553,7 +553,7 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -587,7 +587,7 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -644,7 +644,7 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -678,7 +678,7 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -704,7 +704,7 @@ func TestCalledStopAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
@@ -737,7 +737,7 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -771,7 +771,7 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -798,7 +798,7 @@ func TestCalledDeleteAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
@@ -831,7 +831,7 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCode_ExpectSuccess(t *testing.T
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -859,7 +859,7 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCodeWithInvalidResponse_ExpectS
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
@@ -893,7 +893,7 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),

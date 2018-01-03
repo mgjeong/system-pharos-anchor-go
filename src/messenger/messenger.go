@@ -25,7 +25,7 @@ import (
 	"sync"
 )
 
-type httpInterface interface {
+type httpWrapper interface {
 	DoWrapper(req *http.Request) (*http.Response, error)
 }
 
@@ -36,12 +36,12 @@ func (httpClient) DoWrapper(req *http.Request) (*http.Response, error) {
 	return http.DefaultClient.Do(req)
 }
 
-type MessengerInterface interface {
+type Command interface {
 	SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string)
 }
 
 type HttpRequester struct {
-	client httpInterface
+	client httpWrapper
 }
 
 func NewMessenger() *HttpRequester {
