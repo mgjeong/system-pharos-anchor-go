@@ -28,6 +28,14 @@ import (
 	"encoding/json"
 )
 
+type Command interface {
+	AddAgent(body string) (int, map[string]interface{}, error)
+	DeleteAgent(agentId string) (int, error)
+	GetAgent(agentId string) (int, map[string]interface{}, error)
+	GetAgents() (int, map[string]interface{}, error)
+	UpdateAgentStatus(agentId string, status string) error
+}
+
 const (
 	AGENTS           = "agents"    // used to indicate a list of agents.
 	ID               = "id"        // used to indicate an agent id.
@@ -36,7 +44,7 @@ const (
 	STATUS_CONNECTED = "connected" // used to update agent status with connected.
 )
 
-type AgentManager struct{}
+type Executor struct{}
 
 var dbManager modelinterface.AgentInterface
 
@@ -47,7 +55,7 @@ func init() {
 // AddAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
+func (Executor) AddAgent(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -86,7 +94,7 @@ func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
 // DeleteAgent deletes the agent with a primary key matching the agentId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) DeleteAgent(agentId string) (int, error) {
+func (Executor) DeleteAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -103,7 +111,7 @@ func (AgentManager) DeleteAgent(agentId string) (int, error) {
 // GetAgent returns the agent with a primary key matching the agentId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) GetAgent(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetAgent(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -120,7 +128,7 @@ func (AgentManager) GetAgent(agentId string) (int, map[string]interface{}, error
 // GetAgents returns all agents in databases as an array.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) GetAgents() (int, map[string]interface{}, error) {
+func (Executor) GetAgents() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -140,7 +148,7 @@ func (AgentManager) GetAgents() (int, map[string]interface{}, error) {
 // UpdateAgentStatus returns the agent's status.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentManager) UpdateAgentStatus(agentId string, status string) error {
+func (Executor) UpdateAgentStatus(agentId string, status string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
