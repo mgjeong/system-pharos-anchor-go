@@ -70,7 +70,7 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, res, err := AgentController.GetResourceInfo(AGENTID)
+	code, res, err := Executor.GetResourceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -96,7 +96,7 @@ func TestGetResourceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	code, _, err := Executor.GetResourceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -129,7 +129,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	code, _, err := Executor.GetResourceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -156,7 +156,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	code, _, err := Executor.GetResourceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -194,7 +194,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, res, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, res, err := Executor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -220,7 +220,7 @@ func TestGetPerformanceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, _, err := Executor.GetPerformanceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -253,7 +253,7 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, _, err := Executor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -280,7 +280,7 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	// pass mockObj to a real object.
 	agentDbManager = dbManagerMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, _, err := Executor.GetPerformanceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

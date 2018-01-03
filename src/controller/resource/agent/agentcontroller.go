@@ -31,10 +31,15 @@ const (
 	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-agent port.
 )
 
-type agentController struct{}
+type Command interface {
+	GetResourceInfo(agentId string) (int, map[string]interface{}, error)	
+	GetPerformanceInfo(agentId string) (int, map[string]interface{}, error)
+}
+
+type agentResExecutor struct{}
 
 var agentDbManager agentDB.Command
-var AgentController agentController
+var Executor agentResExecutor
 
 var httpRequester messenger.Command
 
@@ -46,7 +51,7 @@ func init() {
 // GetResourceInfo request an agent resource (os, processor, performance) information.
 // If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (agentController) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
+func (agentResExecutor) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -77,7 +82,7 @@ func (agentController) GetResourceInfo(agentId string) (int, map[string]interfac
 // GetPerformanceInfo request an agent performance(cpu, disk, mem usage) information.
 // If response code represents success, returns performance information.
 // Otherwise, an appropriate error will be returned.
-func (agentController) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
+func (agentResExecutor) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
