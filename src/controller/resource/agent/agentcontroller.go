@@ -38,13 +38,13 @@ type Command interface {
 
 type agentResExecutor struct{}
 
-var agentDbManager agentDB.Command
+var agentDbExecutor agentDB.Command
 var Executor agentResExecutor
 
 var httpRequester messenger.Command
 
 func init() {
-	agentDbManager = agentDB.Executor{}
+	agentDbExecutor = agentDB.Executor{}
 	httpRequester = messenger.NewMessenger()
 }
 
@@ -56,7 +56,7 @@ func (agentResExecutor) GetResourceInfo(agentId string) (int, map[string]interfa
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -87,7 +87,7 @@ func (agentResExecutor) GetPerformanceInfo(agentId string) (int, map[string]inte
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
