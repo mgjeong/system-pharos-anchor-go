@@ -73,7 +73,7 @@ func init() {
 	httpExecutor = messenger.NewExecutor()
 }
 
-func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface{}, error) {
+func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -132,7 +132,7 @@ func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface
 	return result, nil, err
 }
 
-func (RegistryManager) DeleteDockerRegistry(registryId string) (int, error) {
+func (Executor) DeleteDockerRegistry(registryId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -146,7 +146,7 @@ func (RegistryManager) DeleteDockerRegistry(registryId string) (int, error) {
 	return results.OK, err
 }
 
-func (RegistryManager) GetDockerRegistries() (int, map[string]interface{}, error) {
+func (Executor) GetDockerRegistries() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -163,7 +163,7 @@ func (RegistryManager) GetDockerRegistries() (int, map[string]interface{}, error
 	return results.OK, res, err
 }
 
-func (RegistryManager) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
+func (Executor) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -180,7 +180,7 @@ func (RegistryManager) GetDockerRegistry(registryId string) (int, map[string]int
 	return results.OK, res, err
 }
 
-func (RegistryManager) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
+func (Executor) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -197,7 +197,7 @@ func (RegistryManager) GetDockerImages(registryId string) (int, map[string]inter
 	return results.OK, res, err
 }
 
-func (RegistryManager) DockerRegistryEventHandler(body string) (int, error) {
+func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

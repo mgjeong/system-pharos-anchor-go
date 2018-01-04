@@ -23,8 +23,9 @@ import (
 	"api/agent"
 	"api/common"
 	"api/group"
-	"commons/logger"
+	"api/registry"
 	"commons/errors"
+	"commons/logger"
 	URL "commons/url"
 	"net/http"
 	"strconv"
@@ -66,5 +67,9 @@ func (_SDAMApis *_SDAMApisHandler) ServeHTTP(w http.ResponseWriter, req *http.Re
 	case strings.Contains(url, URL.Groups()):
 		logger.Logging(logger.DEBUG, "Request Groups APIs")
 		group.SdamGroupHandle.Handle(w, req)
+
+	case strings.Contains(url, URL.Registry()):
+		logger.Logging(logger.DEBUG, "Request Registry APIs")
+		registry.RegistryAPIHandle.Handle(w, req)
 	}
 }

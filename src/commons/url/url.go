@@ -19,19 +19,19 @@
 package url
 
 // Base returns the base url as a type of string.
-func Base() string   { return "/api/v1" }
+func Base() string { return "/api/v1" }
 
 // Base returns the deploy url as a type of string.
 func Deploy() string { return "/deploy" }
 
 // Base returns the apps url as a type of string.
-func Apps() string   { return "/apps" }
+func Apps() string { return "/apps" }
 
 // Base returns the start url as a type of string.
-func Start() string  { return "/start" }
+func Start() string { return "/start" }
 
 // Base returns the stop url as a type of string.
-func Stop() string   { return "/stop" }
+func Stop() string { return "/stop" }
 
 // Base returns the update url as a type of string.
 func Update() string { return "/update" }
@@ -42,14 +42,17 @@ func Agents() string { return "/agents" }
 // Base returns the groups url as a type of string.
 func Groups() string { return "/groups" }
 
+// Base returns the registry url as a type of string.
+func Registry() string { return "/registry" }
+
 // Base returns the create url as a type of string.
 func Create() string { return "/create" }
 
 // Base returns the join url as a type of string.
-func Join() string   { return "/join" }
+func Join() string { return "/join" }
 
 // Base returns the leave url as a type of string.
-func Leave() string  { return "/leave" }
+func Leave() string { return "/leave" }
 
 // Base returns the register url as a type of string.
 func Register() string { return "/register" }
@@ -65,3 +68,6 @@ func Resource() string { return "/resource" }
 
 // Base returns the performance url as a type of string.
 func Performance() string { return "/performance" }
+
+// Base returns the catalog url as a type of string.
+func Catalog() string { return "/v2/_catalog" }
