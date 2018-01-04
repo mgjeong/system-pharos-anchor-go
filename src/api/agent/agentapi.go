@@ -44,7 +44,7 @@ type _SDAMAgentApis struct{}
 
 var sdamH _SDAMAgentApisHandler
 var sdam _SDAMAgentApis
-var sdamAgentManager agentmanager.AgentInterface
+var sdamAgentManager agentmanager.Command
 var deploymentExecutor deployment.Command
 var registrator registration.RegistrationInterface
 var resourceCtrl resource.ResourceInterface
@@ -52,7 +52,7 @@ var resourceCtrl resource.ResourceInterface
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
-	sdamAgentManager = agentmanager.AgentManager{}
+	sdamAgentManager = agentmanager.Executor{}
 	deploymentExecutor = deployment.Executor{}
 	resourceCtrl = resource.AgentController
 	registrator = registration.AgentRegistrator{}

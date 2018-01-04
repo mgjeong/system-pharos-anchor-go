@@ -23,7 +23,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	agentManagement "controller/management/agent"
+	"controller/management/agent"
 	"encoding/json"
 	"messenger"
 	"strconv"
@@ -41,12 +41,12 @@ const (
 
 type AgentRegistrator struct{}
 
-var agentManager agentManagement.AgentInterface
+var agentManager agent.Command
 var httpExecutor messenger.Command
 var timers map[string]chan bool
 
 func init() {
-	agentManager = agentManagement.AgentManager{}
+	agentManager = agent.Executor{}
 	timers = make(map[string]chan bool)
 	httpExecutor = messenger.NewExecutor()
 }
