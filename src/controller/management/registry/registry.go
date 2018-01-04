@@ -23,11 +23,25 @@ import (
 	"commons/logger"
 	"commons/results"
 	URL "commons/url"
-	"db/modelinterface"
 	registryDB "db/mongo/model/registry"
 	"encoding/json"
 	"messenger"
 )
+
+type Command interface {
+	// AddDockerRegistry add docker registry to database.
+	AddDockerRegistry(body string) (int, map[string]interface{}, error)
+
+	DeleteDockerRegistry(registryId string) (int, error)
+
+	GetDockerRegistries() (int, map[string]interface{}, error)
+
+	GetDockerRegistry(registryId string) (int, map[string]interface{}, error)
+
+	GetDockerImages(registryId string) (int, map[string]interface{}, error)
+
+	DockerRegistryEventHandler(body string) (int, error)
+}
 
 const (
 	ID           = "id"
@@ -49,17 +63,17 @@ const (
 	DELETE       = "delete"
 )
 
-type RegistryManager struct{}
+type Executor struct{}
 
-var dbManager modelinterface.RegistryInterface
-var httpRequester messenger.MessengerInterface
+var dbExecutor registryDB.Command
+var httpExecutor messenger.Command
 
 func init() {
-	dbManager = registryDB.DBManager{}
-	httpRequester = messenger.NewMessenger()
+	dbExecutor = registryDB.Executor{}
+	httpExecutor = messenger.NewExecutor()
 }
 
-func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface{}, error) {
+func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -72,7 +86,7 @@ func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface
 	// Check the URL is valiadated or not with catalog API.
 	urls := makeRequestUrl(reqBody[IP].(string), URL.Catalog())
 
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 	respMap, err := convertRespToMap(respStr)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
@@ -82,14 +96,14 @@ func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface
 	result := codes[0]
 	if isSuccessCode(result) {
 		// Add new registry to database with given url.
-		registry, err := dbManager.AddDockerRegistry(reqBody[IP].(string))
+		registry, err := dbExecutor.AddDockerRegistry(reqBody[IP].(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
 		}
-		
+
 		imagesList := respMap[REPOSITORIES]
-		
+
 		// if registry has repository, add the list of repository.
 		if len(imagesList.([]interface{})) > 0 {
 			imagesInfo := make([]map[string]interface{}, len(imagesList.([]interface{})))
@@ -102,7 +116,7 @@ func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface
 				imagesInfo[i][TIMESTAMP] = ""
 			}
 
-			err = dbManager.AddDockerImages(registry[ID].(string), imagesInfo)
+			err = dbExecutor.AddDockerImages(registry[ID].(string), imagesInfo)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
@@ -118,12 +132,12 @@ func (RegistryManager) AddDockerRegistry(body string) (int, map[string]interface
 	return result, nil, err
 }
 
-func (RegistryManager) DeleteDockerRegistry(registryId string) (int, error) {
+func (Executor) DeleteDockerRegistry(registryId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Delete registry specified by registryId parameter.
-	err := dbManager.DeleteDockerRegistry(registryId)
+	err := dbExecutor.DeleteDockerRegistry(registryId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -132,12 +146,12 @@ func (RegistryManager) DeleteDockerRegistry(registryId string) (int, error) {
 	return results.OK, err
 }
 
-func (RegistryManager) GetDockerRegistries() (int, map[string]interface{}, error) {
+func (Executor) GetDockerRegistries() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get all of registries list.
-	registries, err := dbManager.GetDockerRegistries()
+	registries, err := dbExecutor.GetDockerRegistries()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -149,12 +163,12 @@ func (RegistryManager) GetDockerRegistries() (int, map[string]interface{}, error
 	return results.OK, res, err
 }
 
-func (RegistryManager) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
+func (Executor) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get registry specified by registryId parameter.
-	registry, err := dbManager.GetDockerRegistry(registryId)
+	registry, err := dbExecutor.GetDockerRegistry(registryId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -166,12 +180,12 @@ func (RegistryManager) GetDockerRegistry(registryId string) (int, map[string]int
 	return results.OK, res, err
 }
 
-func (RegistryManager) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
+func (Executor) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get all of images list on registry specified by registryId parameter.
-	images, err := dbManager.GetDockerImages(registryId)
+	images, err := dbExecutor.GetDockerImages(registryId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -183,7 +197,7 @@ func (RegistryManager) GetDockerImages(registryId string) (int, map[string]inter
 	return results.OK, res, err
 }
 
-func (RegistryManager) DockerRegistryEventHandler(body string) (int, error) {
+func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -225,7 +239,7 @@ func addDockerImage(imageInfo map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	host, err := dbManager.GetDockerRegistry(imageInfo[HOST].(string))
+	host, err := dbExecutor.GetDockerRegistry(imageInfo[HOST].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
@@ -235,7 +249,7 @@ func addDockerImage(imageInfo map[string]interface{}) error {
 	images := make([]map[string]interface{}, 0)
 	images = append(images, imageInfo)
 
-	err = dbManager.AddDockerImages(host[ID].(string), images)
+	err = dbExecutor.AddDockerImages(host[ID].(string), images)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
@@ -248,7 +262,7 @@ func deleteDockerImage(imageInfo map[string]interface{}) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	host, err := dbManager.GetDockerRegistry(imageInfo[HOST].(string))
+	host, err := dbExecutor.GetDockerRegistry(imageInfo[HOST].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
@@ -256,7 +270,7 @@ func deleteDockerImage(imageInfo map[string]interface{}) error {
 
 	delete(imageInfo, HOST)
 
-	err = dbManager.DeleteDockerImage(host[ID].(string), imageInfo)
+	err = dbExecutor.DeleteDockerImage(host[ID].(string), imageInfo)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
@@ -333,7 +347,7 @@ func parseEventInfo(eventInfo map[string]interface{}) (map[string]interface{}, e
 	targetInfoEvent := make(map[string]interface{})
 	requestInfoEvent := make(map[string]interface{})
 	parsedEvent := make(map[string]interface{})
-	
+
 	targetInfoEvent = eventInfo[TARGETINFO].(map[string]interface{})
 	requestInfoEvent = eventInfo[REQUESTINFO].(map[string]interface{})
 

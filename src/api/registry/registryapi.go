@@ -29,6 +29,17 @@ import (
 	"strings"
 )
 
+type RegistryAPIHandlerInterface interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type Command interface {
+	registerDockerRegistry(w http.ResponseWriter, req *http.Request)
+	getDockerRegistries(w http.ResponseWriter, req *http.Request)
+	getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
+	handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request)
+}
+
 const (
 	GET    string = "GET"
 	PUT    string = "PUT"
@@ -40,13 +51,13 @@ type RegistryAPIHandler struct{}
 type registryAPIExcutor struct{}
 
 var RegistryAPIHandle RegistryAPIHandlerInterface
-var registryAPI RegistryAPIInterface
-var registryManager registrymanager.RegistryInterface
+var registryAPI Command
+var registryExecutor registrymanager.Command
 
 func init() {
 	RegistryAPIHandle = RegistryAPIHandler{}
 	registryAPI = registryAPIExcutor{}
-	registryManager = registrymanager.RegistryManager{}
+	registryExecutor = registrymanager.Executor{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
@@ -94,7 +105,7 @@ func (registryAPIExcutor) registerDockerRegistry(w http.ResponseWriter, req *htt
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
 	}
-	
+
 	result, resp, err := registryManager.AddDockerRegistry(body)
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
@@ -103,7 +114,7 @@ func (registryAPIExcutor) registerDockerRegistry(w http.ResponseWriter, req *htt
 func (registryAPIExcutor) getDockerRegistries(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
-	
+
 	result, resp, err := registryManager.GetDockerRegistries()
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
@@ -112,24 +123,23 @@ func (registryAPIExcutor) getDockerRegistries(w http.ResponseWriter, req *http.R
 func (registryAPIExcutor) getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
-	
+
 	result, resp, err := registryManager.GetDockerRegistry(registryID)
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-func (registryAPIExcutor) handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request){
+func (registryAPIExcutor) handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
-	
+
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
 	}
-	
+
 	result, err := registryManager.DockerRegistryEventHandler(body)
 
 	common.MakeResponse(w, result, common.ChangeToJson(nil), err)
 }
-
