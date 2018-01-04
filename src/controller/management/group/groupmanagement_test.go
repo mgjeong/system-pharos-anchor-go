@@ -60,10 +60,10 @@ var (
 	connectionError        = errors.DBConnectionError{}
 )
 
-var manager GroupInterface
+var manager Command
 
 func init() {
-	manager = GroupManager{}
+	manager = Executor{}
 }
 
 func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {

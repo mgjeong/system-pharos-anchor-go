@@ -57,10 +57,10 @@ var (
 	invalidJsonError = errors.InvalidJSON{}
 )
 
-var manager AgentInterface
+var manager Command
 
 func init() {
-	manager = AgentManager{}
+	manager = Executor{}
 }
 
 func TestCalledAddAgentWithValidBody_ExpectSuccess(t *testing.T) {

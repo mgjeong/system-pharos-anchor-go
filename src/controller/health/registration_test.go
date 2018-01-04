@@ -131,7 +131,7 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	common.agentManager = agentManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
 	healthExecutor := Executor{}
 	code, err := healthExecutor.UnRegisterAgent(agentId)
