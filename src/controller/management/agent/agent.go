@@ -37,10 +37,10 @@ const (
 
 type AgentManager struct{}
 
-var dbManager agentDB.Command
+var dbExecutor agentDB.Command
 
 func init() {
-	dbManager = agentDB.Executor{}
+	dbExecutor = agentDB.Executor{}
 }
 
 // AddAgent inserts a new agent with ip which is passed in call to function.
@@ -71,7 +71,7 @@ func (AgentManager) AddAgent(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Add new agent to database with given ip, port, status.
-	agent, err := dbManager.AddAgent(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	agent, err := dbExecutor.AddAgent(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -90,7 +90,7 @@ func (AgentManager) DeleteAgent(agentId string) (int, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Delete agent specified by agentId parameter.
-	err := dbManager.DeleteAgent(agentId)
+	err := dbExecutor.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -107,7 +107,7 @@ func (AgentManager) GetAgent(agentId string) (int, map[string]interface{}, error
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := dbManager.GetAgent(agentId)
+	agent, err := dbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -124,7 +124,7 @@ func (AgentManager) GetAgents() (int, map[string]interface{}, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get all agents stored in the database.
-	agents, err := dbManager.GetAllAgents()
+	agents, err := dbExecutor.GetAllAgents()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -144,7 +144,7 @@ func (AgentManager) UpdateAgentStatus(agentId string, status string) error {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	err := dbManager.UpdateAgentStatus(agentId, status)
+	err := dbExecutor.UpdateAgentStatus(agentId, status)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err

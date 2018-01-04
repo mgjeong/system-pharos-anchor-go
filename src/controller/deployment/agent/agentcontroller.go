@@ -36,11 +36,11 @@ const (
 
 type AgentController struct{}
 
-var agentDbManager agentDB.Command
+var agentDbExecutor agentDB.Command
 var httpRequester messenger.Command
 
 func init() {
-	agentDbManager = agentDB.Executor{}
+	agentDbExecutor = agentDB.Executor{}
 	httpRequester = messenger.NewMessenger()
 }
 
@@ -82,7 +82,7 @@ func (AgentController) DeployApp(agentId string, body string) (int, map[string]i
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -101,10 +101,10 @@ func (AgentController) DeployApp(agentId string, body string) (int, map[string]i
 		return results.ERROR, nil, err
 	}
 
-	// if response code represents success, insert the installed appId into agentDbManager.
+	// if response code represents success, insert the installed appId into agentDbExecutor.
 	result := codes[0]
 	if isSuccessCode(result) {
-		err = agentDbManager.AddAppToAgent(agentId, respMap["id"].(string))
+		err = agentDbExecutor.AddAppToAgent(agentId, respMap["id"].(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -123,7 +123,7 @@ func (AgentController) GetApps(agentId string) (int, map[string]interface{}, err
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -154,7 +154,7 @@ func (AgentController) GetApp(agentId string, appId string) (int, map[string]int
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -185,7 +185,7 @@ func (AgentController) UpdateAppInfo(agentId string, appId string, body string) 
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -216,7 +216,7 @@ func (AgentController) DeleteApp(agentId string, appId string) (int, map[string]
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -239,8 +239,8 @@ func (AgentController) DeleteApp(agentId string, appId string) (int, map[string]
 		return result, respMap, err
 	}
 
-	// if response code represents success, delete the appId from agentDbManager.
-	err = agentDbManager.DeleteAppFromAgent(agentId, appId)
+	// if response code represents success, delete the appId from agentDbExecutor.
+	err = agentDbExecutor.DeleteAppFromAgent(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -258,7 +258,7 @@ func (AgentController) UpdateApp(agentId string, appId string) (int, map[string]
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -289,7 +289,7 @@ func (AgentController) StartApp(agentId string, appId string) (int, map[string]i
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -320,7 +320,7 @@ func (AgentController) StopApp(agentId string, appId string) (int, map[string]in
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent including app specified by appId parameter.
-	agent, err := agentDbManager.GetAgentByAppID(agentId, appId)
+	agent, err := agentDbExecutor.GetAgentByAppID(agentId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

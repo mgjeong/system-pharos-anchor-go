@@ -33,10 +33,10 @@ const (
 
 type GroupManager struct{}
 
-var dbManager groupDB.Command
+var dbExecutor groupDB.Command
 
 func init() {
-	dbManager = groupDB.Executor{}
+	dbExecutor = groupDB.Executor{}
 }
 
 // CreateGroup inserts a new group to databases.
@@ -45,7 +45,7 @@ func (GroupManager) CreateGroup() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbManager.CreateGroup()
+	group, err := dbExecutor.CreateGroup()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -61,7 +61,7 @@ func (GroupManager) GetGroup(groupId string) (int, map[string]interface{}, error
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbManager.GetGroup(groupId)
+	group, err := dbExecutor.GetGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -77,7 +77,7 @@ func (GroupManager) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	groups, err := dbManager.GetAllGroups()
+	groups, err := dbExecutor.GetAllGroups()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -109,7 +109,7 @@ func (GroupManager) JoinGroup(groupId string, body string) (int, map[string]inte
 	}
 
 	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbManager.JoinGroup(groupId, agentId.(string))
+		err = dbExecutor.JoinGroup(groupId, agentId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -139,7 +139,7 @@ func (GroupManager) LeaveGroup(groupId string, body string) (int, map[string]int
 	}
 
 	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbManager.LeaveGroup(groupId, agentId.(string))
+		err = dbExecutor.LeaveGroup(groupId, agentId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -156,7 +156,7 @@ func (GroupManager) DeleteGroup(groupId string) (int, map[string]interface{}, er
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	err := dbManager.DeleteGroup(groupId)
+	err := dbExecutor.DeleteGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
