@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-// Package api/agent provides functionality to handle request related to agent.
+// Package api/registry provides functionality to handle request related to agent.
 package registry
 
 import (
