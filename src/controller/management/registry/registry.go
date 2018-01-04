@@ -196,7 +196,7 @@ func (RegistryManager) DockerRegistryEventHandler(body string) (int, error) {
 
 	for _, eventInfo := range events.([]interface{}) {
 		parsedEvent := make(map[string]interface{})
-		parsedEvent, err = parseEvnetInfo(eventInfo.(map[string]interface{}))
+		parsedEvent, err = parseEventInfo(eventInfo.(map[string]interface{}))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, err
@@ -326,7 +326,7 @@ func isSuccessCode(code int) bool {
 }
 
 // parseEventInfo parse data which is matched image-info on DB from event-notification.
-func parseEvnetInfo(eventInfo map[string]interface{}) (map[string]interface{}, error) {
+func parseEventInfo(eventInfo map[string]interface{}) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
