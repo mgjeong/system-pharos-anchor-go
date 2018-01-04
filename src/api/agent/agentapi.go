@@ -27,7 +27,7 @@ import (
 	agentmanager "controller/management/agent"
 	deployment "controller/deployment/agent"
 	resource "controller/resource/agent"
-	"controller/registration"
+	"controller/health"
 	"net/http"
 	"strings"
 )
@@ -46,7 +46,7 @@ var sdamH _SDAMAgentApisHandler
 var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.Command
 var deploymentExecutor deployment.Command
-var registrator registration.RegistrationInterface
+var healthExecutor health.Command
 var resourceExecutor resource.Command
 
 func init() {
@@ -55,7 +55,7 @@ func init() {
 	sdamAgentManager = agentmanager.Executor{}
 	deploymentExecutor = deployment.Executor{}
 	resourceExecutor = resource.Executor{}
-	registrator = registration.AgentRegistrator{}
+	healthExecutor = health.Executor{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
@@ -185,7 +185,7 @@ func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	result, resp, err := registrator.RegisterAgent(body)
+	result, resp, err := healthExecutor.RegisterAgent(body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -197,7 +197,7 @@ func (sdam _SDAMAgentApis) agentRegister(w http.ResponseWriter, req *http.Reques
 func (sdam _SDAMAgentApis) agentUnregister(w http.ResponseWriter, req *http.Request, agentID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Unregister New Service Deployment Agent")
 
-	result, err := registrator.UnRegisterAgent(agentID)
+	result, err := healthExecutor.UnRegisterAgent(agentID)
 	common.MakeResponse(w, result, nil, err)
 }
 
@@ -215,7 +215,7 @@ func (sdam _SDAMAgentApis) agentPing(w http.ResponseWriter, req *http.Request, a
 		return
 	}
 
-	result, err := registrator.PingAgent(agentID, body)
+	result, err := healthExecutor.PingAgent(agentID, body)
 	common.MakeResponse(w, result, nil, err)
 }
 

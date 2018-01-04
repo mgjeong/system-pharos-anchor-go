@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-package registration
+package health
 
 import (
 	"bytes"
@@ -23,10 +23,8 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"controller/management/agent"
 	"encoding/json"
 	"messenger"
-	"strconv"
 	"time"
 )
 
@@ -39,26 +37,42 @@ const (
 	DEFAULT_AGENT_PORT          = "48098"        // used to indicate a default system-management-agent port.
 )
 
-type AgentRegistrator struct{}
+type (
+	// Registerer is an interface of agent registration operation.
+	Registerer interface {
+		RegisterAgent(body string) (int, map[string]interface{}, error)
+	}
 
-var agentManager agent.Command
+	// Unregisterer is an interface of agent un-registration operation.
+	Unregisterer interface {
+		UnRegisterAgent(agentId string) (int, error)
+	}
+
+	// Command is an interface of health operations.
+	Command interface {
+		Registerer
+		Unregisterer
+		Checker
+	}
+
+	// Executor implements the Command interface.
+	Executor struct{}
+)
+
 var httpExecutor messenger.Command
-var timers map[string]chan bool
 
 func init() {
-	agentManager = agent.Executor{}
-	timers = make(map[string]chan bool)
 	httpExecutor = messenger.NewExecutor()
 }
 
 // RegisterAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (AgentRegistrator) RegisterAgent(body string) (int, map[string]interface{}, error) {
+func (Executor) RegisterAgent(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	result, res, err := agentManager.AddAgent(body)
+	result, res, err := common.agentManager.AddAgent(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -71,12 +85,12 @@ func (AgentRegistrator) RegisterAgent(body string) (int, map[string]interface{},
 // And then stop the ping process and delete agent in db.
 // IF successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
+func (Executor) UnRegisterAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	_, agent, err := agentManager.GetAgent(agentId)
+	_, agent, err := common.agentManager.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -98,99 +112,18 @@ func (AgentRegistrator) UnRegisterAgent(agentId string) (int, error) {
 	}
 
 	// Stop timer and close the channel for ping.
-	if timers[agentId] != nil {
-		timers[agentId] <- true
-		close(timers[agentId])
+	if common.timers[agentId] != nil {
+		common.timers[agentId] <- true
+		close(common.timers[agentId])
 	}
-	delete(timers, agentId)
+	delete(common.timers, agentId)
 
 	// Delete agent
-	result, err = agentManager.DeleteAgent(agentId)
+	result, err = common.agentManager.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
-
-	return results.OK, err
-}
-
-// PingAgent starts timer with received interval.
-// If agent does not send next healthcheck message in interval time,
-// change the status of device from connected to disconnected.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func (AgentRegistrator) PingAgent(agentId string, body string) (int, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	// Get agent specified by agentId parameter.
-	_, _, err := agentManager.GetAgent(agentId)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return results.ERROR, err
-	}
-
-	bodyMap, err := convertJsonToMap(body)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return results.ERROR, err
-	}
-
-	// Check whether 'interval' is included.
-	_, exists := bodyMap[INTERVAL]
-	if !exists {
-		return results.ERROR, errors.InvalidJSON{"interval field is required"}
-	}
-
-	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
-	}
-
-	_, exists = timers[agentId]
-	if !exists {
-		logger.Logging(logger.DEBUG, "first ping request is received from agent")
-	} else {
-		if timers[agentId] != nil {
-			// If ping request is received in interval time, send signal to stop timer.
-			timers[agentId] <- true
-			logger.Logging(logger.DEBUG, "ping request is received in interval time")
-		} else {
-			logger.Logging(logger.DEBUG, "ping request is received after interval time-out")
-			err = agentManager.UpdateAgentStatus(agentId, STATUS_CONNECTED)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-			}
-		}
-	}
-
-	// Start timer with received interval time.
-	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
-	timer := time.NewTimer(timeDurationMin)
-	go func() {
-		quit := make(chan bool)
-		timers[agentId] = quit
-
-		select {
-		// Block until timer finishes.
-		case <-timer.C:
-			logger.Logging(logger.ERROR, "ping request is not received in interval time")
-
-			// Status is updated with 'disconnected'.
-			err = agentManager.UpdateAgentStatus(agentId, STATUS_DISCONNECTED)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-			}
-
-		case <-quit:
-			timer.Stop()
-			return
-		}
-
-		timers[agentId] = nil
-		close(quit)
-	}()
 
 	return results.OK, err
 }
