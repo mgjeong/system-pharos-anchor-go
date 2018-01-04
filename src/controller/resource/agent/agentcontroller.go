@@ -36,10 +36,9 @@ type Command interface {
 	GetPerformanceInfo(agentId string) (int, map[string]interface{}, error)
 }
 
-type agentResExecutor struct{}
+type Executor struct{}
 
 var agentDbExecutor agentDB.Command
-var Executor agentResExecutor
 
 var httpRequester messenger.Command
 
@@ -51,7 +50,7 @@ func init() {
 // GetResourceInfo request an agent resource (os, processor, performance) information.
 // If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (agentResExecutor) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -82,7 +81,7 @@ func (agentResExecutor) GetResourceInfo(agentId string) (int, map[string]interfa
 // GetPerformanceInfo request an agent performance(cpu, disk, mem usage) information.
 // If response code represents success, returns performance information.
 // Otherwise, an appropriate error will be returned.
-func (agentResExecutor) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

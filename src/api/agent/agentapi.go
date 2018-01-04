@@ -54,7 +54,7 @@ func init() {
 	SdamAgent = sdam
 	sdamAgentManager = agentmanager.AgentManager{}
 	deploymentCtrl = deployment.AgentController{}
-	resourceExecutor = resource.Executor
+	resourceExecutor = resource.Executor{}
 	registrator = registration.AgentRegistrator{}
 }
 
