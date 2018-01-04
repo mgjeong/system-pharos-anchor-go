@@ -47,13 +47,13 @@ const (
 
 type GroupController struct{}
 
-var agentDbManager agentDB.Command
-var groupDbManager groupDB.Command
+var agentDbExecutor agentDB.Command
+var groupDbExecutor groupDB.Command
 var httpRequester messenger.Command
 
 func init() {
-	agentDbManager = agentDB.Executor{}
-	groupDbManager = groupDB.Executor{}
+	agentDbExecutor = agentDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
 	httpRequester = messenger.NewMessenger()
 }
 
@@ -93,7 +93,7 @@ func (GroupController) DeployApp(groupId string, body string) (int, map[string]i
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members from the database.
-	members, err := groupDbManager.GetGroupMembers(groupId)
+	members, err := groupDbExecutor.GetGroupMembers(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -112,11 +112,11 @@ func (GroupController) DeployApp(groupId string, body string) (int, map[string]i
 		return results.ERROR, nil, err
 	}
 
-	// if response code represents success, insert the installed appId into groupDbManager.
+	// if response code represents success, insert the installed appId into groupDbExecutor.
 	installedAppId := ""
 	for i, agent := range members {
 		if isSuccessCode(codes[i]) {
-			err = agentDbManager.AddAppToAgent(agent[ID].(string), respMap[i][ID].(string))
+			err = agentDbExecutor.AddAppToAgent(agent[ID].(string), respMap[i][ID].(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
@@ -151,7 +151,7 @@ func (GroupController) GetApps(groupId string) (int, map[string]interface{}, err
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members from the database.
-	members, err := groupDbManager.GetGroupMembers(groupId)
+	members, err := groupDbExecutor.GetGroupMembers(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -196,7 +196,7 @@ func (GroupController) GetApp(groupId string, appId string) (int, map[string]int
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -256,7 +256,7 @@ func (GroupController) UpdateAppInfo(groupId string, appId string, body string) 
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -295,7 +295,7 @@ func (GroupController) DeleteApp(groupId string, appId string) (int, map[string]
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -314,10 +314,10 @@ func (GroupController) DeleteApp(groupId string, appId string) (int, map[string]
 		return results.ERROR, nil, err
 	}
 
-	// if response code represents success, delete the appId from groupDbManager.
+	// if response code represents success, delete the appId from groupDbExecutor.
 	for i, agent := range members {
 		if isSuccessCode(codes[i]) {
-			err = agentDbManager.DeleteAppFromAgent(agent[ID].(string), appId)
+			err = agentDbExecutor.DeleteAppFromAgent(agent[ID].(string), appId)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
@@ -345,7 +345,7 @@ func (GroupController) UpdateApp(groupId string, appId string) (int, map[string]
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -384,7 +384,7 @@ func (GroupController) StartApp(groupId string, appId string) (int, map[string]i
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -423,7 +423,7 @@ func (GroupController) StopApp(groupId string, appId string) (int, map[string]in
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get group members including app specified by appId parameter.
-	members, err := groupDbManager.GetGroupMembersByAppID(groupId, appId)
+	members, err := groupDbExecutor.GetGroupMembersByAppID(groupId, appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

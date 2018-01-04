@@ -78,18 +78,18 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 		"id": "000000000000000000000000",
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbManagerMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil).AnyTimes(),
+		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
-	agentDbManager = agentDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	agentDbExecutor = agentDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.DeployApp(groupId, body)
@@ -111,13 +111,13 @@ func TestCalledDeployAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.DeployApp(groupId, body)
 
@@ -142,15 +142,15 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	expectedUrl := []string{deployUrl, deployUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.DeployApp(groupId, body)
@@ -177,18 +177,18 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 	expectedUrl := []string{deployUrl, deployUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbManagerMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(notFoundError),
+		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
-	agentDbManager = agentDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	agentDbExecutor = agentDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.DeployApp(groupId, body)
@@ -229,18 +229,18 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbManagerMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil),
+		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
-	agentDbManager = agentDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	agentDbExecutor = agentDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.DeployApp(groupId, body)
@@ -269,13 +269,13 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 		}},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, res, err := controller.GetApps(groupId)
 
@@ -296,13 +296,13 @@ func TestCalledGetAppsWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.GetApps(groupId)
 
@@ -338,15 +338,15 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 			}},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.GetApp(groupId, appId)
@@ -368,13 +368,13 @@ func TestCalledGetAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.GetApp(groupId, appId)
 
@@ -400,15 +400,15 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.GetApp(groupId, appId)
@@ -449,15 +449,15 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.GetApp(groupId, appId)
@@ -481,15 +481,15 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
@@ -507,13 +507,13 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testin
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
 
@@ -539,15 +539,15 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
@@ -587,15 +587,15 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.UpdateAppInfo(groupId, appId, body)
@@ -619,15 +619,15 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/update", baseUrl + "/update"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.UpdateApp(groupId, appId)
@@ -645,13 +645,13 @@ func TestCalledUpdateAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.UpdateApp(groupId, appId)
 
@@ -677,15 +677,15 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/update", baseUrl + "/update"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.UpdateApp(groupId, appId)
@@ -725,15 +725,15 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.UpdateApp(groupId, appId)
@@ -757,15 +757,15 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/start", baseUrl + "/start"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.StartApp(groupId, appId)
@@ -783,13 +783,13 @@ func TestCalledStartAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.StartApp(groupId, appId)
 
@@ -815,15 +815,15 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/start", baseUrl + "/start"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.StartApp(groupId, appId)
@@ -863,15 +863,15 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.StartApp(groupId, appId)
@@ -895,15 +895,15 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl + "/stop", baseUrl + "/stop"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.StopApp(groupId, appId)
@@ -921,13 +921,13 @@ func TestCalledStopAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.StopApp(groupId, appId)
 
@@ -953,15 +953,15 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl + "/stop", baseUrl + "/stop"}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.StopApp(groupId, appId)
@@ -1001,15 +1001,15 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.StopApp(groupId, appId)
@@ -1033,18 +1033,18 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		agentDbManagerMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil).AnyTimes(),
+		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
-	agentDbManager = agentDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	agentDbExecutor = agentDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.DeleteApp(groupId, appId)
@@ -1062,13 +1062,13 @@ func TestCalledDeleteAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := controller.DeleteApp(groupId, appId)
 
@@ -1094,15 +1094,15 @@ func TestCalledDeleteAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	invalidRespStr := []string{`{"invalidJson"}`, `{"invalidJson"}`}
 	expectedUrl := []string{baseUrl, baseUrl}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, _, err := controller.DeleteApp(groupId, appId)
@@ -1142,18 +1142,18 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		},
 	}
 
-	groupDbManagerMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbManagerMockObj := agentdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupDbManagerMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbManagerMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil),
+		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	groupDbManager = groupDbManagerMockObj
-	agentDbManager = agentDbManagerMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	agentDbExecutor = agentDbExecutorMockObj
 	httpRequester = msgMockObj
 
 	code, res, err := controller.DeleteApp(groupId, appId)
