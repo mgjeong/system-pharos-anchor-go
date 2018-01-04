@@ -22,8 +22,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	"db/modelinterface"
-	agentDB "db/mongo/model/agent"
+	agentDB "db/mongo/agent"
 	"encoding/json"
 	"messenger"
 )
@@ -32,27 +31,31 @@ const (
 	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-agent port.
 )
 
-type agentController struct{}
+type Command interface {
+	GetResourceInfo(agentId string) (int, map[string]interface{}, error)	
+	GetPerformanceInfo(agentId string) (int, map[string]interface{}, error)
+}
 
-var agentDbManager modelinterface.AgentInterface
-var AgentController agentController
+type Executor struct{}
+
+var agentDbExecutor agentDB.Command
 
 var httpExecutor messenger.Command
 
 func init() {
-	agentDbManager = agentDB.DBManager{}
+	agentDbExecutor = agentDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
 // GetResourceInfo request an agent resource (os, processor, performance) information.
 // If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (agentController) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -78,12 +81,12 @@ func (agentController) GetResourceInfo(agentId string) (int, map[string]interfac
 // GetPerformanceInfo request an agent performance(cpu, disk, mem usage) information.
 // If response code represents success, returns performance information.
 // Otherwise, an appropriate error will be returned.
-func (agentController) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	agent, err := agentDbManager.GetAgent(agentId)
+	agent, err := agentDbExecutor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

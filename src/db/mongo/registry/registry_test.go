@@ -1,8 +1,24 @@
-package group
+/*******************************************************************************
+ * Copyright 2017 Samsung Electronics All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ *******************************************************************************/
+package registry
 
 import (
 	errors "commons/errors"
-	dbmocks "db/modelinterface/mocks"
+	imagedbmocks "db/mongo/image/mocks"
 	mgomocks "db/mongo/wrapper/mocks"
 	"github.com/golang/mock/gomock"
 	"gopkg.in/mgo.v2"
@@ -14,15 +30,23 @@ import (
 const (
 	validUrl        = "127.0.0.1:27017"
 	dbName          = "DeploymentManagerDB"
-	collectionName  = "AGENT"
-	status          = "connected"
-	appId           = "000000000000000000000000"
-	agentId         = "000000000000000000000001"
-	groupId         = "000000000000000000000002"
+	collectionName  = "REGISTRY"
+	registryUrl     = "http://localhost:5000"
+	imageId         = "000000000000000000000000"
+	registryId      = "000000000000000000000001"
 	invalidObjectId = ""
 )
 
 var (
+	image = map[string]interface{}{
+		"id":         imageId,
+		"repository": "http://localhost:5000",
+		"tag":        "latest",
+		"size":       "3453",
+		"action":     "push",
+		"timestamp":  "2017-11-27T12:42:56.914783506Z",
+	}
+	images             = []map[string]interface{}{image}
 	dummySession       = mgomocks.MockSession{}
 	connectionError    = errors.DBConnectionError{}
 	invalidObjectError = errors.InvalidObjectId{invalidObjectId}
@@ -104,7 +128,7 @@ func TestCalled_GetCollcetion_ExpectToCCalled(t *testing.T) {
 	}
 }
 
-func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
+func TestCalledAddDockerRegistry_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -115,22 +139,23 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		sessionMockObj.EXPECT().DB(dbName).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
 		collectionMockObj.EXPECT().Insert(gomock.Any()).Return(nil),
 		sessionMockObj.EXPECT().Close(),
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	_, err := dbManager.CreateGroup()
+	Executor := Executor{}
+
+	_, err := Executor.AddDockerRegistry(registryUrl)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledCreateGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledAddDockerRegistryWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -148,8 +173,9 @@ func TestCalledCreateGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	_, err := dbManager.CreateGroup()
+	Executor := Executor{}
+
+	_, err := Executor.AddDockerRegistry(registryUrl)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -162,114 +188,14 @@ func TestCalledCreateGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledGetGroup_ExpectSuccess(t *testing.T) {
+func TestCalledGetDockerRegistries_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	arg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{}}
-	expectedRes := map[string]interface{}{
-		"id":      groupId,
-		"members": []string{},
-	}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
-		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	res, err := dbManager.GetGroup(groupId)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
-
-	if !reflect.DeepEqual(expectedRes, res) {
-		t.Errorf("Expected res: %s, actual res: %s", expectedRes, res)
-	}
-}
-
-func TestCalledGetGroupWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	_, err := dbManager.GetGroup(invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledGetGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
-		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	_, err := dbManager.GetGroup(groupId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
-	case errors.NotFound:
-	}
-}
-
-func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	args := []Group{{ID: bson.ObjectIdHex(groupId), Members: []string{}}}
+	args := []Registry{{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{}}}
 	expectedRes := []map[string]interface{}{{
-		"id":      groupId,
-		"members": []string{},
+		"id":  registryId,
+		"url": registryUrl,
 	}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -288,8 +214,9 @@ func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	res, err := dbManager.GetAllGroups()
+
+	Executor := Executor{}
+	res, err := Executor.GetDockerRegistries()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -300,7 +227,7 @@ func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetDockerRegistriesWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -320,8 +247,9 @@ func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	_, err := dbManager.GetAllGroups()
+
+	Executor := Executor{}
+	_, err := Executor.GetDockerRegistries()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -334,394 +262,102 @@ func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
+func TestCalledGetDockerRegistry_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$addToSet": bson.M{"members": agentId}}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Update(query, update).Return(nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.JoinGroup(groupId, agentId)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
+	query := bson.M{"url": registryUrl}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl}
+	expectedRes := map[string]interface{}{
+		"id":  registryId,
+		"url": registryUrl,
 	}
-}
-
-func TestCalledJoinGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.JoinGroup(invalidObjectId, agentId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledJoinGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.JoinGroup(groupId, invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledJoinGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$addToSet": bson.M{"members": agentId}}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Update(query, update).Return(mgo.ErrNotFound),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.JoinGroup(groupId, agentId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
-	case errors.NotFound:
-	}
-}
-
-func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$pull": bson.M{"members": agentId}}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Update(query, update).Return(nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.LeaveGroup(groupId, agentId)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
-}
-
-func TestCalledLeaveGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.LeaveGroup(invalidObjectId, agentId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledLeaveGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.LeaveGroup(groupId, invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledLeaveGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$pull": bson.M{"members": agentId}}
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Update(query, update).Return(mgo.ErrNotFound),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.LeaveGroup(groupId, agentId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
-	case errors.NotFound:
-	}
-}
-
-func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	groupQuery := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{agentId}}
-	expectedAgentRes := map[string]interface{}{
-		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
-		"apps":   []string{},
-		"status": status,
-	}
-
-	expectedRes := []map[string]interface{}{{
-		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
-		"apps":   []string{},
-		"status": status,
-	}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	agentMockObj := dbmocks.NewMockAgentInterface(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
 		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Find(groupQuery).Return(queryMockObj),
-		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, groupArg).Return(nil),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
 		sessionMockObj.EXPECT().Close(),
-
-		agentMockObj.EXPECT().GetAgent(agentId).Return(expectedAgentRes, nil),
-	)
-
-	agentDBManager = agentMockObj
-	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	res, err := dbManager.GetGroupMembers(groupId)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
-
-	eq := reflect.DeepEqual(expectedRes, res)
-	print(expectedRes)
-	print(res)
-	print(eq)
-	if !eq {
-		t.Errorf("Expected res: %s \n, actual res: %s", expectedRes, res)
-	}
-}
-
-func TestCalledGetGroupMembersWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	dbManager := DBManager{}
-	_, err := dbManager.GetGroupMembers(invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
-func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	groupQuery := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{agentId}}
-
-	expectedRes := []map[string]interface{}{{
-		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
-		"apps":   []string{appId},
-		"status": status,
-	}}
-	expectedAgentRes := map[string]interface{}{
-		"id":     agentId,
-		"host":   "192.168.0.1",
-		"port":   "8888",
-		"apps":   []string{appId},
-		"status": status,
-	}
-	
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
-	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
-	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	agentMockObj := dbmocks.NewMockAgentInterface(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
-		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Find(groupQuery).Return(queryMockObj),
-		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, groupArg).Return(nil),
-		sessionMockObj.EXPECT().Close(),
-
-		agentMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(expectedAgentRes, nil),
 	)
 
 	mgoDial = connectionMockObj
-	agentDBManager = agentMockObj
 
-	dbManager := DBManager{}
-	res, err := dbManager.GetGroupMembersByAppID(groupId, appId)
+	Executor := Executor{}
+	res, err := Executor.GetDockerRegistry(registryUrl)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 
 	if !reflect.DeepEqual(expectedRes, res) {
-		t.Errorf("Expected res: %s actual res: %s", expectedRes, res)
+		t.Errorf("Expected res: %s, actual res: %s", expectedRes, res)
 	}
 }
 
-func TestCalledGetGroupMembersByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetDockerRegistryWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	dbManager := DBManager{}
-	_, err := dbManager.GetGroupMembersByAppID(invalidObjectId, appId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", err.Error())
-	case errors.InvalidObjectId:
-	}
-}
-
-func TestCalledDeleteGroup_ExpectSuccess(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
+	query := bson.M{"url": registryUrl}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	_, err := Executor.GetDockerRegistry(registryUrl)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledDeleteDockerRegistry_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
 		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
 		collectionMockObj.EXPECT().Remove(query).Return(nil),
@@ -729,15 +365,16 @@ func TestCalledDeleteGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.DeleteGroup(groupId)
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(registryId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledDeleteGroupWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteDockerRegistryWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -750,42 +387,537 @@ func TestCalledDeleteGroupWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.DeleteGroup(invalidObjectId)
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(invalidObjectId)
 
 	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", "nil")
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
 	}
 
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", err.Error())
-	case errors.InvalidObjectId:
+	if err.Error() != invalidObjectError.Error() {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
 	}
 }
 
-func TestCalledDeleteGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteDockerRegistryWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
 		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
-		collectionMockObj.EXPECT().Remove(query).Return(mgo.ErrNotFound),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
 		sessionMockObj.EXPECT().Close(),
 	)
 
 	mgoDial = connectionMockObj
-	dbManager := DBManager{}
-	err := dbManager.DeleteGroup(groupId)
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerRegistry(registryId)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledAddDockerImages_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	update := bson.M{"$addToSet": bson.M{"images": imageId}}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		imageDBMockObj.EXPECT().AddDockerImage(image).Return(image, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Update(query, update).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	err := Executor.AddDockerImages(registryId, images)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestCalledAddDockerImagesWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.AddDockerImages(invalidObjectId, images)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
+	}
+
+	if err.Error() != invalidObjectError.Error() {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
+	}
+}
+
+func TestCalledAddDockerImagesWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.AddDockerImages(registryId, images)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledGetDockerImages_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{imageId}}
+	expectedRes := []map[string]interface{}{{
+		"repository": image["repository"].(string),
+		"tag":        image["tag"].(string),
+		"size":       image["size"].(string),
+		"action":     image["action"].(string),
+		"timestamp":  image["timestamp"].(string),
+	}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		imageDBMockObj.EXPECT().GetDockerImage(imageId).Return(image, nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	res, err := Executor.GetDockerImages(registryId)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+
+	if !reflect.DeepEqual(expectedRes, res) {
+		t.Errorf("Expected res: %s, actual res: %s", expectedRes, res)
+	}
+}
+
+func TestCalledGetDockerImagesWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	_, err := Executor.GetDockerImages(invalidObjectId)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
+	}
+
+	if err.Error() != invalidObjectError.Error() {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
+	}
+}
+
+func TestCalledGetDockerImagesWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	_, err := Executor.GetDockerImages(registryId)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledUpdateDockerImage_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{imageId}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		imageDBMockObj.EXPECT().GetDockerImage(imageId).Return(image, nil),
+		imageDBMockObj.EXPECT().UpdateDockerImage(imageId, image).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestCalledUpdateDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(invalidObjectId, image)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
+	}
+
+	if err.Error() != invalidObjectError.Error() {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
+	}
+}
+
+func TestCalledUpdateDockerImageWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledUpdateDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	err := Executor.UpdateDockerImage(registryId, image)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledDeleteDockerImage_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	update := bson.M{"$pull": bson.M{"images": imageId}}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{imageId}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		imageDBMockObj.EXPECT().GetDockerImage(imageId).Return(image, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Update(query, update).Return(nil),
+		imageDBMockObj.EXPECT().DeleteDockerImage(imageId).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestCalledDeleteDockerImageWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(invalidObjectId, image)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
+	}
+
+	if err.Error() != invalidObjectError.Error() {
+		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
+	}
+}
+
+func TestCalledDeleteDockerImageWhenDBHasNotMatchedRegistry_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledDeleteDockerImageWhenRegistryHasNotMatchedImage_ExpectErrorReturn(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"_id": bson.ObjectIdHex(registryId)}
+	arg := Registry{ID: bson.ObjectIdHex(registryId), Url: registryUrl, Images: []string{}}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+	imageDBMockObj := imagedbmocks.NewMockCommand(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	imageExecutor = imageDBMockObj
+
+	Executor := Executor{}
+	err := Executor.DeleteDockerImage(registryId, image)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

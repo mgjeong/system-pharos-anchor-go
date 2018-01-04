@@ -22,8 +22,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	"db/modelinterface"
-	groupDB "db/mongo/model/group"
+	groupDB "db/mongo/group"
 	"encoding/json"
 )
 
@@ -54,10 +53,10 @@ const (
 
 type Executor struct{}
 
-var dbManager modelinterface.GroupInterface
+var dbExecutor groupDB.Command
 
 func init() {
-	dbManager = groupDB.DBManager{}
+	dbExecutor = groupDB.Executor{}
 }
 
 // CreateGroup inserts a new group to databases.
@@ -66,7 +65,7 @@ func (Executor) CreateGroup() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbManager.CreateGroup()
+	group, err := dbExecutor.CreateGroup()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -82,7 +81,7 @@ func (Executor) GetGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbManager.GetGroup(groupId)
+	group, err := dbExecutor.GetGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -98,7 +97,7 @@ func (Executor) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	groups, err := dbManager.GetAllGroups()
+	groups, err := dbExecutor.GetAllGroups()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -130,7 +129,7 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 	}
 
 	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbManager.JoinGroup(groupId, agentId.(string))
+		err = dbExecutor.JoinGroup(groupId, agentId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -160,7 +159,7 @@ func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interfa
 	}
 
 	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbManager.LeaveGroup(groupId, agentId.(string))
+		err = dbExecutor.LeaveGroup(groupId, agentId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -177,7 +176,7 @@ func (Executor) DeleteGroup(groupId string) (int, map[string]interface{}, error)
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	err := dbManager.DeleteGroup(groupId)
+	err := dbExecutor.DeleteGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

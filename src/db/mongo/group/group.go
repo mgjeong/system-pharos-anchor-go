@@ -19,12 +19,37 @@ package group
 import (
 	"commons/errors"
 	"commons/logger"
-	. "db/modelinterface"
-	agentDB "db/mongo/model/agent"
+	agentDB "db/mongo/agent"
 	. "db/mongo/wrapper"
 
 	"gopkg.in/mgo.v2/bson"
 )
+
+type Command interface {
+	// CreateGroup insert new Group.
+	CreateGroup() (map[string]interface{}, error)
+
+	// GetGroup returns single document from db related to group.
+	GetGroup(group_id string) (map[string]interface{}, error)
+
+	// GetAllGroups returns all documents from db related to group.
+	GetAllGroups() ([]map[string]interface{}, error)
+
+	// GetGroupMembers returns all agents who belong to the target group.
+	GetGroupMembers(group_id string) ([]map[string]interface{}, error)
+
+	// GetGroupMembersByAppID returns all agents including specific app on the target group.
+	GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error)
+
+	// JoinGroup add specific agent to the target group.
+	JoinGroup(group_id string, agent_id string) error
+
+	// LeaveGroup delete specific agent from the target group.
+	LeaveGroup(group_id string, agent_id string) error
+
+	// DeleteGroup delete single document from db related to group.
+	DeleteGroup(group_id string) error
+}
 
 const (
 	DB_NAME          = "DeploymentManagerDB"
@@ -37,16 +62,14 @@ type Group struct {
 	Members []string
 }
 
-type DBManager struct {
-	GroupInterface
-}
+type Executor struct {}
 
 var mgoDial Connection
-var agentDBManager AgentInterface
+var agentExecutor agentDB.Command
 
 func init() {
 	mgoDial = MongoDial{}
-	agentDBManager = agentDB.DBManager{}
+	agentExecutor = agentDB.Executor{}
 }
 
 // Try to connect with mongo db server.
@@ -85,7 +108,7 @@ func (group Group) convertToMap() map[string]interface{} {
 // CreateGroup inserts new Group to 'group' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) CreateGroup() (map[string]interface{}, error) {
+func (Executor) CreateGroup() (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -111,7 +134,7 @@ func (DBManager) CreateGroup() (map[string]interface{}, error) {
 // GetGroup returns single document specified by group_id parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetGroup(group_id string) (map[string]interface{}, error) {
+func (Executor) GetGroup(group_id string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -141,7 +164,7 @@ func (DBManager) GetGroup(group_id string) (map[string]interface{}, error) {
 // GetAllGroups returns all documents from 'group' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) GetAllGroups() ([]map[string]interface{}, error) {
+func (Executor) GetAllGroups() ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -167,7 +190,7 @@ func (DBManager) GetAllGroups() ([]map[string]interface{}, error) {
 // JoinGroup adds the specific agent to a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) JoinGroup(group_id string, agent_id string) error {
+func (Executor) JoinGroup(group_id string, agent_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -199,7 +222,7 @@ func (DBManager) JoinGroup(group_id string, agent_id string) error {
 // LeaveGroup deletes the specific agent from a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) LeaveGroup(group_id string, agent_id string) error {
+func (Executor) LeaveGroup(group_id string, agent_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -231,7 +254,7 @@ func (DBManager) LeaveGroup(group_id string, agent_id string) error {
 // GetGroupMembers returns all agents who belong to the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
+func (client Executor) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -249,7 +272,7 @@ func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
 	for i, agent_id := range group["members"].([]string) {
 		var agent map[string]interface{}
-		agent, err := agentDBManager.GetAgent(agent_id)
+		agent, err := agentExecutor.GetAgent(agent_id)
 		if err != nil {
 			return nil, err
 		}
@@ -262,7 +285,7 @@ func (client DBManager) GetGroupMembers(group_id string) ([]map[string]interface
 // by the given appid on the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
+func (client Executor) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -280,7 +303,7 @@ func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) (
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
 	for i, agent_id := range group["members"].([]string) {
 		var agent map[string]interface{}
-		agent, err := agentDBManager.GetAgentByAppID(agent_id, app_id)
+		agent, err := agentExecutor.GetAgentByAppID(agent_id, app_id)
 		if err != nil {
 			return nil, err
 		}
@@ -293,7 +316,7 @@ func (client DBManager) GetGroupMembersByAppID(group_id string, app_id string) (
 // DeleteGroup deletes single document specified by group_id parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (DBManager) DeleteGroup(group_id string) error {
+func (Executor) DeleteGroup(group_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

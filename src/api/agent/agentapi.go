@@ -47,14 +47,14 @@ var sdam _SDAMAgentApis
 var sdamAgentManager agentmanager.Command
 var deploymentExecutor deployment.Command
 var registrator registration.RegistrationInterface
-var resourceCtrl resource.ResourceInterface
+var resourceExecutor resource.Command
 
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
 	sdamAgentManager = agentmanager.Executor{}
 	deploymentExecutor = deployment.Executor{}
-	resourceCtrl = resource.AgentController
+	resourceExecutor = resource.Executor{}
 	registrator = registration.AgentRegistrator{}
 }
 
@@ -356,7 +356,7 @@ func (sdam _SDAMAgentApis) agentUpdateApp(w http.ResponseWriter, req *http.Reque
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Get Resource Info")
-	result, resp, err := resourceCtrl.GetResourceInfo(agentId)
+	result, resp, err := resourceExecutor.GetResourceInfo(agentId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -368,6 +368,6 @@ func (sdam _SDAMAgentApis) agentGetResourceInfo(w http.ResponseWriter, req *http
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Get Performance Info")
-	result, resp, err := resourceCtrl.GetPerformanceInfo(agentId)
+	result, resp, err := resourceExecutor.GetPerformanceInfo(agentId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }

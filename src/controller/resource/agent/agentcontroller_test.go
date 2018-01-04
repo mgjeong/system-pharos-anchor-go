@@ -19,8 +19,8 @@ package agent
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/modelinterface/mocks"
 	"github.com/golang/mock/gomock"
+	agentdbmocks "db/mongo/agent/mocks"
 	msgmocks "messenger/mocks"
 	"reflect"
 	"testing"
@@ -48,6 +48,12 @@ var (
 	invalidJsonError = errors.InvalidJSON{}
 )
 
+var resourceMonitor Command
+
+func init() {
+	resourceMonitor = Executor{}
+}
+
 func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -60,17 +66,17 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 		"mem":       "00%",
 		"disk":      "00%",
 	}
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, res, err := AgentController.GetResourceInfo(AGENTID)
+	code, res, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -89,14 +95,14 @@ func TestGetResourceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	agentDbExecutor = dbExecutorMockObj
+	code, _, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -119,17 +125,17 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	code, _, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -146,17 +152,17 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetResourceInfo(AGENTID)
+	code, _, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -184,17 +190,17 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 		"mem":  "00%",
 		"disk": "00%",
 	}
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, res, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, res, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -213,14 +219,14 @@ func TestGetPerformanceInfoWithGetAgentError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(nil, errors.NotFound{}),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	agentDbExecutor = dbExecutorMockObj
+	code, _, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -243,17 +249,17 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, _, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -270,17 +276,17 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 
 	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
 
-	dbManagerMockObj := dbmocks.NewMockAgentInterface(ctrl)
-	msgMockObj := msgmocks.NewMockMessengerInterface(ctrl)
+	dbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(AGENTID).Return(agent, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbManager = dbManagerMockObj
+	agentDbExecutor = dbExecutorMockObj
 	httpRequester = msgMockObj
-	code, _, err := AgentController.GetPerformanceInfo(AGENTID)
+	code, _, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
