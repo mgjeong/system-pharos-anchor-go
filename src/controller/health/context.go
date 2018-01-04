@@ -14,10 +14,22 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package registration
 
-type RegistrationInterface interface {
-	RegisterAgent(body string) (int, map[string]interface{}, error)
-	UnRegisterAgent(agentId string) (int, error)
-	PingAgent(agentId string, body string) (int, error)
+// Package health provides logic of checking health with system-edge-manager service.
+package health
+
+import (
+	agentManagement "controller/management/agent"
+)
+
+var common context
+
+type context struct {
+	agentManager agentManagement.Command
+	timers       map[string]chan bool
+}
+
+func init() {
+	common.agentManager = agentManagement.Executor{}
+	common.timers = make(map[string]chan bool)
 }
