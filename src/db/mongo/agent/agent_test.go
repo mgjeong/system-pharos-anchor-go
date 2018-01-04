@@ -150,9 +150,9 @@ func TestCalledAddAgent_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
+	executor := Executor{}
 
-	_, err := Executor.AddAgent(ip, status, configuration)
+	_, err := executor.AddAgent(ip, status, configuration)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -179,8 +179,8 @@ func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.AddAgent(ip, status, configuration)
+	executor := Executor{}
+	_, err := executor.AddAgent(ip, status, configuration)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -214,8 +214,8 @@ func TestCalledUpdateAgentAddress_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
+	executor := Executor{}
+	err := executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -235,9 +235,9 @@ func TestCalledUpdateAgentAddressWithInvalidObjectId_ExpectErrorReturn(t *testin
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
+	executor := Executor{}
 
-	err := Executor.UpdateAgentAddress(invalidObjectId, "192.168.0.1", "48098")
+	err := executor.UpdateAgentAddress(invalidObjectId, "192.168.0.1", "48098")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -269,8 +269,8 @@ func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
+	executor := Executor{}
+	err := executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -304,8 +304,8 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.UpdateAgentStatus(agentId, "connected")
+	executor := Executor{}
+	err := executor.UpdateAgentStatus(agentId, "connected")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -325,8 +325,8 @@ func TestCalledUpdateAgentStatusWithInvalidObjectId_ExpectErrorReturn(t *testing
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.UpdateAgentStatus(invalidObjectId, "connected")
+	executor := Executor{}
+	err := executor.UpdateAgentStatus(invalidObjectId, "connected")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -358,8 +358,8 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.UpdateAgentStatus(agentId, "connected")
+	executor := Executor{}
+	err := executor.UpdateAgentStatus(agentId, "connected")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -402,8 +402,8 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetAgent(agentId)
+	executor := Executor{}
+	res, err := executor.GetAgent(agentId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -427,8 +427,8 @@ func TestCalledGetAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAgent(invalidObjectId)
+	executor := Executor{}
+	_, err := executor.GetAgent(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -461,8 +461,8 @@ func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAgent(agentId)
+	executor := Executor{}
+	_, err := executor.GetAgent(agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -504,8 +504,8 @@ func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetAllAgents()
+	executor := Executor{}
+	res, err := executor.GetAllAgents()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -536,8 +536,8 @@ func TestCalledGetAllAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAllAgents()
+	executor := Executor{}
+	_, err := executor.GetAllAgents()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -580,8 +580,8 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetAgentByAppID(agentId, appId)
+	executor := Executor{}
+	res, err := executor.GetAgentByAppID(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -614,8 +614,8 @@ func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAgentByAppID(agentId, appId)
+	executor := Executor{}
+	_, err := executor.GetAgentByAppID(agentId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -641,8 +641,8 @@ func TestCalledGetAgentByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAgentByAppID(invalidObjectId, appId)
+	executor := Executor{}
+	_, err := executor.GetAgentByAppID(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -674,8 +674,8 @@ func TestCalledAddAppToAgent_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.AddAppToAgent(agentId, appId)
+	executor := Executor{}
+	err := executor.AddAppToAgent(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -695,8 +695,8 @@ func TestCalledAddAppToAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) 
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.AddAppToAgent(invalidObjectId, appId)
+	executor := Executor{}
+	err := executor.AddAppToAgent(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -728,8 +728,8 @@ func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.AddAppToAgent(agentId, appId)
+	executor := Executor{}
+	err := executor.AddAppToAgent(agentId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -763,8 +763,8 @@ func TestCalledDeleteAppFromAgent_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAppFromAgent(agentId, appId)
+	executor := Executor{}
+	err := executor.DeleteAppFromAgent(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -784,8 +784,8 @@ func TestCalledDeleteAppFromAgentWithInvalidObjectId_ExpectErrorReturn(t *testin
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAppFromAgent(invalidObjectId, appId)
+	executor := Executor{}
+	err := executor.DeleteAppFromAgent(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -817,8 +817,8 @@ func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAppFromAgent(agentId, appId)
+	executor := Executor{}
+	err := executor.DeleteAppFromAgent(agentId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -851,8 +851,8 @@ func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAgent(agentId)
+	executor := Executor{}
+	err := executor.DeleteAgent(agentId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -872,8 +872,8 @@ func TestCalledDeleteAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAgent(invalidObjectId)
+	executor := Executor{}
+	err := executor.DeleteAgent(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -904,8 +904,8 @@ func TestCalledDeleteAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteAgent(agentId)
+	executor := Executor{}
+	err := executor.DeleteAgent(agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

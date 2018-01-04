@@ -122,8 +122,8 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.CreateGroup()
+	executor := Executor{}
+	_, err := executor.CreateGroup()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -148,8 +148,8 @@ func TestCalledCreateGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.CreateGroup()
+	executor := Executor{}
+	_, err := executor.CreateGroup()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -189,8 +189,8 @@ func TestCalledGetGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetGroup(groupId)
+	executor := Executor{}
+	res, err := executor.GetGroup(groupId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -214,8 +214,8 @@ func TestCalledGetGroupWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetGroup(invalidObjectId)
+	executor := Executor{}
+	_, err := executor.GetGroup(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -248,8 +248,8 @@ func TestCalledGetGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetGroup(groupId)
+	executor := Executor{}
+	_, err := executor.GetGroup(groupId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -288,8 +288,8 @@ func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetAllGroups()
+	executor := Executor{}
+	res, err := executor.GetAllGroups()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -320,8 +320,8 @@ func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	_, err := Executor.GetAllGroups()
+	executor := Executor{}
+	_, err := executor.GetAllGroups()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -355,8 +355,8 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.JoinGroup(groupId, agentId)
+	executor := Executor{}
+	err := executor.JoinGroup(groupId, agentId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -376,8 +376,8 @@ func TestCalledJoinGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *testi
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.JoinGroup(invalidObjectId, agentId)
+	executor := Executor{}
+	err := executor.JoinGroup(invalidObjectId, agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -401,8 +401,8 @@ func TestCalledJoinGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *testi
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.JoinGroup(groupId, invalidObjectId)
+	executor := Executor{}
+	err := executor.JoinGroup(groupId, invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -434,8 +434,8 @@ func TestCalledJoinGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.JoinGroup(groupId, agentId)
+	executor := Executor{}
+	err := executor.JoinGroup(groupId, agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -469,8 +469,8 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.LeaveGroup(groupId, agentId)
+	executor := Executor{}
+	err := executor.LeaveGroup(groupId, agentId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -490,8 +490,8 @@ func TestCalledLeaveGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *test
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.LeaveGroup(invalidObjectId, agentId)
+	executor := Executor{}
+	err := executor.LeaveGroup(invalidObjectId, agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -515,8 +515,8 @@ func TestCalledLeaveGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *test
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.LeaveGroup(groupId, invalidObjectId)
+	executor := Executor{}
+	err := executor.LeaveGroup(groupId, invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -548,8 +548,8 @@ func TestCalledLeaveGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.LeaveGroup(groupId, agentId)
+	executor := Executor{}
+	err := executor.LeaveGroup(groupId, agentId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -604,8 +604,8 @@ func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
 
 	agentExecutor = agentMockObj
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	res, err := Executor.GetGroupMembers(groupId)
+	executor := Executor{}
+	res, err := executor.GetGroupMembers(groupId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -624,8 +624,8 @@ func TestCalledGetGroupMembersWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	Executor := Executor{}
-	_, err := Executor.GetGroupMembers(invalidObjectId)
+	executor := Executor{}
+	_, err := executor.GetGroupMembers(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -679,8 +679,8 @@ func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
 	mgoDial = connectionMockObj
 	agentExecutor = agentMockObj
 
-	Executor := Executor{}
-	res, err := Executor.GetGroupMembersByAppID(groupId, appId)
+	executor := Executor{}
+	res, err := executor.GetGroupMembersByAppID(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -695,8 +695,8 @@ func TestCalledGetGroupMembersByAppIDWithInvalidObjectId_ExpectErrorReturn(t *te
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	Executor := Executor{}
-	_, err := Executor.GetGroupMembersByAppID(invalidObjectId, appId)
+	executor := Executor{}
+	_, err := executor.GetGroupMembersByAppID(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", "nil")
@@ -729,8 +729,8 @@ func TestCalledDeleteGroup_ExpectSuccess(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteGroup(groupId)
+	executor := Executor{}
+	err := executor.DeleteGroup(groupId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -750,8 +750,8 @@ func TestCalledDeleteGroupWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteGroup(invalidObjectId)
+	executor := Executor{}
+	err := executor.DeleteGroup(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "invalidObjectError", "nil")
@@ -784,8 +784,8 @@ func TestCalledDeleteGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	mgoDial = connectionMockObj
-	Executor := Executor{}
-	err := Executor.DeleteGroup(groupId)
+	executor := Executor{}
+	err := executor.DeleteGroup(groupId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
