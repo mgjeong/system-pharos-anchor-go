@@ -26,12 +26,32 @@ import (
 	"encoding/json"
 )
 
+type Command interface {
+	// CreateGroup inserts a new group to databases.
+	CreateGroup() (int, map[string]interface{}, error)
+
+	// GetGroup returns the information of the group specified by groupId parameter.
+	GetGroup(groupId string) (int, map[string]interface{}, error)
+
+	// GetGroups returns a list of groups that is created on databases.
+	GetGroups() (int, map[string]interface{}, error)
+
+	// JoinGroup adds the agent to a list of members.
+	JoinGroup(groupId string, body string) (int, map[string]interface{}, error)
+
+	// LeaveGroup removes the agent from a list of members.
+	LeaveGroup(groupId string, body string) (int, map[string]interface{}, error)
+
+	// DeleteGroup deletes the group with a primary key matching the groupId argument.
+	DeleteGroup(groupId string) (int, map[string]interface{}, error)
+}
+
 const (
 	AGENTS        = "agents"      // used to indicate a list of agents.
 	GROUPS        = "groups"      // used to indicate a list of groups.
 )
 
-type GroupManager struct{}
+type Executor struct{}
 
 var dbExecutor groupDB.Command
 
@@ -41,7 +61,7 @@ func init() {
 
 // CreateGroup inserts a new group to databases.
 // This function returns a unique id in case of success and an error otherwise.
-func (GroupManager) CreateGroup() (int, map[string]interface{}, error) {
+func (Executor) CreateGroup() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -57,7 +77,7 @@ func (GroupManager) CreateGroup() (int, map[string]interface{}, error) {
 // GetGroup returns the information of the group specified by groupId parameter.
 // If response code represents success, returns information about the group.
 // Otherwise, an appropriate error will be returned.
-func (GroupManager) GetGroup(groupId string) (int, map[string]interface{}, error) {
+func (Executor) GetGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -73,7 +93,7 @@ func (GroupManager) GetGroup(groupId string) (int, map[string]interface{}, error
 // GetGroups returns a list of groups that is created on databases.
 // If response code represents success, returns a list of groups.
 // Otherwise, an appropriate error will be returned.
-func (GroupManager) GetGroups() (int, map[string]interface{}, error) {
+func (Executor) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -92,7 +112,7 @@ func (GroupManager) GetGroups() (int, map[string]interface{}, error) {
 // JoinGroup adds the agent to a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupManager) JoinGroup(groupId string, body string) (int, map[string]interface{}, error) {
+func (Executor) JoinGroup(groupId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -122,7 +142,7 @@ func (GroupManager) JoinGroup(groupId string, body string) (int, map[string]inte
 // LeaveGroup removes the agent from a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupManager) LeaveGroup(groupId string, body string) (int, map[string]interface{}, error) {
+func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -152,7 +172,7 @@ func (GroupManager) LeaveGroup(groupId string, body string) (int, map[string]int
 // DeleteGroup deletes the group with a primary key matching the groupId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (GroupManager) DeleteGroup(groupId string) (int, map[string]interface{}, error) {
+func (Executor) DeleteGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

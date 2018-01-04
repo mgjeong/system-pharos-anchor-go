@@ -44,16 +44,16 @@ type _SDAMAgentApis struct{}
 
 var sdamH _SDAMAgentApisHandler
 var sdam _SDAMAgentApis
-var sdamAgentManager agentmanager.AgentInterface
-var deploymentCtrl deployment.Command
+var sdamAgentManager agentmanager.Command
+var deploymentExecutor deployment.Command
 var registrator registration.RegistrationInterface
 var resourceExecutor resource.Command
 
 func init() {
 	SdamAgentHandle = sdamH
 	SdamAgent = sdam
-	sdamAgentManager = agentmanager.AgentManager{}
-	deploymentCtrl = deployment.AgentController{}
+	sdamAgentManager = agentmanager.Executor{}
+	deploymentExecutor = deployment.Executor{}
 	resourceExecutor = resource.Executor{}
 	registrator = registration.AgentRegistrator{}
 }
@@ -255,7 +255,7 @@ func (sdam _SDAMAgentApis) agentDeployApp(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	result, resp, err := deploymentCtrl.DeployApp(agentID, body)
+	result, resp, err := deploymentExecutor.DeployApp(agentID, body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -267,7 +267,7 @@ func (sdam _SDAMAgentApis) agentDeployApp(w http.ResponseWriter, req *http.Reque
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentInfoApps(w http.ResponseWriter, req *http.Request, agentID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Get Info Apps")
-	result, resp, err := deploymentCtrl.GetApps(agentID)
+	result, resp, err := deploymentExecutor.GetApps(agentID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -279,7 +279,7 @@ func (sdam _SDAMAgentApis) agentInfoApps(w http.ResponseWriter, req *http.Reques
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentInfoApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Get Info App")
-	result, resp, err := deploymentCtrl.GetApp(agentID, appID)
+	result, resp, err := deploymentExecutor.GetApp(agentID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -296,7 +296,7 @@ func (sdam _SDAMAgentApis) agentUpdateAppInfo(w http.ResponseWriter, req *http.R
 		return
 	}
 
-	result, resp, err := deploymentCtrl.UpdateAppInfo(agentID, appID, body)
+	result, resp, err := deploymentExecutor.UpdateAppInfo(agentID, appID, body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -308,7 +308,7 @@ func (sdam _SDAMAgentApis) agentUpdateAppInfo(w http.ResponseWriter, req *http.R
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentDeleteApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Delete App")
-	result, resp, err := deploymentCtrl.DeleteApp(agentID, appID)
+	result, resp, err := deploymentExecutor.DeleteApp(agentID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -320,7 +320,7 @@ func (sdam _SDAMAgentApis) agentDeleteApp(w http.ResponseWriter, req *http.Reque
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentStartApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Start App")
-	result, resp, err := deploymentCtrl.StartApp(agentID, appID)
+	result, resp, err := deploymentExecutor.StartApp(agentID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -332,7 +332,7 @@ func (sdam _SDAMAgentApis) agentStartApp(w http.ResponseWriter, req *http.Reques
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentStopApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Stop App")
-	result, resp, err := deploymentCtrl.StopApp(agentID, appID)
+	result, resp, err := deploymentExecutor.StopApp(agentID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -344,7 +344,7 @@ func (sdam _SDAMAgentApis) agentStopApp(w http.ResponseWriter, req *http.Request
 //    responses: if successful, 200 status code will be returned.
 func (sdam _SDAMAgentApis) agentUpdateApp(w http.ResponseWriter, req *http.Request, agentID string, appID string) {
 	logger.Logging(logger.DEBUG, "[AGENT] Update App")
-	result, resp, err := deploymentCtrl.UpdateApp(agentID, appID)
+	result, resp, err := deploymentExecutor.UpdateApp(agentID, appID)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 

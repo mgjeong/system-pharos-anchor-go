@@ -34,14 +34,14 @@ const (
 	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-agent port.
 )
 
-type AgentController struct{}
+type Executor struct{}
 
 var agentDbExecutor agentDB.Command
-var httpRequester messenger.Command
+var httpExecutor messenger.Command
 
 func init() {
 	agentDbExecutor = agentDB.Executor{}
-	httpRequester = messenger.NewMessenger()
+  httpExecutor = messenger.NewExecutor()
 }
 
 // Command is an interface of agent deployment operations.
@@ -77,7 +77,7 @@ type Command interface {
 // DeployApp request an deployment of edge services to an agent specified by agentId parameter.
 // If response code represents success, add an app id to a list of installed app and returns it.
 // Otherwise, an appropriate error will be returned.
-func (AgentController) DeployApp(agentId string, body string) (int, map[string]interface{}, error) {
+func (Executor) DeployApp(agentId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -92,7 +92,7 @@ func (AgentController) DeployApp(agentId string, body string) (int, map[string]i
 	urls := makeRequestUrl(address, url.Deploy())
 
 	// Request an deployment of edge services to a specific agent.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -118,7 +118,7 @@ func (AgentController) DeployApp(agentId string, body string) (int, map[string]i
 // specified by agentId parameter.
 // If response code represents success, returns a list of applications.
 // Otherwise, an appropriate error will be returned.
-func (AgentController) GetApps(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetApps(agentId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -133,7 +133,7 @@ func (AgentController) GetApps(agentId string) (int, map[string]interface{}, err
 	urls := makeRequestUrl(address, url.Apps())
 
 	// Request list of applications that is deployed to agent.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -149,7 +149,7 @@ func (AgentController) GetApps(agentId string) (int, map[string]interface{}, err
 // GetApp gets the application's information of the agent specified by agentId parameter.
 // If response code represents success, returns information of application.
 // Otherwise, an appropriate error will be returned.
-func (AgentController) GetApp(agentId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) GetApp(agentId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -164,7 +164,7 @@ func (AgentController) GetApp(agentId string, appId string) (int, map[string]int
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request get target application's information
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -180,7 +180,7 @@ func (AgentController) GetApp(agentId string, appId string) (int, map[string]int
 // UpdateApp request to update an application specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) UpdateAppInfo(agentId string, appId string, body string) (int, map[string]interface{}, error) {
+func (Executor) UpdateAppInfo(agentId string, appId string, body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -195,7 +195,7 @@ func (AgentController) UpdateAppInfo(agentId string, appId string, body string) 
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request update target application's information.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -211,7 +211,7 @@ func (AgentController) UpdateAppInfo(agentId string, appId string, body string) 
 // DeleteApp request to delete an application specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) DeleteApp(agentId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) DeleteApp(agentId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -226,7 +226,7 @@ func (AgentController) DeleteApp(agentId string, appId string) (int, map[string]
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request delete target application
-	codes, respStr := httpRequester.SendHttpRequest("DELETE", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -253,7 +253,7 @@ func (AgentController) DeleteApp(agentId string, appId string) (int, map[string]
 // specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) UpdateApp(agentId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) UpdateApp(agentId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -268,7 +268,7 @@ func (AgentController) UpdateApp(agentId string, appId string) (int, map[string]
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -284,7 +284,7 @@ func (AgentController) UpdateApp(agentId string, appId string) (int, map[string]
 // StartApp request to start an application specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) StartApp(agentId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) StartApp(agentId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -299,7 +299,7 @@ func (AgentController) StartApp(agentId string, appId string) (int, map[string]i
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -315,7 +315,7 @@ func (AgentController) StartApp(agentId string, appId string) (int, map[string]i
 // StopApp request to stop an application specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (AgentController) StopApp(agentId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) StopApp(agentId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -330,7 +330,7 @@ func (AgentController) StopApp(agentId string, appId string) (int, map[string]in
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
-	codes, respStr := httpRequester.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]

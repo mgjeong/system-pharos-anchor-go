@@ -40,11 +40,11 @@ type Executor struct{}
 
 var agentDbExecutor agentDB.Command
 
-var httpRequester messenger.Command
+var httpExecutor messenger.Command
 
 func init() {
 	agentDbExecutor = agentDB.Executor{}
-	httpRequester = messenger.NewMessenger()
+	httpExecutor = messenger.NewExecutor()
 }
 
 // GetResourceInfo request an agent resource (os, processor, performance) information.
@@ -65,7 +65,7 @@ func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, er
 	urls := makeRequestUrl(address, url.Resource())
 
 	// Request to return agent's resource information.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -96,7 +96,7 @@ func (Executor) GetPerformanceInfo(agentId string) (int, map[string]interface{},
 	urls := makeRequestUrl(address, url.Resource(), url.Performance())
 
 	// Request to return agent's performance information.
-	codes, respStr := httpRequester.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
 	result := codes[0]

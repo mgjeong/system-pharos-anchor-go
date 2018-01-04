@@ -15,12 +15,19 @@
  *
  *******************************************************************************/
 
-package agent
+package registry
 
-type AgentInterface interface {
-	AddAgent(body string) (int, map[string]interface{}, error)
-	DeleteAgent(agentId string) (int, error)
-	GetAgent(agentId string) (int, map[string]interface{}, error)
-	GetAgents() (int, map[string]interface{}, error)
-	UpdateAgentStatus(agentId string, status string) error
+type RegistryInterface interface {
+	// AddDockerRegistry add docker registry to database.
+	AddDockerRegistry(body string) (int, map[string]interface{}, error)
+	
+	DeleteDockerRegistry(registryId string) (int, error)
+	
+	GetDockerRegistries() (int, map[string]interface{}, error)
+	
+	GetDockerRegistry(registryId string) (int, map[string]interface{}, error)
+	
+	GetDockerImages(registryId string) (int, map[string]interface{}, error)
+	
+	DockerRegistryEventHandler(body string) (int, error)
 }
