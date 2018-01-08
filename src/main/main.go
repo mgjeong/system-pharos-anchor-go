@@ -21,5 +21,5 @@ import (
 )
 
 func main() {
-	api.RunSDAMWebServer("0.0.0.0", 48099)
+	api.RunWebServer("0.0.0.0", 48099)
 }
