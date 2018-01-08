@@ -42,6 +42,18 @@ func Agents() string { return "/agents" }
 // Base returns the groups url as a type of string.
 func Groups() string { return "/groups" }
 
+// Base returns the registries url as a type of string.
+func Registries() string { return "/registries" }
+
+// Base returns the management url as a type of string.
+func Management() string { return "/management" }
+
+// Base returns the monitoring url as a type of string.
+func Monitoring() string { return "/monitoring" }
+
+// Base returns the events url as a type of string.
+func Events() string { return "/events" }
+
 // Base returns the registry url as a type of string.
 func Registry() string { return "/registry" }
 
