@@ -41,7 +41,7 @@ var httpExecutor messenger.Command
 
 func init() {
 	agentDbExecutor = agentDB.Executor{}
-  httpExecutor = messenger.NewExecutor()
+	httpExecutor = messenger.NewExecutor()
 }
 
 // Command is an interface of agent deployment operations.
