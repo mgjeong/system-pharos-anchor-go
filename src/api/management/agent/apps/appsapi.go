@@ -68,13 +68,7 @@ func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	switch len(split) {
 	case 3:
 		agentID := split[1]
-		if "/"+split[2] == URL.Deploy() {
-			if req.Method == POST {
-				appsAPI.agentDeployApp(w, req, agentID)
-			} else {
-				common.WriteError(w, errors.InvalidMethod{req.Method})
-			}
-		} else if "/"+split[2] == URL.Apps() {
+		if "/"+split[2] == URL.Apps() {
 			if req.Method == GET {
 				appsAPI.agentInfoApps(w, req, agentID)
 			} else {
@@ -86,19 +80,28 @@ func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	case 4:
 		if "/"+split[2] == URL.Apps() {
-			agentID, appID := split[1], split[3]
-			switch req.Method {
-			case GET:
-				appsAPI.agentInfoApp(w, req, agentID, appID)
+			if "/"+split[3] == URL.Deploy() {
+				if req.Method == POST {
+					agentID := split[1]
+					appsAPI.agentDeployApp(w, req, agentID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
+			} else {
+				agentID, appID := split[1], split[3]
+				switch req.Method {
+				case GET:
+					appsAPI.agentInfoApp(w, req, agentID, appID)
 
-			case POST:
-				appsAPI.agentUpdateAppInfo(w, req, agentID, appID)
+				case POST:
+					appsAPI.agentUpdateAppInfo(w, req, agentID, appID)
 
-			case DELETE:
-				appsAPI.agentDeleteApp(w, req, agentID, appID)
+				case DELETE:
+					appsAPI.agentDeleteApp(w, req, agentID, appID)
 
-			default:
-				common.WriteError(w, errors.InvalidMethod{req.Method})
+				default:
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
 			}
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})

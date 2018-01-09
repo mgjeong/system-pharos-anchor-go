@@ -91,6 +91,9 @@ func (groupHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	case 3:
 		groupID := split[1]
 		switch {
+		case "/"+split[2] == URL.Apps():
+			apps.Handler.Handle(w, req)
+
 		case "/"+split[2] == URL.Join():
 			if req.Method == POST {
 				groupAPI.groupJoin(w, req, groupID)
@@ -105,21 +108,11 @@ func (groupHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
 
-		case "/"+split[2] == URL.Deploy() ||
-			"/"+split[2] == URL.Apps():
-			apps.Handler.Handle(w, req)
-
 		default:
 			common.WriteError(w, errors.NotFoundURL{})
 		}
 
 	case 4:
-		if "/"+split[2] == URL.Apps() {
-			apps.Handler.Handle(w, req)
-		} else {
-			common.WriteError(w, errors.NotFoundURL{})
-		}
-
 	case 5:
 		if "/"+split[2] == URL.Apps() {
 			apps.Handler.Handle(w, req)

@@ -90,19 +90,28 @@ func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	case 4:
 		if "/"+split[2] == URL.Apps() {
-			groupID, appID := split[1], split[3]
-			switch req.Method {
-			case GET:
-				appsAPI.groupInfoApp(w, req, groupID, appID)
+			if "/"+split[3] == URL.Deploy() {
+				if req.Method == POST {
+					groupID := split[1]
+					appsAPI.groupDeployApp(w, req, groupID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
+			} else {
+				groupID, appID := split[1], split[3]
+				switch req.Method {
+				case GET:
+					appsAPI.groupInfoApp(w, req, groupID, appID)
 
-			case POST:
-				appsAPI.groupUpdateAppInfo(w, req, groupID, appID)
+				case POST:
+					appsAPI.groupUpdateAppInfo(w, req, groupID, appID)
 
-			case DELETE:
-				appsAPI.groupDeleteApp(w, req, groupID, appID)
+				case DELETE:
+					appsAPI.groupDeleteApp(w, req, groupID, appID)
 
-			default:
-				common.WriteError(w, errors.InvalidMethod{req.Method})
+				default:
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
 			}
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})

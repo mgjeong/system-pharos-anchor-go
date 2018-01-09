@@ -21,7 +21,6 @@ package agent
 import (
 	"api/common"
 	"api/management/agent/apps"
-	"api/management/agent/health"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
@@ -72,7 +71,7 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	case 2:
 		if "/"+split[1] == URL.Register() {
-			health.Handler.Handle(w, req)
+			agentAPI.register(w, req)
 		} else {
 			if req.Method == GET {
 				agentID := split[1]
@@ -86,9 +85,11 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		if strings.Contains(url, URL.Apps()) {
 			apps.Handler.Handle(w, req)
 		} else if "/"+split[2] == URL.Unregister() {
-			agentAPI.Handle(w, req)
+			agentID := split[1]
+			agentAPI.unregister(w, req, agentID)
 		} else if "/"+split[2] == URL.Ping() {
-			agentAPI.Handle(w, req)
+			agentID := split[1]
+			agentAPI.ping(w, req, agentID)
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})
 		}
@@ -121,7 +122,7 @@ func (agentAPIExecutor) agent(w http.ResponseWriter, req *http.Request, agentID 
 
 // agents handles requests which is used to get information of all agents registered.
 //
-//    paths: '/api/v1/agents'
+//    paths: '/api/v1/management/agents'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (agentAPIExecutor) agents(w http.ResponseWriter, req *http.Request) {

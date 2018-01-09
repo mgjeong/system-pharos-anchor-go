@@ -50,7 +50,7 @@ func init() {
 }
 
 func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Agents(), "", -1)
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Monitoring()+URL.Agents(), "", -1)
 	split := strings.Split(url, "/")
 	switch len(split) {
 	case 3:
