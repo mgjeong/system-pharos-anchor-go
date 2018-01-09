@@ -15,21 +15,14 @@
  *
  *******************************************************************************/
 
-// Package health provides logic of checking health with system-edge-manager service.
-package health
-
-import (
-	agentManagement "controller/management/agent"
-)
+package agent
 
 var common context
 
 type context struct {
-	agentManager agentManagement.Command
-	timers       map[string]chan bool
+	timers map[string]chan bool
 }
 
 func init() {
-	common.agentManager = agentManagement.Executor{}
 	common.timers = make(map[string]chan bool)
 }
