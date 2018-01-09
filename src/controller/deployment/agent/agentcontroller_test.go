@@ -54,10 +54,10 @@ var (
 	invalidJsonError = errors.InvalidJSON{}
 )
 
-var controller Command
+var executor Command
 
 func init() {
-	controller = AgentController{}
+	executor = Executor{}
 }
 
 func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
@@ -80,9 +80,9 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.DeployApp(agentId, body)
+	code, res, err := executor.DeployApp(agentId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -109,7 +109,7 @@ func TestCalledDeployAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
 
-	code, _, err := controller.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(agentId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -141,9 +141,9 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(agentId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -177,9 +177,9 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(agentId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -215,9 +215,9 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.GetApps(agentId)
+	code, res, err := executor.GetApps(agentId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -247,9 +247,9 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.GetApps(agentId)
+	code, _, err := executor.GetApps(agentId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -278,7 +278,7 @@ func TestCalledGetAppsWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
 
-	code, _, err := controller.GetApps(agentId)
+	code, _, err := executor.GetApps(agentId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -314,9 +314,9 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.GetApp(agentId, appId)
+	code, res, err := executor.GetApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -346,9 +346,9 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.GetApp(agentId, appId)
+	code, _, err := executor.GetApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -377,7 +377,7 @@ func TestCalledGetAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
 
-	code, _, err := controller.GetApp(agentId, appId)
+	code, _, err := executor.GetApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -409,9 +409,9 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -434,9 +434,9 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testin
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -468,9 +468,9 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -502,9 +502,9 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -527,9 +527,9 @@ func TestCalledUpdateAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -561,9 +561,9 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -595,9 +595,9 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -620,7 +620,7 @@ func TestCalledStartAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
 
-	code, _, err := controller.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -652,9 +652,9 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -686,9 +686,9 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -711,9 +711,9 @@ func TestCalledStopAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -745,9 +745,9 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -780,9 +780,9 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -805,9 +805,9 @@ func TestCalledDeleteAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -839,9 +839,9 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCode_ExpectSuccess(t *testing.T
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(agentId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -867,9 +867,9 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCodeWithInvalidResponse_ExpectS
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -902,9 +902,9 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbManagerMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(agentId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
