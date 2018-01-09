@@ -59,49 +59,48 @@ func init() {
 
 // Handle calls a proper function according to the url and method received from remote device.
 func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Agents(), "", -1)
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
-	switch len(split) {
-	case 1:
-		if req.Method == GET {
-			agentAPI.agents(w, req)
-		} else {
-			common.WriteError(w, errors.InvalidMethod{req.Method})
-		}
 
-	case 2:
-		if "/"+split[1] == URL.Register() {
-			agentAPI.register(w, req)
-		} else {
+	if strings.Contains(url, URL.Apps()) {
+		apps.Handler.Handle(w, req)
+	} else {
+		switch len(split) {
+		case 1:
 			if req.Method == GET {
-				agentID := split[1]
-				agentAPI.agent(w, req, agentID)
+				agentAPI.agents(w, req)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
+
+		case 2:
+			if "/"+split[1] == URL.Register() {
+				agentAPI.register(w, req)
+			} else {
+				if req.Method == GET {
+					agentID := split[1]
+					agentAPI.agent(w, req, agentID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
+			}
+
+		case 3:
+			if strings.Contains(url, URL.Apps()) {
+				apps.Handler.Handle(w, req)
+			} else if "/"+split[2] == URL.Unregister() {
+				agentID := split[1]
+				agentAPI.unregister(w, req, agentID)
+			} else if "/"+split[2] == URL.Ping() {
+				agentID := split[1]
+				agentAPI.ping(w, req, agentID)
+			} else {
+				common.WriteError(w, errors.NotFoundURL{})
+			}
 		}
 
-	case 3:
-		if strings.Contains(url, URL.Apps()) {
-			apps.Handler.Handle(w, req)
-		} else if "/"+split[2] == URL.Unregister() {
-			agentID := split[1]
-			agentAPI.unregister(w, req, agentID)
-		} else if "/"+split[2] == URL.Ping() {
-			agentID := split[1]
-			agentAPI.ping(w, req, agentID)
-		} else {
-			common.WriteError(w, errors.NotFoundURL{})
-		}
-
-	case 4:
-	case 5:
-		if strings.Contains(url, URL.Apps()) {
-			apps.Handler.Handle(w, req)
-		} else {
-			common.WriteError(w, errors.NotFoundURL{})
-		}
 	}
+
 }
 
 // agents handles requests which is used to get information of agent identified by the given agentID.

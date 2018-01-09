@@ -62,7 +62,7 @@ func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, er
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Resource())
+	urls := makeRequestUrl(address, url.Monitoring(), url.Resource())
 
 	// Request to return agent's resource information.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
@@ -93,7 +93,7 @@ func (Executor) GetPerformanceInfo(agentId string) (int, map[string]interface{},
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Resource(), url.Performance())
+	urls := makeRequestUrl(address, url.Monitoring(), url.Resource(), url.Performance())
 
 	// Request to return agent's performance information.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)

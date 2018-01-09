@@ -36,8 +36,8 @@ func Stop() string { return "/stop" }
 // Base returns the update url as a type of string.
 func Update() string { return "/update" }
 
-// Base returns the agents url as a type of string.
-func Agents() string { return "/agents" }
+// Base returns the nodes url as a type of string.
+func Nodes() string { return "/nodes" }
 
 // Base returns the groups url as a type of string.
 func Groups() string { return "/groups" }

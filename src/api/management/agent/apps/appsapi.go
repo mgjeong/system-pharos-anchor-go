@@ -63,7 +63,7 @@ func init() {
 
 // Handle calls a proper function according to the url and method received from remote device.
 func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Agents(), "", -1)
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
 	switch len(split) {
 	case 3:

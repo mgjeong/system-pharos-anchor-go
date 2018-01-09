@@ -46,7 +46,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		logger.Logging(logger.DEBUG, "Unknown URL")
 		common.WriteError(w, errors.NotFoundURL{})
 
-	case strings.Contains(url, URL.Agents()):
+	case strings.Contains(url, URL.Nodes()):
 		logger.Logging(logger.DEBUG, "Request Agents APIs")
 		agent.Handler.Handle(w, req)
 		
