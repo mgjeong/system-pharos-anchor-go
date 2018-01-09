@@ -128,7 +128,7 @@ func (groupHandler) Handle(w http.ResponseWriter, req *http.Request) {
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (groupAPIExecutor) createGroup(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[GROUP] Create SDA Group")
+	logger.Logging(logger.DEBUG, "[GROUP] Create Group")
 	result, resp, err := managementExecutor.CreateGroup()
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
@@ -144,10 +144,10 @@ func (groupAPIExecutor) group(w http.ResponseWriter, req *http.Request, groupID 
 	var err error
 	switch req.Method {
 	case GET:
-		logger.Logging(logger.DEBUG, "[GROUP] Get SDA Group")
+		logger.Logging(logger.DEBUG, "[GROUP] Get Group")
 		result, resp, err = managementExecutor.GetGroup(groupID)
 	case DELETE:
-		logger.Logging(logger.DEBUG, "[GROUP] Delete SDA Group")
+		logger.Logging(logger.DEBUG, "[GROUP] Delete Group")
 		result, resp, err = managementExecutor.DeleteGroup(groupID)
 	}
 
@@ -156,11 +156,11 @@ func (groupAPIExecutor) group(w http.ResponseWriter, req *http.Request, groupID 
 
 // groups handles requests which is used to get information of all groups created.
 //
-//    paths: '/api/v1/groups'
+//    paths: '/api/v1/management/groups'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (groupAPIExecutor) groups(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[GROUP] Get All SDA Groups")
+	logger.Logging(logger.DEBUG, "[GROUP] Get All Groups")
 	result, resp, err := managementExecutor.GetGroups()
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
@@ -172,7 +172,7 @@ func (groupAPIExecutor) groups(w http.ResponseWriter, req *http.Request) {
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (groupAPIExecutor) groupJoin(w http.ResponseWriter, req *http.Request, groupID string) {
-	logger.Logging(logger.DEBUG, "[GROUP] Join SDA Group")
+	logger.Logging(logger.DEBUG, "[GROUP] Join Group")
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
@@ -190,7 +190,7 @@ func (groupAPIExecutor) groupJoin(w http.ResponseWriter, req *http.Request, grou
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (groupAPIExecutor) groupLeave(w http.ResponseWriter, req *http.Request, groupID string) {
-	logger.Logging(logger.DEBUG, "[GROUP] Leave SDA Group")
+	logger.Logging(logger.DEBUG, "[GROUP] Leave Group")
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
