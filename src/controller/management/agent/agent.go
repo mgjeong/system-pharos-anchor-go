@@ -20,41 +20,55 @@
 package agent
 
 import (
+	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/url"
 	agentDB "db/mongo/agent"
 	"encoding/json"
+	"messenger"
+	"time"
 )
 
+// Command is an interface of agent operations.
 type Command interface {
-	AddAgent(body string) (int, map[string]interface{}, error)
-	DeleteAgent(agentId string) (int, error)
+	RegisterAgent(body string) (int, map[string]interface{}, error)
+	UnRegisterAgent(agentId string) (int, error)
 	GetAgent(agentId string) (int, map[string]interface{}, error)
 	GetAgents() (int, map[string]interface{}, error)
 	UpdateAgentStatus(agentId string, status string) error
+	Checker
 }
 
 const (
-	AGENTS           = "agents"    // used to indicate a list of agents.
-	ID               = "id"        // used to indicate an agent id.
-	HOST             = "host"      // used to indicate an agent address.
-	PORT             = "port"      // used to indicate an agent port.
-	STATUS_CONNECTED = "connected" // used to update agent status with connected.
+	AGENTS                      = "agents"       // used to indicate a list of agents.
+	ID                          = "id"           // used to indicate an agent id.
+	HOST                        = "host"         // used to indicate an agent address.
+	PORT                        = "port"         // used to indicate an agent port.
+	STATUS_CONNECTED            = "connected"    // used to update agent status with connected.
+	STATUS_DISCONNECTED         = "disconnected" // used to update agent status with disconnected.
+	INTERVAL                    = "interval"     // a period between two healthcheck message.
+	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
+	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
+	DEFAULT_AGENT_PORT          = "48098"        // used to indicate a default system-management-agent port.
 )
 
+// Executor implements the Command interface.
 type Executor struct{}
 
 var dbExecutor agentDB.Command
+var httpExecutor messenger.Command
 
 func init() {
 	dbExecutor = agentDB.Executor{}
+	httpExecutor = messenger.NewExecutor()
 }
 
 // AddAgent inserts a new agent with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (Executor) AddAgent(body string) (int, map[string]interface{}, error) {
+func (Executor) RegisterAgent(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -93,12 +107,41 @@ func (Executor) AddAgent(body string) (int, map[string]interface{}, error) {
 // DeleteAgent deletes the agent with a primary key matching the agentId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) DeleteAgent(agentId string) (int, error) {
+func (Executor) UnRegisterAgent(agentId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
+	// Get agent specified by agentId parameter.
+	agent, err := dbExecutor.GetAgent(agentId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	address, err := getAgentAddress(agent)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	urls := makeRequestUrl(address, url.Unregister())
+
+	codes, _ := httpExecutor.SendHttpRequest("POST", urls)
+
+	result := codes[0]
+	if !isSuccessCode(result) {
+		return results.ERROR, err
+	}
+
+	// Stop timer and close the channel for ping.
+	if common.timers[agentId] != nil {
+		common.timers[agentId] <- true
+		close(common.timers[agentId])
+	}
+	delete(common.timers, agentId)
+
 	// Delete agent specified by agentId parameter.
-	err := dbExecutor.DeleteAgent(agentId)
+	err = dbExecutor.DeleteAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -171,4 +214,44 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
 	}
 	return result, err
+}
+
+// isSuccessCode returns true in case of success and false otherwise.
+func isSuccessCode(code int) bool {
+	if code >= 200 && code <= 299 {
+		return true
+	}
+	return false
+}
+
+// makeRequestUrl make a list of urls that can be used to send a http request.
+func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
+	var httpTag string = "http://"
+	var full_url bytes.Buffer
+
+	for i := range address {
+		full_url.Reset()
+		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+			":" + DEFAULT_AGENT_PORT + url.Base())
+		for _, api_part := range api_parts {
+			full_url.WriteString(api_part)
+		}
+		urls = append(urls, full_url.String())
+	}
+	return urls
+}
+
+// getAgentAddress returns an address as an array.
+func getAgentAddress(agent map[string]interface{}) ([]map[string]interface{}, error) {
+	result := make([]map[string]interface{}, 1)
+
+	_, exists := agent["ip"]
+	if !exists {
+		return nil, errors.InvalidJSON{"ip field is required"}
+	}
+
+	result[0] = map[string]interface{}{
+		"ip": agent["ip"],
+	}
+	return result, nil
 }

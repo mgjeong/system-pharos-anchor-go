@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-package health
+package agent
 
 import (
 	"commons/errors"
@@ -35,12 +35,12 @@ type Checker interface {
 // change the status of device from connected to disconnected.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) PingAgent(agentId string, body string) (int, error) {
+func (executor Executor) PingAgent(agentId string, body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get agent specified by agentId parameter.
-	_, _, err := common.agentManager.GetAgent(agentId)
+	_, _, err := executor.GetAgent(agentId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -74,7 +74,7 @@ func (Executor) PingAgent(agentId string, body string) (int, error) {
 			logger.Logging(logger.DEBUG, "ping request is received in interval time")
 		} else {
 			logger.Logging(logger.DEBUG, "ping request is received after interval time-out")
-			err = common.agentManager.UpdateAgentStatus(agentId, STATUS_CONNECTED)
+			err = executor.UpdateAgentStatus(agentId, STATUS_CONNECTED)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
@@ -94,7 +94,7 @@ func (Executor) PingAgent(agentId string, body string) (int, error) {
 			logger.Logging(logger.ERROR, "ping request is not received in interval time")
 
 			// Status is updated with 'disconnected'.
-			err = common.agentManager.UpdateAgentStatus(agentId, STATUS_DISCONNECTED)
+			err = executor.UpdateAgentStatus(agentId, STATUS_DISCONNECTED)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
