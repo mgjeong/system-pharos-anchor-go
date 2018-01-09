@@ -82,7 +82,7 @@ func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
 // agentGetResourceInfo handles requests related to get agent's resource informaion
 // identified by the given agentID.
 //
-//    paths: '/api/v1/agents/{agentID}/resource'
+//    paths: '/api/v1/monitoring/agents/{agentID}/resource'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (resourceAPIExecutor) agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
@@ -94,7 +94,7 @@ func (resourceAPIExecutor) agentGetResourceInfo(w http.ResponseWriter, req *http
 // agentGetPerformanceInfo handles requests related to get agent's resource performance informaion
 // identified by the given agentID.
 //
-//    paths: '/api/v1/agents/{agentID}/resource/performance'
+//    paths: '/api/v1/monitoring/agents/{agentID}/resource/performance'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (resourceAPIExecutor) agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
