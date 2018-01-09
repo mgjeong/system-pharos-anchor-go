@@ -129,7 +129,7 @@ func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
 // agentDeployApp handles requests which is used to deploy new application to agent
 // identified by the given agentID.
 //
-//    paths: '/api/v1/management/agents/{agentID}/deploy'
+//    paths: '/api/v1/management/agents/{agentID}/apps/deploy'
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (appsAPIExecutor) agentDeployApp(w http.ResponseWriter, req *http.Request, agentID string) {

@@ -32,12 +32,15 @@ import (
 )
 
 const (
-	GET    string = "GET"
+	GET string = "GET"
 )
 
 type Command interface {
 	agent(w http.ResponseWriter, req *http.Request, agentID string)
 	agents(w http.ResponseWriter, req *http.Request)
+	register(w http.ResponseWriter, req *http.Request)
+	ping(w http.ResponseWriter, req *http.Request, agentID string)
+	unregister(w http.ResponseWriter, req *http.Request, agentID string)
 }
 
 type agentHandler struct{}
@@ -80,19 +83,19 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		}
 
 	case 3:
-		if "/"+split[2] == URL.Deploy() ||
-			"/"+split[2] == URL.Apps() {
+		if strings.Contains(url, URL.Apps()) {
 			apps.Handler.Handle(w, req)
-		} else if "/"+split[2] == URL.Unregister() ||
-			"/"+split[2] == URL.Ping() {
-			health.Handler.Handle(w, req)
+		} else if "/"+split[2] == URL.Unregister() {
+			agentAPI.Handle(w, req)
+		} else if "/"+split[2] == URL.Ping() {
+			agentAPI.Handle(w, req)
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})
 		}
 
 	case 4:
 	case 5:
-		if "/"+split[2] == URL.Apps() {
+		if strings.Contains(url, URL.Apps()) {
 			apps.Handler.Handle(w, req)
 		} else {
 			common.WriteError(w, errors.NotFoundURL{})
@@ -130,4 +133,52 @@ func (agentAPIExecutor) agents(w http.ResponseWriter, req *http.Request) {
 	}
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+// register handles requests which is used to register agent to a list of agents.
+//
+//    paths: '/api/v1/management/agents/register'
+//    method: POST
+//    responses: if successful, 200 status code will be returned.
+func (agentAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[AGENT] Register New Service Deployment Agent")
+
+	body, err := common.GetBodyFromReq(req)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	result, resp, err := managementExecutor.RegisterAgent(body)
+	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+// unregister handles requests which is used to unregister agent from a list of agents.
+//
+//    paths: '/api/v1/management/agents/{agentID}/unregister'
+//    method: POST
+//    responses: if successful, 200 status code will be returned.
+func (agentAPIExecutor) unregister(w http.ResponseWriter, req *http.Request, agentID string) {
+	logger.Logging(logger.DEBUG, "[AGENT] Unregister New Service Deployment Agent")
+
+	result, err := managementExecutor.UnRegisterAgent(agentID)
+	common.MakeResponse(w, result, nil, err)
+}
+
+// ping handles requests which is used to check whether an agent is up.
+//
+//    paths: '/api/v1/management/agents/{agentID}/ping'
+//    method: POST
+//    responses: if successful, 200 status code will be returned.
+func (agentAPIExecutor) ping(w http.ResponseWriter, req *http.Request, agentID string) {
+	logger.Logging(logger.DEBUG, "[AGENT] Ping From Service Deployment Agent")
+
+	body, err := common.GetBodyFromReq(req)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	result, err := managementExecutor.PingAgent(agentID, body)
+	common.MakeResponse(w, result, nil, err)
 }
