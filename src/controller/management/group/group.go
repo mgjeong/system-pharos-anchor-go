@@ -36,10 +36,10 @@ type Command interface {
 	// GetGroups returns a list of groups that is created on databases.
 	GetGroups() (int, map[string]interface{}, error)
 
-	// JoinGroup adds the agent to a list of members.
+	// JoinGroup adds the node to a list of members.
 	JoinGroup(groupId string, body string) (int, map[string]interface{}, error)
 
-	// LeaveGroup removes the agent from a list of members.
+	// LeaveGroup removes the node from a list of members.
 	LeaveGroup(groupId string, body string) (int, map[string]interface{}, error)
 
 	// DeleteGroup deletes the group with a primary key matching the groupId argument.
@@ -47,7 +47,7 @@ type Command interface {
 }
 
 const (
-	AGENTS        = "agents"      // used to indicate a list of agents.
+	AGENTS        = "nodes"      // used to indicate a list of nodes.
 	GROUPS        = "groups"      // used to indicate a list of groups.
 )
 
@@ -97,7 +97,7 @@ func (Executor) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	groups, err := dbExecutor.GetAllGroups()
+	groups, err := dbExecutor.GetGroups()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -109,7 +109,7 @@ func (Executor) GetGroups() (int, map[string]interface{}, error) {
 	return results.OK, res, err
 }
 
-// JoinGroup adds the agent to a list of members.
+// JoinGroup adds the node to a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func (Executor) JoinGroup(groupId string, body string) (int, map[string]interface{}, error) {
@@ -122,14 +122,14 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 		return results.ERROR, nil, err
 	}
 
-	// Check whether 'agents' is included.
+	// Check whether 'nodes' is included.
 	_, exists := bodyMap[AGENTS]
 	if !exists {
-		return results.ERROR, nil, errors.InvalidJSON{"agents field is required"}
+		return results.ERROR, nil, errors.InvalidJSON{"nodes field is required"}
 	}
 
-	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbExecutor.JoinGroup(groupId, agentId.(string))
+	for _, nodeId := range bodyMap[AGENTS].([]interface{}) {
+		err = dbExecutor.JoinGroup(groupId, nodeId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -139,7 +139,7 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 	return results.OK, nil, err
 }
 
-// LeaveGroup removes the agent from a list of members.
+// LeaveGroup removes the node from a list of members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interface{}, error) {
@@ -152,14 +152,14 @@ func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interfa
 		return results.ERROR, nil, err
 	}
 
-	// Check whether 'agents' is included.
+	// Check whether 'nodes' is included.
 	_, exists := bodyMap[AGENTS]
 	if !exists {
-		return results.ERROR, nil, errors.InvalidJSON{"agents field is required"}
+		return results.ERROR, nil, errors.InvalidJSON{"nodes field is required"}
 	}
 
-	for _, agentId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbExecutor.LeaveGroup(groupId, agentId.(string))
+	for _, nodeId := range bodyMap[AGENTS].([]interface{}) {
+		err = dbExecutor.LeaveGroup(groupId, nodeId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err

@@ -14,12 +14,12 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/mongo/agent/mocks"
+	dbmocks "db/mongo/node/mocks"
 	"github.com/golang/mock/gomock"
 	msgmocks "messenger/mocks"
 	"reflect"
@@ -29,14 +29,14 @@ import (
 const (
 	status  = "connected"
 	appId   = "000000000000000000000000"
-	agentId = "000000000000000000000001"
+	nodeId = "000000000000000000000001"
 	ip    = "127.0.0.1"
 	port    = "48098"
 )
 
 var (
-	agent = map[string]interface{}{
-		"id":   agentId,
+	node = map[string]interface{}{
+		"id":   nodeId,
 		"ip": ip,
 		"apps": []string{},
 	}
@@ -65,7 +65,7 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"id":"000000000000000000000000"}`}
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000000",
 	}
@@ -74,15 +74,15 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil),
+		dbManagerMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, res, err := executor.DeployApp(agentId, body)
+	code, res, err := executor.DeployApp(nodeId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -97,19 +97,19 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledDeployAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeployAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 
-	code, _, err := executor.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(nodeId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -130,20 +130,20 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(nodeId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -164,22 +164,22 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/deploy"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(notFoundError),
+		dbManagerMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeployApp(agentId, body)
+	code, _, err := executor.DeployApp(nodeId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -201,7 +201,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"description":"description"}`}
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps"}
 	expectedRes := map[string]interface{}{
 		"description": "description",
 	}
@@ -210,14 +210,14 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, res, err := executor.GetApps(agentId)
+	code, res, err := executor.GetApps(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -236,20 +236,20 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps"}
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.GetApps(agentId)
+	code, _, err := executor.GetApps(nodeId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -266,19 +266,19 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	}
 }
 
-func TestCalledGetAppsWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetAppsWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 
-	code, _, err := executor.GetApps(agentId)
+	code, _, err := executor.GetApps(nodeId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -300,7 +300,7 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"description":"description"}`}
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	expectedRes := map[string]interface{}{
 		"description": "description",
 	}
@@ -309,14 +309,14 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, res, err := executor.GetApp(agentId, appId)
+	code, res, err := executor.GetApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -335,20 +335,20 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.GetApp(agentId, appId)
+	code, _, err := executor.GetApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -365,19 +365,19 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	}
 }
 
-func TestCalledGetAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 
-	code, _, err := executor.GetApp(agentId, appId)
+	code, _, err := executor.GetApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -398,20 +398,20 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -422,7 +422,7 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateAppInfoWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateAppInfoWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -430,13 +430,13 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testin
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -457,20 +457,20 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateAppInfo(agentId, appId, body)
+	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -491,20 +491,20 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -515,7 +515,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -523,13 +523,13 @@ func TestCalledUpdateAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -550,20 +550,20 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/update"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/update"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(agentId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -584,20 +584,20 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -608,19 +608,19 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledStartAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledStartAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 
-	code, _, err := executor.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -641,20 +641,20 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/start"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/start"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.StartApp(agentId, appId)
+	code, _, err := executor.StartApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -675,20 +675,20 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -699,7 +699,7 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledStopAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledStopAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -707,13 +707,13 @@ func TestCalledStopAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -734,20 +734,20 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId + "/stop"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/stop"}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.StopApp(agentId, appId)
+	code, _, err := executor.StopApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -768,21 +768,21 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil),
+		dbManagerMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -793,7 +793,7 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledDeleteAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -801,13 +801,13 @@ func TestCalledDeleteAppWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(nil, notFoundError),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -828,20 +828,20 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCode_ExpectSuccess(t *testing.T
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -856,20 +856,20 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCodeWithInvalidResponse_ExpectS
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -890,21 +890,21 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/apps/" + appId}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
 	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(agent, nil),
+		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		dbManagerMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(notFoundError),
+		dbManagerMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	agentDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbManagerMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeleteApp(agentId, appId)
+	code, _, err := executor.DeleteApp(nodeId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

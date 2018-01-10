@@ -14,12 +14,12 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/mongo/agent/mocks"
+	dbmocks "db/mongo/node/mocks"
 	msgmocks "messenger/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
@@ -29,14 +29,14 @@ import (
 const (
 	status  = "connected"
 	appId   = "000000000000000000000000"
-	agentId = "000000000000000000000001"
+	nodeId = "000000000000000000000001"
 	ip      = "127.0.0.1"
 	port    = "48098"
 )
 
 var (
-	agent = map[string]interface{}{
-		"id":     agentId,
+	node = map[string]interface{}{
+		"id":     nodeId,
 		"ip":     ip,
 		"apps":   []string{},
 		"config": configuration,
@@ -64,7 +64,7 @@ func init() {
 	manager = Executor{}
 }
 
-func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
+func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -76,12 +76,12 @@ func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().AddAgent(ip, status, configuration).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, configuration).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, res, err := manager.RegisterAgent(body)
+	code, res, err := manager.RegisterNode(body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -96,13 +96,13 @@ func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledRegisterAgentWithInValidJsonFormatBody_ExpectErrorReturn(t *testing.T) {
+func TestCalledRegisterNodeWithInValidJsonFormatBody_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	invalidBody := `{"ip"}`
 
-	code, _, err := manager.RegisterAgent(invalidBody)
+	code, _, err := manager.RegisterNode(invalidBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -119,13 +119,13 @@ func TestCalledRegisterAgentWithInValidJsonFormatBody_ExpectErrorReturn(t *testi
 	}
 }
 
-func TestCalledRegisterAgentWithInvalidBodyNotIncludingIPField_ExpectErrorReturn(t *testing.T) {
+func TestCalledRegisterNodeWithInvalidBodyNotIncludingIPField_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	invalidBody := `{"key":"value"}`
 
-	code, _, err := manager.RegisterAgent(invalidBody)
+	code, _, err := manager.RegisterNode(invalidBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -142,21 +142,21 @@ func TestCalledRegisterAgentWithInvalidBodyNotIncludingIPField_ExpectErrorReturn
 	}
 }
 
-func TestCalledRegisterAgentWhenFailedToInsertNewAgentToDB_ExpectErrorReturn(t *testing.T) {
+func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().AddAgent(ip, status, configuration).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, configuration).Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
 	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
-	code, _, err := manager.RegisterAgent(body)
+	code, _, err := manager.RegisterNode(body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -173,25 +173,25 @@ func TestCalledRegisterAgentWhenFailedToInsertNewAgentToDB_ExpectErrorReturn(t *
 	}
 }
 
-func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
+func TestCalledUnRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/unregister"}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/unregister"}
 
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
-		dbExecutorMockObj.EXPECT().DeleteAgent(agentId).Return(nil),
+		dbExecutorMockObj.EXPECT().DeleteNode(nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	httpExecutor = msgMockObj
 	dbExecutor = dbExecutorMockObj
 
-	code, err := manager.UnRegisterAgent(agentId)
+	code, err := manager.UnRegisterNode(nodeId)
 
 	if code != results.OK {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
@@ -202,19 +202,19 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledUnRegisterAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledUnRegisterNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, err := manager.UnRegisterAgent(agentId)
+	code, err := manager.UnRegisterNode(nodeId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -231,20 +231,20 @@ func TestCalledUnRegisterAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 	}
 }
 
-func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
+func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, res, err := manager.GetAgent(agentId)
+	code, res, err := manager.GetNode(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -254,25 +254,25 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res, agent) {
+	if !reflect.DeepEqual(res, node) {
 		t.Error()
 	}
 }
 
-func TestCalledGetAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, _, err := manager.GetAgent(agentId)
+	code, _, err := manager.GetNode(nodeId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -289,22 +289,22 @@ func TestCalledGetAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledGetAgents_ExpectSuccess(t *testing.T) {
+func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	agents := []map[string]interface{}{agent}
+	nodes := []map[string]interface{}{node}
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAllAgents().Return(agents, nil),
+		dbExecutorMockObj.EXPECT().GetNodes().Return(nodes, nil),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, res, err := manager.GetAgents()
+	code, res, err := manager.GetNodes()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -314,25 +314,25 @@ func TestCalledGetAgents_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res["agents"].([]map[string]interface{}), agents) {
+	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodes) {
 		t.Error()
 	}
 }
 
-func TestCalledGetAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodesWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAllAgents().Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodes().Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, _, err := manager.GetAgents()
+	code, _, err := manager.GetNodes()
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -349,40 +349,40 @@ func TestCalledGetAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
+func TestCalledUpdateNodeStatus_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().UpdateAgentStatus(agentId, status).Return(nil),
+		dbExecutorMockObj.EXPECT().UpdateNodeStatus(nodeId, status).Return(nil),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	err := manager.UpdateAgentStatus(agentId, status)
+	err := manager.UpdateNodeStatus(nodeId, status)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateNodeStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().UpdateAgentStatus(agentId, status).Return(notFoundError),
+		dbExecutorMockObj.EXPECT().UpdateNodeStatus(nodeId, status).Return(notFoundError),
 	)
 
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	err := manager.UpdateAgentStatus(agentId, status)
+	err := manager.UpdateNodeStatus(nodeId, status)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -395,19 +395,19 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 	}
 }
 
-func TestCalledPingAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledPingNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	code, err := Executor{}.PingAgent(agentId, "")
+	code, err := Executor{}.PingNode(nodeId, "")
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -424,20 +424,20 @@ func TestCalledPingAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T)
 	}
 }
 
-func TestCalledPingAgentWithInvalidBody_ExpectErrorReturn(t *testing.T) {
+func TestCalledPingNodeWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
 	invalidKeyBody := `{"key":"value"}`
-	code, err := Executor{}.PingAgent(agentId, invalidKeyBody)
+	code, err := Executor{}.PingNode(nodeId, invalidKeyBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -454,20 +454,20 @@ func TestCalledPingAgentWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledPingAgentWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
+func TestCalledPingNodeWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
 	invalidValueBody := `{"interval":"value"}`
-	code, err := Executor{}.PingAgent(agentId, invalidValueBody)
+	code, err := Executor{}.PingNode(nodeId, invalidValueBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

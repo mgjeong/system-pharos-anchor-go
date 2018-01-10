@@ -15,17 +15,17 @@
  *
  *******************************************************************************/
 
-// Package api/agent provides functionality to handle request related to agent.
-package agent
+// Package api/node provides functionality to handle request related to node.
+package node
 
 import (
 	"api/common"
-	"api/management/agent/apps"
+	"api/management/node/apps"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	URL "commons/url"
-	agentmanager "controller/management/agent"
+	nodemanager "controller/management/node"
 	"net/http"
 	"strings"
 )
@@ -35,30 +35,30 @@ const (
 )
 
 type Command interface {
-	agent(w http.ResponseWriter, req *http.Request, agentID string)
-	agents(w http.ResponseWriter, req *http.Request)
+	node(w http.ResponseWriter, req *http.Request, nodeID string)
+	nodes(w http.ResponseWriter, req *http.Request)
 	register(w http.ResponseWriter, req *http.Request)
-	ping(w http.ResponseWriter, req *http.Request, agentID string)
-	unregister(w http.ResponseWriter, req *http.Request, agentID string)
+	ping(w http.ResponseWriter, req *http.Request, nodeID string)
+	unregister(w http.ResponseWriter, req *http.Request, nodeID string)
 }
 
-type agentHandler struct{}
-type agentAPIExecutor struct {
+type nodeHandler struct{}
+type nodeAPIExecutor struct {
 	Command
 }
 
-var managementExecutor agentmanager.Command
-var agentAPI agentAPIExecutor
-var Handler agentHandler
+var managementExecutor nodemanager.Command
+var nodeAPI nodeAPIExecutor
+var Handler nodeHandler
 
 func init() {
-	managementExecutor = agentmanager.Executor{}
-	agentAPI = agentAPIExecutor{}
-	Handler = agentHandler{}
+	managementExecutor = nodemanager.Executor{}
+	nodeAPI = nodeAPIExecutor{}
+	Handler = nodeHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (nodeHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
 
@@ -68,18 +68,18 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		switch len(split) {
 		case 1:
 			if req.Method == GET {
-				agentAPI.agents(w, req)
+				nodeAPI.nodes(w, req)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
 
 		case 2:
 			if "/"+split[1] == URL.Register() {
-				agentAPI.register(w, req)
+				nodeAPI.register(w, req)
 			} else {
 				if req.Method == GET {
-					agentID := split[1]
-					agentAPI.agent(w, req, agentID)
+					nodeID := split[1]
+					nodeAPI.node(w, req, nodeID)
 				} else {
 					common.WriteError(w, errors.InvalidMethod{req.Method})
 				}
@@ -89,11 +89,11 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			if strings.Contains(url, URL.Apps()) {
 				apps.Handler.Handle(w, req)
 			} else if "/"+split[2] == URL.Unregister() {
-				agentID := split[1]
-				agentAPI.unregister(w, req, agentID)
+				nodeID := split[1]
+				nodeAPI.unregister(w, req, nodeID)
 			} else if "/"+split[2] == URL.Ping() {
-				agentID := split[1]
-				agentAPI.ping(w, req, agentID)
+				nodeID := split[1]
+				nodeAPI.ping(w, req, nodeID)
 			} else {
 				common.WriteError(w, errors.NotFoundURL{})
 			}
@@ -103,14 +103,14 @@ func (agentHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 }
 
-// agents handles requests which is used to get information of agent identified by the given agentID.
+// nodes handles requests which is used to get information of node identified by the given nodeID.
 //
-//    paths: '/api/v1/management/agents/{agentID}'
+//    paths: '/api/v1/management/nodes/{nodeID}'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (agentAPIExecutor) agent(w http.ResponseWriter, req *http.Request, agentID string) {
-	logger.Logging(logger.DEBUG, "[AGENT] Get Service Deployment Agent")
-	result, resp, err := managementExecutor.GetAgent(agentID)
+func (nodeAPIExecutor) node(w http.ResponseWriter, req *http.Request, nodeID string) {
+	logger.Logging(logger.DEBUG, "[NODE] Get Service Deployment Nodes")
+	result, resp, err := managementExecutor.GetNode(nodeID)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
@@ -119,14 +119,14 @@ func (agentAPIExecutor) agent(w http.ResponseWriter, req *http.Request, agentID 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-// agents handles requests which is used to get information of all agents registered.
+// nodes handles requests which is used to get information of all nodes registered.
 //
-//    paths: '/api/v1/management/agents'
+//    paths: '/api/v1/management/nodes'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (agentAPIExecutor) agents(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[AGENT] Get All Service Deployment Agents")
-	result, resp, err := managementExecutor.GetAgents()
+func (nodeAPIExecutor) nodes(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[NODE] Get All Service Deployment Nodes")
+	result, resp, err := managementExecutor.GetNodes()
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
 		return
@@ -135,13 +135,13 @@ func (agentAPIExecutor) agents(w http.ResponseWriter, req *http.Request) {
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-// register handles requests which is used to register agent to a list of agents.
+// register handles requests which is used to register node to a list of nodes.
 //
-//    paths: '/api/v1/management/agents/register'
+//    paths: '/api/v1/management/nodes/register'
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
-func (agentAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[AGENT] Register New Service Deployment Agent")
+func (nodeAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[NODE] Register New Service Deployment Node")
 
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
@@ -149,29 +149,29 @@ func (agentAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	result, resp, err := managementExecutor.RegisterAgent(body)
+	result, resp, err := managementExecutor.RegisterNode(body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-// unregister handles requests which is used to unregister agent from a list of agents.
+// unregister handles requests which is used to unregister node from a list of nodes.
 //
-//    paths: '/api/v1/management/agents/{agentID}/unregister'
+//    paths: '/api/v1/management/nodes/{nodeID}/unregister'
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
-func (agentAPIExecutor) unregister(w http.ResponseWriter, req *http.Request, agentID string) {
-	logger.Logging(logger.DEBUG, "[AGENT] Unregister New Service Deployment Agent")
+func (nodeAPIExecutor) unregister(w http.ResponseWriter, req *http.Request, nodeID string) {
+	logger.Logging(logger.DEBUG, "[NODE] Unregister New Service Deployment Node")
 
-	result, err := managementExecutor.UnRegisterAgent(agentID)
+	result, err := managementExecutor.UnRegisterNode(nodeID)
 	common.MakeResponse(w, result, nil, err)
 }
 
-// ping handles requests which is used to check whether an agent is up.
+// ping handles requests which is used to check whether a node is up.
 //
-//    paths: '/api/v1/management/agents/{agentID}/ping'
+//    paths: '/api/v1/management/nodes/{nodeID}/ping'
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
-func (agentAPIExecutor) ping(w http.ResponseWriter, req *http.Request, agentID string) {
-	logger.Logging(logger.DEBUG, "[AGENT] Ping From Service Deployment Agent")
+func (nodeAPIExecutor) ping(w http.ResponseWriter, req *http.Request, nodeID string) {
+	logger.Logging(logger.DEBUG, "[NODE] Ping From Service Deployment Node")
 
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
@@ -179,6 +179,6 @@ func (agentAPIExecutor) ping(w http.ResponseWriter, req *http.Request, agentID s
 		return
 	}
 
-	result, err := managementExecutor.PingAgent(agentID, body)
+	result, err := managementExecutor.PingNode(nodeID, body)
 	common.MakeResponse(w, result, nil, err)
 }
