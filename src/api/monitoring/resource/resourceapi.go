@@ -31,17 +31,21 @@ const (
 	GET    string = "GET"
 )
 
+
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type resourceMonitoringAPI interface {
 	nodeGetResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
 	nodeGetPerformanceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
 }
 
-type resourceHandler struct{}
+type RequestHandler struct{}
 type resourceAPIExecutor struct {
-	Command
+	resourceMonitoringAPI
 }
 
-var Handler resourceHandler
 var resourceAPI resourceAPIExecutor
 var resourceExecutor resource.Command
 
@@ -49,7 +53,7 @@ func init() {
 	resourceExecutor = resource.Executor{}
 }
 
-func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Monitoring()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
 	switch len(split) {

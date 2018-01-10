@@ -38,6 +38,10 @@ const (
 )
 
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type groupManagementAPI interface {
 	createGroup(w http.ResponseWriter, req *http.Request)
 	group(w http.ResponseWriter, req *http.Request, groupID string)
 	groups(w http.ResponseWriter, req *http.Request)
@@ -45,79 +49,73 @@ type Command interface {
 	groupLeave(w http.ResponseWriter, req *http.Request, groupID string)
 }
 
-type groupHandler struct{}
+type RequestHandler struct{}
 type groupAPIExecutor struct {
-	Command
+	groupManagementAPI
 }
 
+var deploymentHandler apps.Command
 var managementExecutor groupmanager.Command
 var groupAPI groupAPIExecutor
-var Handler groupHandler
 
 func init() {
+	deploymentHandler = apps.RequestHandler{}
 	managementExecutor = groupmanager.Executor{}
 	groupAPI = groupAPIExecutor{}
-	Handler = groupHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (groupHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Groups(), "", -1)
 	split := strings.Split(url, "/")
-	switch len(split) {
-	case 1:
-		if req.Method == GET {
-			groupAPI.groups(w, req)
-		} else {
-			common.WriteError(w, errors.InvalidMethod{req.Method})
-		}
 
-	case 2:
-		if "/"+split[1] == URL.Create() {
-			if req.Method == POST {
-				groupAPI.createGroup(w, req)
-			} else {
-				common.WriteError(w, errors.InvalidMethod{req.Method})
-			}
-		} else {
-			if req.Method == GET || req.Method == DELETE {
-				groupID := split[1]
-				groupAPI.group(w, req, groupID)
-			} else {
-				common.WriteError(w, errors.InvalidMethod{req.Method})
-			}
-		}
-
-	case 3:
-		groupID := split[1]
-		switch {
-		case "/"+split[2] == URL.Apps():
-			apps.Handler.Handle(w, req)
-
-		case "/"+split[2] == URL.Join():
-			if req.Method == POST {
-				groupAPI.groupJoin(w, req, groupID)
+	if strings.Contains(url, URL.Apps()) {
+		deploymentHandler.Handle(w, req)
+	} else {
+		switch len(split) {
+		case 1:
+			if req.Method == GET {
+				groupAPI.groups(w, req)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
 
-		case "/"+split[2] == URL.Leave():
-			if req.Method == POST {
-				groupAPI.groupLeave(w, req, groupID)
+		case 2:
+			if "/"+split[1] == URL.Create() {
+				if req.Method == POST {
+					groupAPI.createGroup(w, req)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
 			} else {
-				common.WriteError(w, errors.InvalidMethod{req.Method})
+				if req.Method == GET || req.Method == DELETE {
+					groupID := split[1]
+					groupAPI.group(w, req, groupID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
 			}
 
-		default:
-			common.WriteError(w, errors.NotFoundURL{})
-		}
+		case 3:
+			groupID := split[1]
+			switch {
+			case "/"+split[2] == URL.Join():
+				if req.Method == POST {
+					groupAPI.groupJoin(w, req, groupID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
 
-	case 4:
-	case 5:
-		if "/"+split[2] == URL.Apps() {
-			apps.Handler.Handle(w, req)
-		} else {
-			common.WriteError(w, errors.NotFoundURL{})
+			case "/"+split[2] == URL.Leave():
+				if req.Method == POST {
+					groupAPI.groupLeave(w, req, groupID)
+				} else {
+					common.WriteError(w, errors.InvalidMethod{req.Method})
+				}
+
+			default:
+				common.WriteError(w, errors.NotFoundURL{})
+			}
 		}
 	}
 }

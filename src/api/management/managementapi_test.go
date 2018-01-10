@@ -15,11 +15,11 @@
  *
  *******************************************************************************/
 
-package api
+package management
 
 import (
-	managementmocks "api/management/mocks"
-	monitoringmocks "api/monitoring/mocks"
+	nodemocks "api/management/node/mocks"
+	groupmocks "api/monitoring/group/mocks"
 	"net/http"
 	"net/http/httptest"
 	"github.com/golang/mock/gomock"

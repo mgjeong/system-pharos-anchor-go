@@ -37,29 +37,31 @@ const (
 )
 
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type registryManagementAPI interface {
 	registerDockerRegistry(w http.ResponseWriter, req *http.Request)
 	getDockerRegistries(w http.ResponseWriter, req *http.Request)
 	getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
 	handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request)
 }
 
-type registryHandler struct{}
+type RequestHandler struct{}
 type registryAPIExecutor struct{
-	Command
+	registryManagementAPI
 }
 
-var Handler registryHandler
 var registryAPI registryAPIExecutor
 var registryExecutor registry.Command
 
 func init() {
 	registryAPI = registryAPIExecutor{}
 	registryExecutor = registry.Executor{}
-	Handler = registryHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (registryHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

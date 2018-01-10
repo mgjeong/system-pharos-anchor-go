@@ -35,6 +35,10 @@ const (
 )
 
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type nodeManagementAPI interface {
 	node(w http.ResponseWriter, req *http.Request, nodeID string)
 	nodes(w http.ResponseWriter, req *http.Request)
 	register(w http.ResponseWriter, req *http.Request)
@@ -42,28 +46,28 @@ type Command interface {
 	unregister(w http.ResponseWriter, req *http.Request, nodeID string)
 }
 
-type nodeHandler struct{}
+type RequestHandler struct{}
 type nodeAPIExecutor struct {
-	Command
+	nodeManagementAPI
 }
 
-var managementExecutor nodemanager.Command
+var deploymentHandler apps.Command
+var managementExecutor agentmanager.Command
 var nodeAPI nodeAPIExecutor
-var Handler nodeHandler
 
 func init() {
-	managementExecutor = nodemanager.Executor{}
+	deploymentHandler = apps.RequestHandler{}
+	managementExecutor = agentmanager.Executor{}
 	nodeAPI = nodeAPIExecutor{}
-	Handler = nodeHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (nodeHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
 
 	if strings.Contains(url, URL.Apps()) {
-		apps.Handler.Handle(w, req)
+		deploymentHandler.Handle(w, req)
 	} else {
 		switch len(split) {
 		case 1:
@@ -86,11 +90,9 @@ func (nodeHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			}
 
 		case 3:
-			if strings.Contains(url, URL.Apps()) {
-				apps.Handler.Handle(w, req)
-			} else if "/"+split[2] == URL.Unregister() {
-				nodeID := split[1]
-				nodeAPI.unregister(w, req, nodeID)
+			if "/"+split[2] == URL.Unregister() {
+				agentID := split[1]
+				agentAPI.unregister(w, req, agentID)
 			} else if "/"+split[2] == URL.Ping() {
 				nodeID := split[1]
 				nodeAPI.ping(w, req, nodeID)
