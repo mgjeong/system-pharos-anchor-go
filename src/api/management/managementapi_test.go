@@ -19,81 +19,111 @@ package management
 
 import (
 	nodemocks "api/management/node/mocks"
-	groupmocks "api/monitoring/group/mocks"
+	groupmocks "api/management/group/mocks"
+	registrymocks "api/management/registry/mocks"
 	"net/http"
 	"net/http/httptest"
 	"github.com/golang/mock/gomock"
 	"testing"
 )
 
-func TestCalledServeHTTPWithInvalidURL_UnExpectCalledManagementHandleAndMonitoringHandle(t *testing.T) {
+var Handler Command
+
+func init() {
+	Handler = RequestHandler{}
+}
+
+func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
-	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+	nodeHandlerMockObj := nodemocks.NewMockCommand(ctrl)
+	groupHandlerMockObj := groupmocks.NewMockCommand(ctrl)
+	registryHandlerMockObj := registrymocks.NewMockCommand(ctrl)
 	
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/invalid", nil)
 	
 	// pass mockObj to a real object.
-	managementHandler = managementHandlerMockObj
-	monitoringHandler = monitoringHandlerMockObj
+	nodeManagementHandler = nodeHandlerMockObj
+	groupManagementHandler = groupHandlerMockObj
+	registryManagementHandler = registryHandlerMockObj
 
-	Handler.ServeHTTP(w, req)
+	Handler.Handle(w, req)
 }
 
-func TestCalledServeHTTPWithExcludedBaseURL_UnExpectCalledManagementHandleAndMonitoringHandle(t *testing.T) {
+func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
-	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+	nodeHandlerMockObj := nodemocks.NewMockCommand(ctrl)
+	groupHandlerMockObj := groupmocks.NewMockCommand(ctrl)
+	registryHandlerMockObj := registrymocks.NewMockCommand(ctrl)
 	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/monitoring/resource", nil)
+	req, _ := http.NewRequest("GET", "/nodes/resource", nil)
 	
 	// pass mockObj to a real object.
-	managementHandler = managementHandlerMockObj
-	monitoringHandler = monitoringHandlerMockObj
+	nodeManagementHandler = nodeHandlerMockObj
+	groupManagementHandler = groupHandlerMockObj
+	registryManagementHandler = registryHandlerMockObj
 
-	Handler.ServeHTTP(w, req)
+	Handler.Handle(w, req)
 }
 
-func TestCalledServeHTTPWithManagementRequest_ExpectCalledManagementHandle(t *testing.T) {
+func TestCalledHandleWithNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
+	nodeHandlerMockObj := nodemocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		managementHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+		nodeHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
 	
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/nodes", nil)
 	
 	// pass mockObj to a real object.
-	managementHandler = managementHandlerMockObj
+	nodeManagementHandler = nodeHandlerMockObj
 
-	Handler.ServeHTTP(w, req)
+	Handler.Handle(w, req)
 }
 
-func TestCalledServeHTTPWithMonitoringRequest_ExpectCalledMonitoringHandle(t *testing.T) {
+func TestCalledHandleWithGroupRequest_ExpectCalledGroupHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+	groupHandlerMockObj := groupmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		monitoringHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+		groupHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
 	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/monitoring/resource", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/groups", nil)
 	
 	// pass mockObj to a real object.
-	monitoringHandler = monitoringHandlerMockObj
+	groupManagementHandler = groupHandlerMockObj
 
-	Handler.ServeHTTP(w, req)
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithRegistryRequest_ExpectCalledRegistryHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	registryHandlerMockObj := registrymocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		registryHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+	
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/management/registries", nil)
+	
+	// pass mockObj to a real object.
+	registryManagementHandler = registryHandlerMockObj
+
+	Handler.Handle(w, req)
 }
