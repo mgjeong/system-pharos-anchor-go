@@ -15,9 +15,9 @@
  *
  *******************************************************************************/
 
-// Package agent provides an interfaces to add, delete, get
+// Package node provides an interfaces to add, delete, get
 // an target edge device.
-package agent
+package node
 
 import (
 	"bytes"
@@ -25,55 +25,55 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	agentDB "db/mongo/agent"
+	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
 	"time"
 )
 
-// Command is an interface of agent operations.
+// Command is an interface of node operations.
 type Command interface {
-	RegisterAgent(body string) (int, map[string]interface{}, error)
-	UnRegisterAgent(agentId string) (int, error)
-	GetAgent(agentId string) (int, map[string]interface{}, error)
-	GetAgents() (int, map[string]interface{}, error)
-	UpdateAgentStatus(agentId string, status string) error
+	RegisterNode(body string) (int, map[string]interface{}, error)
+	UnRegisterNode(nodeId string) (int, error)
+	GetNode(nodeId string) (int, map[string]interface{}, error)
+	GetNodes() (int, map[string]interface{}, error)
+	UpdateNodeStatus(nodeId string, status string) error
 	Checker
 }
 
 const (
-	AGENTS                      = "agents"       // used to indicate a list of agents.
-	ID                          = "id"           // used to indicate an agent id.
-	HOST                        = "host"         // used to indicate an agent address.
-	PORT                        = "port"         // used to indicate an agent port.
-	STATUS_CONNECTED            = "connected"    // used to update agent status with connected.
-	STATUS_DISCONNECTED         = "disconnected" // used to update agent status with disconnected.
+	NODES                       = "nodes"        // used to indicate a list of nodes.
+	ID                          = "id"           // used to indicate an node id.
+	HOST                        = "host"         // used to indicate an node address.
+	PORT                        = "port"         // used to indicate an node port.
+	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
+	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
 	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
-	DEFAULT_AGENT_PORT          = "48098"        // used to indicate a default system-management-agent port.
+	DEFAULT_NODE_PORT          = "48098"        // used to indicate a default pharos node port.
 )
 
 // Executor implements the Command interface.
 type Executor struct{}
 
-var dbExecutor agentDB.Command
+var dbExecutor nodeDB.Command
 var httpExecutor messenger.Command
 
 func init() {
-	dbExecutor = agentDB.Executor{}
+	dbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
-// AddAgent inserts a new agent with ip which is passed in call to function.
+// RegisterNode inserts a new node with ip which is passed in call to function.
 // If successful, a unique id that is created automatically will be returned.
 // otherwise, an appropriate error will be returned.
-func (Executor) RegisterAgent(body string) (int, map[string]interface{}, error) {
+func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// If body is not empty, try to get agent id from body.
-	// This code will be used to update the information of agent without changing id.
+	// If body is not empty, try to get node id from body.
+	// This code will be used to update the information of node without changing id.
 	bodyMap, err := convertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
@@ -92,39 +92,39 @@ func (Executor) RegisterAgent(body string) (int, map[string]interface{}, error) 
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
 
-	// Add new agent to database with given ip, port, status.
-	agent, err := dbExecutor.AddAgent(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	// Add new node to database with given ip, port, status.
+	node, err := dbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
 	res := make(map[string]interface{})
-	res[ID] = agent[ID]
+	res[ID] = node[ID]
 	return results.OK, res, err
 }
 
-// DeleteAgent deletes the agent with a primary key matching the agentId argument.
+// UnRegisterNode deletes the node with a primary key matching the nodeId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UnRegisterAgent(agentId string) (int, error) {
+func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	agent, err := dbExecutor.GetAgent(agentId)
+	// Get node specified by nodeId parameter.
+	node, err := dbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
 
-	address, err := getAgentAddress(agent)
+	address, err := getNodeAddress(node)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Unregister())
+	urls := makeRequestUrl(address, url.Management(), url.Unregister())
 
 	codes, _ := httpExecutor.SendHttpRequest("POST", urls)
 
@@ -134,14 +134,14 @@ func (Executor) UnRegisterAgent(agentId string) (int, error) {
 	}
 
 	// Stop timer and close the channel for ping.
-	if common.timers[agentId] != nil {
-		common.timers[agentId] <- true
-		close(common.timers[agentId])
+	if common.timers[nodeId] != nil {
+		common.timers[nodeId] <- true
+		close(common.timers[nodeId])
 	}
-	delete(common.timers, agentId)
+	delete(common.timers, nodeId)
 
-	// Delete agent specified by agentId parameter.
-	err = dbExecutor.DeleteAgent(agentId)
+	// Delete node specified by nodeId parameter.
+	err = dbExecutor.DeleteNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -150,52 +150,52 @@ func (Executor) UnRegisterAgent(agentId string) (int, error) {
 	return results.OK, err
 }
 
-// GetAgent returns the agent with a primary key matching the agentId argument.
+// GetNode returns the node with a primary key matching the nodeId argument.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetAgent(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetNode(nodeId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	agent, err := dbExecutor.GetAgent(agentId)
+	// Get node specified by nodeId parameter.
+	node, err := dbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
-	return results.OK, agent, err
+	return results.OK, node, err
 }
 
-// GetAgents returns all agents in databases as an array.
+// GetNodes returns all nodes in databases as an array.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetAgents() (int, map[string]interface{}, error) {
+func (Executor) GetNodes() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get all agents stored in the database.
-	agents, err := dbExecutor.GetAllAgents()
+	// Get all nodes stored in the database.
+	nodes, err := dbExecutor.GetNodes()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
 	res := make(map[string]interface{})
-	res[AGENTS] = agents
+	res[NODES] = nodes
 
 	return results.OK, res, err
 }
 
-// UpdateAgentStatus returns the agent's status.
+// UpdateNodeStatus returns the node's status.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UpdateAgentStatus(agentId string, status string) error {
+func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	err := dbExecutor.UpdateAgentStatus(agentId, status)
+	// Get node specified by nodeId parameter.
+	err := dbExecutor.UpdateNodeStatus(nodeId, status)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
@@ -232,7 +232,7 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 	for i := range address {
 		full_url.Reset()
 		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_AGENT_PORT + url.Base())
+			":" + DEFAULT_NODE_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}
@@ -241,17 +241,17 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 	return urls
 }
 
-// getAgentAddress returns an address as an array.
-func getAgentAddress(agent map[string]interface{}) ([]map[string]interface{}, error) {
+// getNodeAddress returns an address as an array.
+func getNodeAddress(node map[string]interface{}) ([]map[string]interface{}, error) {
 	result := make([]map[string]interface{}, 1)
 
-	_, exists := agent["ip"]
+	_, exists := node["ip"]
 	if !exists {
 		return nil, errors.InvalidJSON{"ip field is required"}
 	}
 
 	result[0] = map[string]interface{}{
-		"ip": agent["ip"],
+		"ip": node["ip"],
 	}
 	return result, nil
 }

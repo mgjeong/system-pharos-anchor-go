@@ -47,7 +47,7 @@ type Command interface {
 	UpdateDockerImage(registryId string, image map[string]interface{}) error
 
 	// DeleteDockerImage delete a specific docker image from the target registry.
-	DeleteDockerImage(registryId string, image map[string]interface{})
+	DeleteDockerImage(registryId string, image map[string]interface{}) error
 }
 
 const (
@@ -62,7 +62,7 @@ type Registry struct {
 	Images []string
 }
 
-type Executor struct {}
+type Executor struct{}
 
 var mgoDial Connection
 var imageExecutor imageDB.Command
@@ -223,7 +223,10 @@ func (Executor) DeleteDockerRegistry(registryId string) error {
 
 	// Delete all docker images included in the target registry from database.
 	for _, imageId := range registry.Images {
-		imageExecutor.DeleteDockerImage(imageId)
+		err = imageExecutor.DeleteDockerImage(imageId)
+		if err != nil {
+			return ConvertMongoError(err, registryId)
+		}
 	}
 	return nil
 }

@@ -22,26 +22,26 @@ import (
 	"github.com/golang/mock/gomock"
 	msgmocks "messenger/mocks"
 	groupdbmocks "db/mongo/group/mocks"
-	agentdbmocks "db/mongo/agent/mocks"
+	nodedbmocks "db/mongo/node/mocks"
 	"reflect"
 	"testing"
 )
 
 const (
 	appId   = "000000000000000000000000"
-	agentId = "000000000000000000000001"
+	nodeId = "000000000000000000000001"
 	groupId = "000000000000000000000002"
 	ip    = "192.168.0.1"
 	port    = "48098"
 )
 
 var (
-	agent = map[string]interface{}{
-		"id":   agentId,
+	node = map[string]interface{}{
+		"id":   nodeId,
 		"ip": ip,
 		"apps": []string{appId},
 	}
-	members = []map[string]interface{}{agent, agent}
+	members = []map[string]interface{}{node, node}
 	address = map[string]interface{}{
 		"ip": ip,
 	}
@@ -62,10 +62,10 @@ var (
 	connectionError        = errors.DBConnectionError{}
 )
 
-var controller Command
+var executor Command
 
 func init() {
-	controller = GroupController{}
+	executor = Executor{}
 }
 
 func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
@@ -79,20 +79,20 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil).AnyTimes(),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
-	httpRequester = msgMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.DeployApp(groupId, body)
+	code, res, err := executor.DeployApp(groupId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -119,7 +119,7 @@ func TestCalledDeployAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.DeployApp(groupId, body)
+	code, _, err := executor.DeployApp(groupId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -151,9 +151,9 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeployApp(groupId, body)
+	code, _, err := executor.DeployApp(groupId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -178,20 +178,20 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	expectedUrl := []string{deployUrl, deployUrl}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(notFoundError),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
-	httpRequester = msgMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeployApp(groupId, body)
+	code, _, err := executor.DeployApp(groupId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -218,11 +218,11 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		"id": "000000000000000000000000",
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -230,20 +230,20 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
-	httpRequester = msgMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.DeployApp(groupId, body)
+	code, res, err := executor.DeployApp(groupId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -265,7 +265,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	expectedRes := map[string]interface{}{
 		"apps": []map[string]interface{}{{
 			"id":      appId,
-			"members": []string{agentId, agentId},
+			"members": []string{nodeId, nodeId},
 		}},
 	}
 
@@ -277,7 +277,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, res, err := controller.GetApps(groupId)
+	code, res, err := executor.GetApps(groupId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -304,7 +304,7 @@ func TestCalledGetAppsWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.GetApps(groupId)
+	code, _, err := executor.GetApps(groupId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -347,9 +347,9 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.GetApp(groupId, appId)
+	code, res, err := executor.GetApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -376,7 +376,7 @@ func TestCalledGetAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.GetApp(groupId, appId)
+	code, _, err := executor.GetApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -409,9 +409,9 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.GetApp(groupId, appId)
+	code, _, err := executor.GetApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -437,12 +437,12 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":          agentId,
+				"id":          nodeId,
 				"code":        results.OK,
 				"description": "description",
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -458,9 +458,9 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.GetApp(groupId, appId)
+	code, res, err := executor.GetApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -490,9 +490,9 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
+	code, _, err := executor.UpdateAppInfo(groupId, appId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -515,7 +515,7 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testin
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
+	code, _, err := executor.UpdateAppInfo(groupId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -548,9 +548,9 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateAppInfo(groupId, appId, body)
+	code, _, err := executor.UpdateAppInfo(groupId, appId, body)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -576,11 +576,11 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -596,9 +596,9 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.UpdateAppInfo(groupId, appId, body)
+	code, res, err := executor.UpdateAppInfo(groupId, appId, body)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -628,9 +628,9 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateApp(groupId, appId)
+	code, _, err := executor.UpdateApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -653,7 +653,7 @@ func TestCalledUpdateAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.UpdateApp(groupId, appId)
+	code, _, err := executor.UpdateApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -686,9 +686,9 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.UpdateApp(groupId, appId)
+	code, _, err := executor.UpdateApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -714,11 +714,11 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -734,9 +734,9 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.UpdateApp(groupId, appId)
+	code, res, err := executor.UpdateApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -766,9 +766,9 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StartApp(groupId, appId)
+	code, _, err := executor.StartApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -791,7 +791,7 @@ func TestCalledStartAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) 
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.StartApp(groupId, appId)
+	code, _, err := executor.StartApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -824,9 +824,9 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StartApp(groupId, appId)
+	code, _, err := executor.StartApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -852,11 +852,11 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -872,9 +872,9 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.StartApp(groupId, appId)
+	code, res, err := executor.StartApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -904,9 +904,9 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StopApp(groupId, appId)
+	code, _, err := executor.StopApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -929,7 +929,7 @@ func TestCalledStopAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.StopApp(groupId, appId)
+	code, _, err := executor.StopApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -962,9 +962,9 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.StopApp(groupId, appId)
+	code, _, err := executor.StopApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -990,11 +990,11 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -1010,9 +1010,9 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.StopApp(groupId, appId)
+	code, res, err := executor.StopApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -1034,20 +1034,20 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{baseUrl, baseUrl}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil).AnyTimes(),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
-	httpRequester = msgMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(groupId, appId)
+	code, _, err := executor.DeleteApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -1070,7 +1070,7 @@ func TestCalledDeleteAppWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 
-	code, _, err := controller.DeleteApp(groupId, appId)
+	code, _, err := executor.DeleteApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -1103,9 +1103,9 @@ func TestCalledDeleteAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 
-	code, _, err := controller.DeleteApp(groupId, appId)
+	code, _, err := executor.DeleteApp(groupId, appId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -1131,11 +1131,11 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -1143,20 +1143,20 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
-	httpRequester = msgMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	httpExecutor = msgMockObj
 
-	code, res, err := controller.DeleteApp(groupId, appId)
+	code, res, err := executor.DeleteApp(groupId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())

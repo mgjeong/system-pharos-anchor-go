@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-package agent
+package node
 
 import (
 	"commons/errors"
@@ -25,22 +25,22 @@ import (
 	"time"
 )
 
-// Checker is an interface to update current status of the agent.
+// Checker is an interface to update current status of the node.
 type Checker interface {
-	PingAgent(agentId string, body string) (int, error)
+	PingNode(nodeId string, body string) (int, error)
 }
 
-// PingAgent starts timer with received interval.
-// If agent does not send next healthcheck message in interval time,
+// PingNode starts timer with received interval.
+// If node does not send next healthcheck message in interval time,
 // change the status of device from connected to disconnected.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (executor Executor) PingAgent(agentId string, body string) (int, error) {
+func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	_, _, err := executor.GetAgent(agentId)
+	// Get node specified by nodeId parameter.
+	_, _, err := executor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -64,17 +64,17 @@ func (executor Executor) PingAgent(agentId string, body string) (int, error) {
 		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
 	}
 
-	_, exists = common.timers[agentId]
+	_, exists = common.timers[nodeId]
 	if !exists {
-		logger.Logging(logger.DEBUG, "first ping request is received from agent")
+		logger.Logging(logger.DEBUG, "first ping request is received from node")
 	} else {
-		if common.timers[agentId] != nil {
+		if common.timers[nodeId] != nil {
 			// If ping request is received in interval time, send signal to stop timer.
-			common.timers[agentId] <- true
+			common.timers[nodeId] <- true
 			logger.Logging(logger.DEBUG, "ping request is received in interval time")
 		} else {
 			logger.Logging(logger.DEBUG, "ping request is received after interval time-out")
-			err = executor.UpdateAgentStatus(agentId, STATUS_CONNECTED)
+			err = executor.UpdateNodeStatus(nodeId, STATUS_CONNECTED)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
@@ -86,7 +86,7 @@ func (executor Executor) PingAgent(agentId string, body string) (int, error) {
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
 		quit := make(chan bool)
-		common.timers[agentId] = quit
+		common.timers[nodeId] = quit
 
 		select {
 		// Block until timer finishes.
@@ -94,7 +94,7 @@ func (executor Executor) PingAgent(agentId string, body string) (int, error) {
 			logger.Logging(logger.ERROR, "ping request is not received in interval time")
 
 			// Status is updated with 'disconnected'.
-			err = executor.UpdateAgentStatus(agentId, STATUS_DISCONNECTED)
+			err = executor.UpdateNodeStatus(nodeId, STATUS_DISCONNECTED)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
@@ -104,7 +104,7 @@ func (executor Executor) PingAgent(agentId string, body string) (int, error) {
 			return
 		}
 
-		common.timers[agentId] = nil
+		common.timers[nodeId] = nil
 		close(quit)
 	}()
 

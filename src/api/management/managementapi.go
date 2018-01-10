@@ -15,32 +15,25 @@
  *
  *******************************************************************************/
 
-// Package api provides web server for Pharos Anchor(Edge Manager).
-// and also provides functionality of request processing and response making.
-package api
+package management
 
 import (
-	"api/management"
-	"api/monitoring"
 	"api/common"
+	"api/management/node"
+	"api/management/group"
+	"api/management/registry"
 	"commons/errors"
 	"commons/logger"
 	URL "commons/url"
 	"net/http"
-	"strconv"
 	"strings"
 )
-
-// RunWebServer starts web server service with given address and port number.
-func RunWebServer(addr string, port int) {
-	http.ListenAndServe(addr+":"+strconv.Itoa(port), &Handler)
-}
 
 var Handler RequestHandler
 
 type RequestHandler struct{}
 
-func (RequestHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -53,12 +46,17 @@ func (RequestHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		logger.Logging(logger.DEBUG, "Unknown URL")
 		common.WriteError(w, errors.NotFoundURL{})
 
-	case strings.Contains(url, URL.Management()):
-		logger.Logging(logger.DEBUG, "Request Management APIs")
-		management.Handler.Handle(w, req)
+	case strings.Contains(url, URL.Nodes()):
+		logger.Logging(logger.DEBUG, "Request Nodes APIs")
+		node.Handler.Handle(w, req)
+		
+	case strings.Contains(url, URL.Groups()):
+		logger.Logging(logger.DEBUG, "Request Groups APIs")
+		group.Handler.Handle(w, req)
 
-	case strings.Contains(url, URL.Monitoring()):
-		logger.Logging(logger.DEBUG, "Request Monitoring APIs")
-		monitoring.Handler.Handle(w, req)
+	case strings.Contains(url, URL.Registries()):
+		logger.Logging(logger.DEBUG, "Request Registries APIs")
+		registry.Handler.Handle(w, req)
 	}
 }
+

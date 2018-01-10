@@ -97,7 +97,7 @@ func (image Image) convertToMap() map[string]interface{} {
 	}
 }
 
-// AddDockerImage insert a new agent to 'image' collection.
+// AddDockerImage insert a new docker image to 'image' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func (Executor) AddDockerImage(image map[string]interface{}) (map[string]interface{}, error) {

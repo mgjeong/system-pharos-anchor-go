@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	"bytes"
@@ -22,49 +22,49 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	agentDB "db/mongo/agent"
+	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
 )
 
 const (
-	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-agent port.
+	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-node port.
 )
 
 type Command interface {
-	GetResourceInfo(agentId string) (int, map[string]interface{}, error)	
-	GetPerformanceInfo(agentId string) (int, map[string]interface{}, error)
+	GetResourceInfo(nodeId string) (int, map[string]interface{}, error)	
+	GetPerformanceInfo(nodeId string) (int, map[string]interface{}, error)
 }
 
 type Executor struct{}
 
-var agentDbExecutor agentDB.Command
+var nodeDbExecutor nodeDB.Command
 
 var httpExecutor messenger.Command
 
 func init() {
-	agentDbExecutor = agentDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
-// GetResourceInfo request an agent resource (os, processor, performance) information.
+// GetResourceInfo request an node resource (os, processor, performance) information.
 // If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetResourceInfo(nodeId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	agent, err := agentDbExecutor.GetAgent(agentId)
+	// Get node specified by nodeId parameter.
+	node, err := nodeDbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
-	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Resource())
+	address := getNodeAddress(node)
+	urls := makeRequestUrl(address, url.Monitoring(), url.Resource())
 
-	// Request to return agent's resource information.
+	// Request to return node's resource information.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
@@ -78,24 +78,24 @@ func (Executor) GetResourceInfo(agentId string) (int, map[string]interface{}, er
 	return result, respMap, err
 }
 
-// GetPerformanceInfo request an agent performance(cpu, disk, mem usage) information.
+// GetPerformanceInfo request an node performance(cpu, disk, mem usage) information.
 // If response code represents success, returns performance information.
 // Otherwise, an appropriate error will be returned.
-func (Executor) GetPerformanceInfo(agentId string) (int, map[string]interface{}, error) {
+func (Executor) GetPerformanceInfo(nodeId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	// Get agent specified by agentId parameter.
-	agent, err := agentDbExecutor.GetAgent(agentId)
+	// Get node specified by nodeId parameter.
+	node, err := nodeDbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
-	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Resource(), url.Performance())
+	address := getNodeAddress(node)
+	urls := makeRequestUrl(address, url.Monitoring(), url.Resource(), url.Performance())
 
-	// Request to return agent's performance information.
+	// Request to return node's performance information.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
 
 	// Convert the received response from string to map.
@@ -121,11 +121,11 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 	return result, err
 }
 
-// getAgentAddress returns an address as an array.
-func getAgentAddress(agent map[string]interface{}) []map[string]interface{} {
+// getNodeAddress returns an address as an array.
+func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		"ip": agent["ip"],
+		"ip": node["ip"],
 	}
 	return result
 }
