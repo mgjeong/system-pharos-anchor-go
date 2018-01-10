@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	"commons/errors"
@@ -24,41 +24,41 @@ import (
 )
 
 type Command interface {
-	// AddAgent insert new Agent.
-	AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error)
+	// AddNode insert new Node.
+	AddNode(ip string, status string, config map[string]interface{}) (map[string]interface{}, error)
 
-	// UpdateAgentAddress updates ip,port of agent from db related to agent.
-	UpdateAgentAddress(agent_id string, host string, port string) error
+	// UpdateNodeAddress updates ip,port of node from db related to node.
+	UpdateNodeAddress(nodeId string, host string, port string) error
 
-	// UpdateAgentStatus updates status of agent from db related to agent.
-	UpdateAgentStatus(agent_id string, status string) error
+	// UpdateNodeStatus updates status of node from db related to node.
+	UpdateNodeStatus(nodeId string, status string) error
 
-	// GetAgent returns single document from db related to agent.
-	GetAgent(agent_id string) (map[string]interface{}, error)
+	// GetNode returns single document from db related to node.
+	GetNode(nodeId string) (map[string]interface{}, error)
 
-	// GetAllAgents returns all documents from db related to agent.
-	GetAllAgents() ([]map[string]interface{}, error)
+	// GetNodes returns all documents from db related to node.
+	GetNodes() ([]map[string]interface{}, error)
 
-	// GetAgentByAppID returns single document including specific app.
-	GetAgentByAppID(agent_id string, app_id string) (map[string]interface{}, error)
+	// GetNodeByAppID returns single document including specific app.
+	GetNodeByAppID(nodeId string, appId string) (map[string]interface{}, error)
 
-	// AddAppToAgent add specific app to the target agent.
-	AddAppToAgent(agent_id string, app_id string) error
+	// AddAppToNode add specific app to the target node.
+	AddAppToNode(nodeId string, appId string) error
 
-	// DeleteAppFromAgent delete specific app from the target agent.
-	DeleteAppFromAgent(agent_id string, app_id string) error
+	// DeleteAppFromNode delete specific app from the target node.
+	DeleteAppFromNode(nodeId string, appId string) error
 
-	// DeleteAgent delete single document from db related to agent.
-	DeleteAgent(agent_id string) error
+	// DeleteNode delete single document from db related to node.
+	DeleteNode(nodeId string) error
 }
 
 const (
 	DB_NAME          = "DeploymentManagerDB"
-	AGENT_COLLECTION = "AGENT"
+	NODE_COLLECTION = "NODE"
 	DB_URL           = "127.0.0.1:27017"
 )
 
-type Agent struct {
+type Node struct {
 	ID     bson.ObjectId `bson:"_id,omitempty"`
 	IP     string
 	Apps   []string
@@ -99,21 +99,21 @@ func getCollection(mgoSession Session, dbname string, collectionName string) Col
 	return mgoSession.DB(dbname).C(collectionName)
 }
 
-// convertToMap converts Agent object into a map.
-func (agent Agent) convertToMap() map[string]interface{} {
+// convertToMap converts Node object into a map.
+func (node Node) convertToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":     agent.ID.Hex(),
-		"ip":     agent.IP,
-		"apps":   agent.Apps,
-		"status": agent.Status,
-		"config": agent.Config,
+		"id":     node.ID.Hex(),
+		"ip":     node.IP,
+		"apps":   node.Apps,
+		"status": node.Status,
+		"config": node.Config,
 	}
 }
 
-// AddAgent inserts new agent to 'agent' collection.
+// AddNode inserts new node to 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) AddAgent(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
+func (Executor) AddNode(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -123,27 +123,27 @@ func (Executor) AddAgent(ip string, status string, config map[string]interface{}
 	}
 	defer close(session)
 
-	agent := Agent{
+	node := Node{
 		ID:     bson.NewObjectId(),
 		IP:     ip,
 		Status: status,
 		Config: config,
 	}
 
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Insert(agent)
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Insert(node)
 
 	if err != nil {
 		return nil, ConvertMongoError(err)
 	}
 
-	result := agent.convertToMap()
+	result := node.convertToMap()
 	return result, err
 }
 
-// UpdateAgentAddress updates ip,port of agent specified by agent_id parameter.
+// UpdateNodeAddress updates ip,port of node specified by nodeId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UpdateAgentAddress(agent_id string, host string, port string) error {
+func (Executor) UpdateNodeAddress(nodeId string, host string, port string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -154,24 +154,24 @@ func (Executor) UpdateAgentAddress(agent_id string, host string, port string) er
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err := errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err := errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"host": host, "port": port}}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Update(query, update)
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, "Failed to update address")
 	}
 	return err
 }
 
-// UpdateAgentStatus updates status of agent specified by agent_id parameter.
+// UpdateNodeStatus updates status of node specified by nodeId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UpdateAgentStatus(agent_id string, status string) error {
+func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -182,24 +182,24 @@ func (Executor) UpdateAgentStatus(agent_id string, status string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err = errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"status": status}}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Update(query, update)
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, "Failed to update status")
 	}
 	return err
 }
 
-// GetAgent returns single document specified by agent_id parameter.
+// GetNode returns single document specified by nodeId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetAgent(agent_id string) (map[string]interface{}, error) {
+func (Executor) GetNode(nodeId string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -210,26 +210,26 @@ func (Executor) GetAgent(agent_id string) (map[string]interface{}, error) {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err := errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err := errors.InvalidObjectId{nodeId}
 		return nil, err
 	}
 
-	agent := Agent{}
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Find(query).One(&agent)
+	node := Node{}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
-		return nil, ConvertMongoError(err, agent_id)
+		return nil, ConvertMongoError(err, nodeId)
 	}
 
-	result := agent.convertToMap()
+	result := node.convertToMap()
 	return result, err
 }
 
-// GetAllAgents returns all documents from 'agent' collection.
+// GetNodes returns all documents from 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetAllAgents() ([]map[string]interface{}, error) {
+func (Executor) GetNodes() ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -239,24 +239,24 @@ func (Executor) GetAllAgents() ([]map[string]interface{}, error) {
 	}
 	defer close(session)
 
-	agents := []Agent{}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Find(nil).All(&agents)
+	nodes := []Node{}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(nil).All(&nodes)
 	if err != nil {
 		return nil, ConvertMongoError(err)
 	}
 
-	result := make([]map[string]interface{}, len(agents))
-	for i, agent := range agents {
-		result[i] = agent.convertToMap()
+	result := make([]map[string]interface{}, len(nodes))
+	for i, node := range nodes {
+		result[i] = node.convertToMap()
 	}
 	return result, err
 }
 
-// GetAgentByAppID returns single document specified by agent_id parameter.
+// GetNodeByAppID returns single document specified by nodeId parameter.
 // If successful, this function returns an error as nil.
-// But if the target agent does not include the given app_id,
+// But if the target node does not include the given appId,
 // an appropriate error will be returned.
-func (Executor) GetAgentByAppID(agent_id string, app_id string) (map[string]interface{}, error) {
+func (Executor) GetNodeByAppID(nodeId string, appId string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -267,26 +267,26 @@ func (Executor) GetAgentByAppID(agent_id string, app_id string) (map[string]inte
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err = errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
 		return nil, err
 	}
 
-	agent := Agent{}
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id), "apps": bson.M{"$in": []string{app_id}}}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Find(query).One(&agent)
+	node := Node{}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
-		return nil, ConvertMongoError(err, agent_id)
+		return nil, ConvertMongoError(err, nodeId)
 	}
 
-	result := agent.convertToMap()
+	result := node.convertToMap()
 	return result, err
 }
 
-// AddAppToAgent adds the specific app to the target agent.
+// AddAppToNode adds the specific app to the target node.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) AddAppToAgent(agent_id string, app_id string) error {
+func (Executor) AddAppToNode(nodeId string, appId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -297,24 +297,24 @@ func (Executor) AddAppToAgent(agent_id string, app_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err := errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err := errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
-	update := bson.M{"$addToSet": bson.M{"apps": app_id}}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Update(query, update)
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	update := bson.M{"$addToSet": bson.M{"apps": appId}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
-		return ConvertMongoError(err, agent_id)
+		return ConvertMongoError(err, nodeId)
 	}
 	return err
 }
 
-// DeleteAppFromAgent deletes the specific app from the target agent.
+// DeleteAppFromNode deletes the specific app from the target node.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) DeleteAppFromAgent(agent_id string, app_id string) error {
+func (Executor) DeleteAppFromNode(nodeId string, appId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -325,24 +325,24 @@ func (Executor) DeleteAppFromAgent(agent_id string, app_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err = errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
-	update := bson.M{"$pull": bson.M{"apps": app_id}}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Update(query, update)
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	update := bson.M{"$pull": bson.M{"apps": appId}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
-		return ConvertMongoError(err, agent_id)
+		return ConvertMongoError(err, nodeId)
 	}
 	return err
 }
 
-// DeleteAgent deletes single document from 'agent' collection.
+// DeleteNode deletes single document from 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) DeleteAgent(agent_id string) error {
+func (Executor) DeleteNode(nodeId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -353,15 +353,15 @@ func (Executor) DeleteAgent(agent_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(agent_id) {
-		err = errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(agent_id)}
-	err = getCollection(session, DB_NAME, AGENT_COLLECTION).Remove(query)
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Remove(query)
 	if err != nil {
-		return ConvertMongoError(err, agent_id)
+		return ConvertMongoError(err, nodeId)
 	}
 	return err
 }

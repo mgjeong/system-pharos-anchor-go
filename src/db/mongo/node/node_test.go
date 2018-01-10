@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	errors "commons/errors"
@@ -29,10 +29,10 @@ import (
 const (
 	validUrl        = "127.0.0.1:27017"
 	dbName          = "DeploymentManagerDB"
-	collectionName  = "AGENT"
+	collectionName  = "NODE"
 	status          = "connected"
 	appId           = "000000000000000000000000"
-	agentId         = "000000000000000000000001"
+	nodeId         = "000000000000000000000001"
 	invalidObjectId = ""
 )
 
@@ -197,7 +197,7 @@ func TestCalledUpdateAgentAddress_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"host": "192.168.0.1", "port": "48098"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -215,7 +215,7 @@ func TestCalledUpdateAgentAddress_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
+	err := executor.UpdateAgentAddress(nodeId, "192.168.0.1", "48098")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -252,7 +252,7 @@ func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"host": "192.168.0.1", "port": "48098"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -270,7 +270,7 @@ func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentAddress(agentId, "192.168.0.1", "48098")
+	err := executor.UpdateAgentAddress(nodeId, "192.168.0.1", "48098")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -287,7 +287,7 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"status": "connected"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -305,7 +305,7 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentStatus(agentId, "connected")
+	err := executor.UpdateAgentStatus(nodeId, "connected")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -341,7 +341,7 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"status": "connected"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -359,7 +359,7 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentStatus(agentId, "connected")
+	err := executor.UpdateAgentStatus(nodeId, "connected")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -376,10 +376,10 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
-	arg := Agent{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
-		"id":     agentId,
+		"id":     nodeId,
 		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
@@ -403,7 +403,7 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAgent(agentId)
+	res, err := executor.GetAgent(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -443,7 +443,7 @@ func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -462,7 +462,7 @@ func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgent(agentId)
+	_, err := executor.GetAgent(nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -479,9 +479,9 @@ func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	args := []Agent{{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}}
+	args := []Node{{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}}
 	expectedRes := []map[string]interface{}{{
-		"id":     agentId,
+		"id":     nodeId,
 		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
@@ -554,10 +554,10 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId), "apps": bson.M{"$in": []string{appId}}}
-	arg := Agent{ID: bson.ObjectIdHex(agentId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
+	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
-		"id":     agentId,
+		"id":     nodeId,
 		"ip":     "192.168.0.1",
 		"apps":   []string{},
 		"status": status,
@@ -581,7 +581,7 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAgentByAppID(agentId, appId)
+	res, err := executor.GetAgentByAppID(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -596,7 +596,7 @@ func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId), "apps": bson.M{"$in": []string{appId}}}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -615,7 +615,7 @@ func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgentByAppID(agentId, appId)
+	_, err := executor.GetAgentByAppID(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -657,7 +657,7 @@ func TestCalledAddAppToAgent_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$addToSet": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -675,7 +675,7 @@ func TestCalledAddAppToAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.AddAppToAgent(agentId, appId)
+	err := executor.AddAppToAgent(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -711,7 +711,7 @@ func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$addToSet": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -729,7 +729,7 @@ func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.AddAppToAgent(agentId, appId)
+	err := executor.AddAppToAgent(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -746,7 +746,7 @@ func TestCalledDeleteAppFromAgent_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$pull": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -764,7 +764,7 @@ func TestCalledDeleteAppFromAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAppFromAgent(agentId, appId)
+	err := executor.DeleteAppFromAgent(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -800,7 +800,7 @@ func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$pull": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -818,7 +818,7 @@ func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAppFromAgent(agentId, appId)
+	err := executor.DeleteAppFromAgent(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -835,7 +835,7 @@ func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -852,7 +852,7 @@ func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAgent(agentId)
+	err := executor.DeleteAgent(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -888,7 +888,7 @@ func TestCalledDeleteAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(agentId)}
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -905,7 +905,7 @@ func TestCalledDeleteAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAgent(agentId)
+	err := executor.DeleteAgent(nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

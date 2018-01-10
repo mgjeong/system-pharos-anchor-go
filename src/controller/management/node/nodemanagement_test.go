@@ -14,12 +14,12 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package agent
+package node
 
 import (
 	"commons/errors"
 	"commons/results"
-	dbmocks "db/mongo/agent/mocks"
+	dbmocks "db/mongo/node/mocks"
 	msgmocks "messenger/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
@@ -35,7 +35,7 @@ const (
 )
 
 var (
-	agent = map[string]interface{}{
+	node = map[string]interface{}{
 		"id":     agentId,
 		"ip":     ip,
 		"apps":   []string{},
@@ -76,7 +76,7 @@ func TestCalledRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().AddAgent(ip, status, configuration).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().AddAgent(ip, status, configuration).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
@@ -183,7 +183,7 @@ func TestCalledUnRegisterAgentWithValidBody_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 		dbExecutorMockObj.EXPECT().DeleteAgent(agentId).Return(nil),
 	)
@@ -238,7 +238,7 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(node, nil),
 	)
 
 	// pass mockObj to a real object.
@@ -254,7 +254,7 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res, agent) {
+	if !reflect.DeepEqual(res, node) {
 		t.Error()
 	}
 }
@@ -293,12 +293,12 @@ func TestCalledGetAgents_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	agents := []map[string]interface{}{agent}
+	nodes := []map[string]interface{}{node}
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAllAgents().Return(agents, nil),
+		dbExecutorMockObj.EXPECT().GetAllAgents().Return(nodes, nil),
 	)
 
 	// pass mockObj to a real object.
@@ -431,7 +431,7 @@ func TestCalledPingAgentWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
@@ -461,7 +461,7 @@ func TestCalledPingAgentWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(agent, nil),
+		dbExecutorMockObj.EXPECT().GetAgent(agentId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj

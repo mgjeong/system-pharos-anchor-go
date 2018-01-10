@@ -26,14 +26,14 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	agentDB "db/mongo/agent"
+	nodeDB "db/mongo/node"
 	groupDB "db/mongo/group"
 	"encoding/json"
 	"messenger"
 )
 
 const (
-	AGENTS             = "agents"      // used to indicate a list of agents.
+	NODES             = "nodes"      // used to indicate a list of agents.
 	GROUPS             = "groups"      // used to indicate a list of groups.
 	MEMBERS            = "members"     // used to indicate a list of members.
 	APPS               = "apps"        // used to indicate a list of apps.
@@ -42,17 +42,17 @@ const (
 	ERROR_MESSAGE      = "message"     // used to indicate a message.
 	RESPONSES          = "responses"   // used to indicate a list of responses.
 	DESCRIPTION        = "description" // used to indicate a description.
-	DEFAULT_AGENT_PORT = "48098"       // used to indicate a default system-management-agent port.
+	DEFAULT_AGENT_PORT = "48098"       // used to indicate a default system-management-node port.
 )
 
 type Executor struct{}
 
-var agentDbExecutor agentDB.Command
+var nodeDbExecutor nodeDB.Command
 var groupDbExecutor groupDB.Command
 var httpExecutor messenger.Command
 
 func init() {
-	agentDbExecutor = agentDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
 	groupDbExecutor = groupDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
@@ -114,9 +114,9 @@ func (Executor) DeployApp(groupId string, body string) (int, map[string]interfac
 
 	// if response code represents success, insert the installed appId into groupDbExecutor.
 	installedAppId := ""
-	for i, agent := range members {
+	for i, node := range members {
 		if isSuccessCode(codes[i]) {
-			err = agentDbExecutor.AddAppToAgent(agent[ID].(string), respMap[i][ID].(string))
+			err = nodeDbExecutor.AddAppToNode(node[ID].(string), respMap[i][ID].(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
@@ -167,15 +167,15 @@ func (Executor) GetApps(groupId string) (int, map[string]interface{}, error) {
 	}
 
 	respValue := make([]map[string]interface{}, 0)
-	for _, agent := range members {
-		for _, appId := range agent[APPS].([]string) {
+	for _, node := range members {
+		for _, appId := range node[APPS].([]string) {
 			item := contains(respValue, appId)
 			if item != nil {
-				item[MEMBERS] = append(item[MEMBERS].([]string), agent[ID].(string))
+				item[MEMBERS] = append(item[MEMBERS].([]string), node[ID].(string))
 			} else {
 				item = map[string]interface{}{
 					ID:      appId,
-					MEMBERS: []string{agent[ID].(string)},
+					MEMBERS: []string{node[ID].(string)},
 				}
 				respValue = append(respValue, item)
 			}
@@ -236,9 +236,9 @@ func (Executor) GetApp(groupId string, appId string) (int, map[string]interface{
 	respValue := make([]map[string]interface{}, len(members))
 	resp[RESPONSES] = respValue
 
-	for i, agent := range members {
+	for i, node := range members {
 		respValue[i] = make(map[string]interface{})
-		respValue[i][ID] = agent[ID].(string)
+		respValue[i][ID] = node[ID].(string)
 		for key, value := range respMap[i] {
 			respValue[i][key] = value
 		}
@@ -315,9 +315,9 @@ func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interfa
 	}
 
 	// if response code represents success, delete the appId from groupDbExecutor.
-	for i, agent := range members {
+	for i, node := range members {
 		if isSuccessCode(codes[i]) {
-			err = agentDbExecutor.DeleteAppFromAgent(agent[ID].(string), appId)
+			err = nodeDbExecutor.DeleteAppFromNode(node[ID].(string), appId)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
@@ -465,12 +465,12 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 	return result, err
 }
 
-// getAgentAddress returns an member's address as an array.
+// getNodeAddress returns an member's address as an array.
 func getMemberAddress(members []map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(members))
-	for i, agent := range members {
+	for i, node := range members {
 		result[i] = map[string]interface{}{
-			"ip": agent["ip"],
+			"ip": node["ip"],
 		}
 	}
 	return result
@@ -533,9 +533,9 @@ func makeSeparateResponses(members []map[string]interface{}, codes []int,
 
 	respValue := make([]map[string]interface{}, len(members))
 
-	for i, agent := range members {
+	for i, node := range members {
 		respValue[i] = make(map[string]interface{})
-		respValue[i][ID] = agent[ID].(string)
+		respValue[i][ID] = node[ID].(string)
 		respValue[i][RESPONSE_CODE] = codes[i]
 
 		if !isSuccessCode(codes[i]) {

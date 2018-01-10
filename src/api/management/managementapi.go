@@ -19,7 +19,7 @@ package management
 
 import (
 	"api/common"
-	"api/management/agent"
+	"api/management/node"
 	"api/management/group"
 	"api/management/registry"
 	"commons/errors"
@@ -47,8 +47,8 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		common.WriteError(w, errors.NotFoundURL{})
 
 	case strings.Contains(url, URL.Nodes()):
-		logger.Logging(logger.DEBUG, "Request Agents APIs")
-		agent.Handler.Handle(w, req)
+		logger.Logging(logger.DEBUG, "Request Nodes APIs")
+		node.Handler.Handle(w, req)
 		
 	case strings.Contains(url, URL.Groups()):
 		logger.Logging(logger.DEBUG, "Request Groups APIs")

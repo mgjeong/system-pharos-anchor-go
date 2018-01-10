@@ -19,7 +19,7 @@ package group
 import (
 	"commons/errors"
 	"commons/logger"
-	agentDB "db/mongo/agent"
+	nodeDB "db/mongo/node"
 	. "db/mongo/wrapper"
 
 	"gopkg.in/mgo.v2/bson"
@@ -35,17 +35,17 @@ type Command interface {
 	// GetAllGroups returns all documents from db related to group.
 	GetAllGroups() ([]map[string]interface{}, error)
 
-	// GetGroupMembers returns all agents who belong to the target group.
+	// GetGroupMembers returns all nodes who belong to the target group.
 	GetGroupMembers(group_id string) ([]map[string]interface{}, error)
 
-	// GetGroupMembersByAppID returns all agents including specific app on the target group.
+	// GetGroupMembersByAppID returns all nodes including specific app on the target group.
 	GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error)
 
-	// JoinGroup add specific agent to the target group.
-	JoinGroup(group_id string, agent_id string) error
+	// JoinGroup add specific node to the target group.
+	JoinGroup(group_id string, node_id string) error
 
-	// LeaveGroup delete specific agent from the target group.
-	LeaveGroup(group_id string, agent_id string) error
+	// LeaveGroup delete specific node from the target group.
+	LeaveGroup(group_id string, node_id string) error
 
 	// DeleteGroup delete single document from db related to group.
 	DeleteGroup(group_id string) error
@@ -65,11 +65,11 @@ type Group struct {
 type Executor struct {}
 
 var mgoDial Connection
-var agentExecutor agentDB.Command
+var nodeExecutor nodeDB.Command
 
 func init() {
 	mgoDial = MongoDial{}
-	agentExecutor = agentDB.Executor{}
+	nodeExecutor = nodeDB.Executor{}
 }
 
 // Try to connect with mongo db server.
@@ -187,10 +187,10 @@ func (Executor) GetAllGroups() ([]map[string]interface{}, error) {
 	return result, err
 }
 
-// JoinGroup adds the specific agent to a list of group members.
+// JoinGroup adds the specific node to a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) JoinGroup(group_id string, agent_id string) error {
+func (Executor) JoinGroup(group_id string, node_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -205,13 +205,13 @@ func (Executor) JoinGroup(group_id string, agent_id string) error {
 		err := errors.InvalidObjectId{group_id}
 		return err
 	}
-	if !bson.IsObjectIdHex(agent_id) {
-		err := errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(node_id) {
+		err := errors.InvalidObjectId{node_id}
 		return err
 	}
 
 	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
-	update := bson.M{"$addToSet": bson.M{"members": agent_id}}
+	update := bson.M{"$addToSet": bson.M{"members": node_id}}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, group_id)
@@ -219,10 +219,10 @@ func (Executor) JoinGroup(group_id string, agent_id string) error {
 	return err
 }
 
-// LeaveGroup deletes the specific agent from a list of group members.
+// LeaveGroup deletes the specific node from a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) LeaveGroup(group_id string, agent_id string) error {
+func (Executor) LeaveGroup(group_id string, node_id string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -237,13 +237,13 @@ func (Executor) LeaveGroup(group_id string, agent_id string) error {
 		err = errors.InvalidObjectId{group_id}
 		return err
 	}
-	if !bson.IsObjectIdHex(agent_id) {
-		err = errors.InvalidObjectId{agent_id}
+	if !bson.IsObjectIdHex(node_id) {
+		err = errors.InvalidObjectId{node_id}
 		return err
 	}
 
 	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
-	update := bson.M{"$pull": bson.M{"members": agent_id}}
+	update := bson.M{"$pull": bson.M{"members": node_id}}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, group_id)
@@ -251,7 +251,7 @@ func (Executor) LeaveGroup(group_id string, agent_id string) error {
 	return err
 }
 
-// GetGroupMembers returns all agents who belong to the target group.
+// GetGroupMembers returns all nodes who belong to the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func (client Executor) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
@@ -270,18 +270,18 @@ func (client Executor) GetGroupMembers(group_id string) ([]map[string]interface{
 	}
 
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
-	for i, agent_id := range group["members"].([]string) {
-		var agent map[string]interface{}
-		agent, err := agentExecutor.GetAgent(agent_id)
+	for i, node_id := range group["members"].([]string) {
+		var node map[string]interface{}
+		node, err := nodeExecutor.GetNode(node_id)
 		if err != nil {
 			return nil, err
 		}
-		result[i] = agent
+		result[i] = node
 	}
 	return result, err
 }
 
-// GetGroupMembersByAppID returns all agents including the app identified
+// GetGroupMembersByAppID returns all nodes including the app identified
 // by the given appid on the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
@@ -301,13 +301,13 @@ func (client Executor) GetGroupMembersByAppID(group_id string, app_id string) ([
 	}
 
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
-	for i, agent_id := range group["members"].([]string) {
-		var agent map[string]interface{}
-		agent, err := agentExecutor.GetAgentByAppID(agent_id, app_id)
+	for i, node_id := range group["members"].([]string) {
+		var node map[string]interface{}
+		node, err := nodeExecutor.GetNodeByAppID(node_id, app_id)
 		if err != nil {
 			return nil, err
 		}
-		result[i] = agent
+		result[i] = node
 	}
 
 	return result, err

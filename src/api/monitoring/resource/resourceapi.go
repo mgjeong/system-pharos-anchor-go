@@ -22,7 +22,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	URL "commons/url"
-	resource "controller/resource/agent"
+	resource "controller/resource/node"
 	"net/http"
 	"strings"
 )
@@ -32,8 +32,8 @@ const (
 )
 
 type Command interface {
-	agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string)
-	agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string)
+	nodeGetResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
+	nodeGetPerformanceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
 }
 
 type resourceHandler struct{}
@@ -54,10 +54,10 @@ func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	split := strings.Split(url, "/")
 	switch len(split) {
 	case 3:
-		agentID := split[1]
+		nodeID := split[1]
 		if "/"+split[2] == URL.Resource() {
 			if req.Method == GET {
-				resourceAPI.agentGetResourceInfo(w, req, agentID)
+				resourceAPI.nodeGetResourceInfo(w, req, nodeID)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
@@ -67,9 +67,9 @@ func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	case 4:
 		if "/"+split[3] == URL.Performance() {
-			agentID := split[1]
+			nodeID := split[1]
 			if req.Method == GET {
-				resourceAPI.agentGetPerformanceInfo(w, req, agentID)
+				resourceAPI.nodeGetPerformanceInfo(w, req, nodeID)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
@@ -79,26 +79,26 @@ func (resourceHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// agentGetResourceInfo handles requests related to get agent's resource informaion
-// identified by the given agentID.
+// nodeGetResourceInfo handles requests related to get node's resource informaion
+// identified by the given nodeID.
 //
-//    paths: '/api/v1/monitoring/agents/{agentID}/resource'
+//    paths: '/api/v1/monitoring/nodes/{nodeID}/resource'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (resourceAPIExecutor) agentGetResourceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
-	logger.Logging(logger.DEBUG, "[AGENT] Get Resource Info")
-	result, resp, err := resourceExecutor.GetResourceInfo(agentId)
+func (resourceAPIExecutor) nodeGetResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string) {
+	logger.Logging(logger.DEBUG, "[NODE] Get Resource Info")
+	result, resp, err := resourceExecutor.GetResourceInfo(nodeId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-// agentGetPerformanceInfo handles requests related to get agent's resource performance informaion
-// identified by the given agentID.
+// nodeGetPerformanceInfo handles requests related to get node's resource performance informaion
+// identified by the given nodeID.
 //
-//    paths: '/api/v1/monitoring/agents/{agentID}/resource/performance'
+//    paths: '/api/v1/monitoring/nodes/{nodeID}/resource/performance'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (resourceAPIExecutor) agentGetPerformanceInfo(w http.ResponseWriter, req *http.Request, agentId string) {
-	logger.Logging(logger.DEBUG, "[AGENT] Get Performance Info")
-	result, resp, err := resourceExecutor.GetPerformanceInfo(agentId)
+func (resourceAPIExecutor) nodeGetPerformanceInfo(w http.ResponseWriter, req *http.Request, nodeId string) {
+	logger.Logging(logger.DEBUG, "[NODE] Get Performance Info")
+	result, resp, err := resourceExecutor.GetPerformanceInfo(nodeId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
