@@ -124,7 +124,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Unregister())
+	urls := makeRequestUrl(address, url.Management(), url.Unregister())
 
 	codes, _ := httpExecutor.SendHttpRequest("POST", urls)
 
