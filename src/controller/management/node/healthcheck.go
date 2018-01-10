@@ -25,11 +25,6 @@ import (
 	"time"
 )
 
-// Checker is an interface to update current status of the node.
-type Checker interface {
-	PingNode(nodeId string, body string) (int, error)
-}
-
 // PingNode starts timer with received interval.
 // If node does not send next healthcheck message in interval time,
 // change the status of device from connected to disconnected.
