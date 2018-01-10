@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	NODES             = "nodes"      // used to indicate a list of agents.
+	NODES             = "nodes"      // used to indicate a list of nodes.
 	GROUPS             = "groups"      // used to indicate a list of groups.
 	MEMBERS            = "members"     // used to indicate a list of members.
 	APPS               = "apps"        // used to indicate a list of apps.

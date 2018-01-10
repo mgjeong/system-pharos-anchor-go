@@ -262,7 +262,7 @@ func TestCalledGetGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
+func TestCalledGetGroups_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -289,7 +289,7 @@ func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAllGroups()
+	res, err := executor.GetGroups()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -300,7 +300,7 @@ func TestCalledGetAllGroups_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -321,7 +321,7 @@ func TestCalledGetAllGroupsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAllGroups()
+	_, err := executor.GetGroups()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

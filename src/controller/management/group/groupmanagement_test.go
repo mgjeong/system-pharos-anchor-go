@@ -27,20 +27,20 @@ import (
 
 const (
 	appId   = "000000000000000000000000"
-	agentId = "000000000000000000000001"
+	nodeId = "000000000000000000000001"
 	groupId = "000000000000000000000002"
 	host    = "192.168.0.1"
 	port    = "8888"
 )
 
 var (
-	agent = map[string]interface{}{
-		"id":   agentId,
+	node = map[string]interface{}{
+		"id":   nodeId,
 		"host": host,
 		"port": port,
 		"apps": []string{appId},
 	}
-	members = []map[string]interface{}{agent, agent}
+	members = []map[string]interface{}{node, node}
 	address = map[string]interface{}{
 		"host": host,
 		"port": port,
@@ -187,7 +187,7 @@ func TestCalledGetGroups_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAllGroups().Return(groups, nil),
+		dbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
@@ -214,7 +214,7 @@ func TestCalledGetGroupsWhenFailedToGetGroupsFromDB_ExpectErrorReturn(t *testing
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetAllGroups().Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetGroups().Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
@@ -243,13 +243,13 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().JoinGroup(groupId, agentId).Return(nil),
+		dbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	agents := `{"agents":["000000000000000000000001"]}`
-	code, _, err := manager.JoinGroup(groupId, agents)
+	nodes := `{"nodes":["000000000000000000000001"]}`
+	code, _, err := manager.JoinGroup(groupId, nodes)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -289,13 +289,13 @@ func TestCalledJoinGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().JoinGroup(groupId, agentId).Return(notFoundError),
+		dbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 	
-	agents := `{"agents":["000000000000000000000001"]}`
-	code, _, err := manager.JoinGroup(groupId, agents)
+	nodes := `{"nodes":["000000000000000000000001"]}`
+	code, _, err := manager.JoinGroup(groupId, nodes)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -319,13 +319,13 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, agentId).Return(nil),
+		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	agents := `{"agents":["000000000000000000000001"]}`
-	code, _, err := manager.LeaveGroup(groupId, agents)
+	nodes := `{"nodes":["000000000000000000000001"]}`
+	code, _, err := manager.LeaveGroup(groupId, nodes)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -365,13 +365,13 @@ func TestCalledLeaveGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T
 	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, agentId).Return(notFoundError),
+		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	agents := `{"agents":["000000000000000000000001"]}`
-	code, _, err := manager.LeaveGroup(groupId, agents)
+	nodes := `{"nodes":["000000000000000000000001"]}`
+	code, _, err := manager.LeaveGroup(groupId, nodes)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

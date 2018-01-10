@@ -30,25 +30,25 @@ type Command interface {
 	CreateGroup() (map[string]interface{}, error)
 
 	// GetGroup returns single document from db related to group.
-	GetGroup(group_id string) (map[string]interface{}, error)
+	GetGroup(groupId string) (map[string]interface{}, error)
 
-	// GetAllGroups returns all documents from db related to group.
-	GetAllGroups() ([]map[string]interface{}, error)
+	// GetGroups returns all documents from db related to group.
+	GetGroups() ([]map[string]interface{}, error)
 
 	// GetGroupMembers returns all nodes who belong to the target group.
-	GetGroupMembers(group_id string) ([]map[string]interface{}, error)
+	GetGroupMembers(groupId string) ([]map[string]interface{}, error)
 
 	// GetGroupMembersByAppID returns all nodes including specific app on the target group.
-	GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error)
+	GetGroupMembersByAppID(groupId string, appId string) ([]map[string]interface{}, error)
 
 	// JoinGroup add specific node to the target group.
-	JoinGroup(group_id string, node_id string) error
+	JoinGroup(groupId string, nodeId string) error
 
 	// LeaveGroup delete specific node from the target group.
-	LeaveGroup(group_id string, node_id string) error
+	LeaveGroup(groupId string, nodeId string) error
 
 	// DeleteGroup delete single document from db related to group.
-	DeleteGroup(group_id string) error
+	DeleteGroup(groupId string) error
 }
 
 const (
@@ -131,10 +131,10 @@ func (Executor) CreateGroup() (map[string]interface{}, error) {
 	return result, err
 }
 
-// GetGroup returns single document specified by group_id parameter.
+// GetGroup returns single document specified by groupId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetGroup(group_id string) (map[string]interface{}, error) {
+func (Executor) GetGroup(groupId string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -145,26 +145,26 @@ func (Executor) GetGroup(group_id string) (map[string]interface{}, error) {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err = errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err = errors.InvalidObjectId{groupId}
 		return nil, err
 	}
 
 	group := Group{}
-	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
+	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Find(query).One(&group)
 	if err != nil {
-		return nil, ConvertMongoError(err, group_id)
+		return nil, ConvertMongoError(err, groupId)
 	}
 
 	result := group.convertToMap()
 	return result, err
 }
 
-// GetAllGroups returns all documents from 'group' collection.
+// GetGroups returns all documents from 'group' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetAllGroups() ([]map[string]interface{}, error) {
+func (Executor) GetGroups() ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -190,7 +190,7 @@ func (Executor) GetAllGroups() ([]map[string]interface{}, error) {
 // JoinGroup adds the specific node to a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) JoinGroup(group_id string, node_id string) error {
+func (Executor) JoinGroup(groupId string, nodeId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -201,20 +201,20 @@ func (Executor) JoinGroup(group_id string, node_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err := errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err := errors.InvalidObjectId{groupId}
 		return err
 	}
-	if !bson.IsObjectIdHex(node_id) {
-		err := errors.InvalidObjectId{node_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err := errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
-	update := bson.M{"$addToSet": bson.M{"members": node_id}}
+	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
+	update := bson.M{"$addToSet": bson.M{"members": nodeId}}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Update(query, update)
 	if err != nil {
-		return ConvertMongoError(err, group_id)
+		return ConvertMongoError(err, groupId)
 	}
 	return err
 }
@@ -222,7 +222,7 @@ func (Executor) JoinGroup(group_id string, node_id string) error {
 // LeaveGroup deletes the specific node from a list of group members.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) LeaveGroup(group_id string, node_id string) error {
+func (Executor) LeaveGroup(groupId string, nodeId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -233,20 +233,20 @@ func (Executor) LeaveGroup(group_id string, node_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err = errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err = errors.InvalidObjectId{groupId}
 		return err
 	}
-	if !bson.IsObjectIdHex(node_id) {
-		err = errors.InvalidObjectId{node_id}
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
-	update := bson.M{"$pull": bson.M{"members": node_id}}
+	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
+	update := bson.M{"$pull": bson.M{"members": nodeId}}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Update(query, update)
 	if err != nil {
-		return ConvertMongoError(err, group_id)
+		return ConvertMongoError(err, groupId)
 	}
 	return err
 }
@@ -254,25 +254,25 @@ func (Executor) LeaveGroup(group_id string, node_id string) error {
 // GetGroupMembers returns all nodes who belong to the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client Executor) GetGroupMembers(group_id string) ([]map[string]interface{}, error) {
+func (client Executor) GetGroupMembers(groupId string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err := errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err := errors.InvalidObjectId{groupId}
 		return nil, err
 	}
 
-	group, err := client.GetGroup(group_id)
+	group, err := client.GetGroup(groupId)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
-	for i, node_id := range group["members"].([]string) {
+	for i, nodeId := range group["members"].([]string) {
 		var node map[string]interface{}
-		node, err := nodeExecutor.GetNode(node_id)
+		node, err := nodeExecutor.GetNode(nodeId)
 		if err != nil {
 			return nil, err
 		}
@@ -285,25 +285,25 @@ func (client Executor) GetGroupMembers(group_id string) ([]map[string]interface{
 // by the given appid on the target group.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (client Executor) GetGroupMembersByAppID(group_id string, app_id string) ([]map[string]interface{}, error) {
+func (client Executor) GetGroupMembersByAppID(groupId string, appId string) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err := errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err := errors.InvalidObjectId{groupId}
 		return nil, err
 	}
 
-	group, err := client.GetGroup(group_id)
+	group, err := client.GetGroup(groupId)
 	if err != nil {
 		return nil, err
 	}
 
 	result := make([]map[string]interface{}, len(group["members"].([]string)))
-	for i, node_id := range group["members"].([]string) {
+	for i, nodeId := range group["members"].([]string) {
 		var node map[string]interface{}
-		node, err := nodeExecutor.GetNodeByAppID(node_id, app_id)
+		node, err := nodeExecutor.GetNodeByAppID(nodeId, appId)
 		if err != nil {
 			return nil, err
 		}
@@ -313,10 +313,10 @@ func (client Executor) GetGroupMembersByAppID(group_id string, app_id string) ([
 	return result, err
 }
 
-// DeleteGroup deletes single document specified by group_id parameter.
+// DeleteGroup deletes single document specified by groupId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) DeleteGroup(group_id string) error {
+func (Executor) DeleteGroup(groupId string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -327,15 +327,15 @@ func (Executor) DeleteGroup(group_id string) error {
 	defer close(session)
 
 	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(group_id) {
-		err = errors.InvalidObjectId{group_id}
+	if !bson.IsObjectIdHex(groupId) {
+		err = errors.InvalidObjectId{groupId}
 		return err
 	}
 
-	query := bson.M{"_id": bson.ObjectIdHex(group_id)}
+	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Remove(query)
 	if err != nil {
-		return ConvertMongoError(err, group_id)
+		return ConvertMongoError(err, groupId)
 	}
 	return err
 }
