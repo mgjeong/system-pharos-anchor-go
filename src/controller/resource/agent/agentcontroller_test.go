@@ -75,7 +75,7 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, res, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if err != nil {
@@ -134,7 +134,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, _, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if err != nil {
@@ -161,7 +161,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, _, err := resourceMonitor.GetResourceInfo(AGENTID)
 
 	if code != results.ERROR {
@@ -199,7 +199,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, res, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
@@ -258,7 +258,7 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, _, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if err != nil {
@@ -285,7 +285,7 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	)
 	// pass mockObj to a real object.
 	agentDbExecutor = dbExecutorMockObj
-	httpRequester = msgMockObj
+	httpExecutor = msgMockObj
 	code, _, err := resourceMonitor.GetPerformanceInfo(AGENTID)
 
 	if code != results.ERROR {
