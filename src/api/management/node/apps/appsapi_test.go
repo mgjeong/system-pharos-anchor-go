@@ -19,7 +19,7 @@ package apps
 
 import (
 	"bytes"
-	deploymentmocks "controller/deployment/group/mocks"
+	deploymentmocks "controller/deployment/node/mocks"
 	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"net/http"
@@ -48,7 +48,7 @@ func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/groups/groupID/invalid", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/nodes/nodeID/invalid", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -63,7 +63,7 @@ func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/groups/groupID/invalid", nil)
+	req, _ := http.NewRequest("GET", "/nodes/nodeID/apps/invalid", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -78,12 +78,12 @@ func TestCalledHandleWithDeployRequest_ExpectCalledDeployApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().DeployApp("groupID", testBodyString),
+		deploymentMockObj.EXPECT().DeployApp("nodeID", testBodyString),
 	)
 
 	w := httptest.NewRecorder()
 	body, _ := json.Marshal(testBody)
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/apps/deploy", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/deploy", bytes.NewReader(body))
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -98,12 +98,12 @@ func TestCalledHandleWithUpdateAppInfoRequest_ExpectCalledUpdateAppInfo(t *testi
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().UpdateAppInfo("groupID", "appID", testBodyString),
+		deploymentMockObj.EXPECT().UpdateAppInfo("nodeID", "appID", testBodyString),
 	)
 
 	w := httptest.NewRecorder()
 	body, _ := json.Marshal(testBody)
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/apps/appID", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID", bytes.NewReader(body))
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -118,11 +118,11 @@ func TestCalledHandleWithGetAppsRequest_ExpectCalledGetApps(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().GetApps("groupID"),
+		deploymentMockObj.EXPECT().GetApps("nodeID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/groups/groupID/apps", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/nodes/nodeID/apps", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -137,11 +137,11 @@ func TestCalledHandleWithGetAppRequest_ExpectCalledGetApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().GetApp("groupID", "appID"),
+		deploymentMockObj.EXPECT().GetApp("nodeID", "appID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/groups/groupID/apps/appID", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/nodes/nodeID/apps/appID", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -156,11 +156,11 @@ func TestCalledHandleWithDeleteAppRequest_ExpectCalledDeleteApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().DeleteApp("groupID", "appID"),
+		deploymentMockObj.EXPECT().DeleteApp("nodeID", "appID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/api/v1/management/groups/groupID/apps/appID", nil)
+	req, _ := http.NewRequest("DELETE", "/api/v1/management/nodes/nodeID/apps/appID", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -175,11 +175,11 @@ func TestCalledHandleWithUpdateAppRequest_ExpectCalledUpdateApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().UpdateApp("groupID", "appID"),
+		deploymentMockObj.EXPECT().UpdateApp("nodeID", "appID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/apps/appID/update", nil)
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID/update", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -194,11 +194,11 @@ func TestCalledHandleWithStartAppRequest_ExpectCalledStartApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().StartApp("groupID", "appID"),
+		deploymentMockObj.EXPECT().StartApp("nodeID", "appID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/apps/appID/start", nil)
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID/start", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
@@ -213,11 +213,11 @@ func TestCalledHandleWithStopAppRequest_ExpectCalledStopApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().StopApp("groupID", "appID"),
+		deploymentMockObj.EXPECT().StopApp("nodeID", "appID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/apps/appID/stop", nil)
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID/stop", nil)
 
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
