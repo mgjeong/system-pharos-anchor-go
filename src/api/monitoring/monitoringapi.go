@@ -14,12 +14,38 @@
  * limitations under the License.
  *
  *******************************************************************************/
-package main
+
+package monitoring
 
 import (
-    "api"
+	"api/common"
+	"api/monitoring/resource"
+	"commons/errors"
+	"commons/logger"
+	URL "commons/url"
+	"net/http"
+	"strings"
 )
 
-func main() {
-	api.RunWebServer("0.0.0.0", 48099)
+var Handler RequestHandler
+
+type RequestHandler struct{}
+
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	switch url := req.URL.Path; {
+	default:
+		logger.Logging(logger.DEBUG, "Unknown URL")
+		common.WriteError(w, errors.NotFoundURL{})
+
+	case !strings.Contains(url, URL.Base()):
+		logger.Logging(logger.DEBUG, "Unknown URL")
+		common.WriteError(w, errors.NotFoundURL{})
+
+	case strings.Contains(url, URL.Resource()):
+		logger.Logging(logger.DEBUG, "Request Resource APIs")
+		resource.Handler.Handle(w, req)
+	}
 }

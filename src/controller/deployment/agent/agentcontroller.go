@@ -89,7 +89,7 @@ func (Executor) DeployApp(agentId string, body string) (int, map[string]interfac
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Deploy())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
 
 	// Request an deployment of edge services to a specific agent.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
@@ -130,7 +130,7 @@ func (Executor) GetApps(agentId string) (int, map[string]interface{}, error) {
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps())
+	urls := makeRequestUrl(address, url.Management(), url.Apps())
 
 	// Request list of applications that is deployed to agent.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
@@ -161,7 +161,7 @@ func (Executor) GetApp(agentId string, appId string) (int, map[string]interface{
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request get target application's information
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
@@ -192,7 +192,7 @@ func (Executor) UpdateAppInfo(agentId string, appId string, body string) (int, m
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request update target application's information.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
@@ -223,7 +223,7 @@ func (Executor) DeleteApp(agentId string, appId string) (int, map[string]interfa
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request delete target application
 	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls)
@@ -265,7 +265,7 @@ func (Executor) UpdateApp(agentId string, appId string) (int, map[string]interfa
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Update())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
@@ -296,7 +296,7 @@ func (Executor) StartApp(agentId string, appId string) (int, map[string]interfac
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Start())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
@@ -327,7 +327,7 @@ func (Executor) StopApp(agentId string, appId string) (int, map[string]interface
 	}
 
 	address := getAgentAddress(agent)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Stop())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)

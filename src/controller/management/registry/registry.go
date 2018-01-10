@@ -23,7 +23,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	URL "commons/url"
-	registryDB "db/mongo/model/registry"
+	"db/mongo/registry"
 	"encoding/json"
 	"messenger"
 )
@@ -65,11 +65,11 @@ const (
 
 type Executor struct{}
 
-var dbExecutor registryDB.Command
+var dbExecutor registry.Command
 var httpExecutor messenger.Command
 
 func init() {
-	dbExecutor = registryDB.Executor{}
+	dbExecutor = registry.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
