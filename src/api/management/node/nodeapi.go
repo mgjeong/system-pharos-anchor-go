@@ -52,12 +52,12 @@ type nodeAPIExecutor struct {
 }
 
 var deploymentHandler apps.Command
-var managementExecutor agentmanager.Command
+var managementExecutor nodemanager.Command
 var nodeAPI nodeAPIExecutor
 
 func init() {
 	deploymentHandler = apps.RequestHandler{}
-	managementExecutor = agentmanager.Executor{}
+	managementExecutor = nodemanager.Executor{}
 	nodeAPI = nodeAPIExecutor{}
 }
 
@@ -92,7 +92,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		case 3:
 			if "/"+split[2] == URL.Unregister() {
 				agentID := split[1]
-				agentAPI.unregister(w, req, agentID)
+				nodeAPI.unregister(w, req, agentID)
 			} else if "/"+split[2] == URL.Ping() {
 				nodeID := split[1]
 				nodeAPI.ping(w, req, nodeID)

@@ -26,7 +26,7 @@ import (
 	"testing"
 )
 
-func TestCalledServeHTTPWithInvalidURL_UnExpectCalledManagementHandleAndMonitoringHandle(t *testing.T) {
+func TestCalledServeHTTPWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -43,7 +43,7 @@ func TestCalledServeHTTPWithInvalidURL_UnExpectCalledManagementHandleAndMonitori
 	Handler.ServeHTTP(w, req)
 }
 
-func TestCalledServeHTTPWithExcludedBaseURL_UnExpectCalledManagementHandleAndMonitoringHandle(t *testing.T) {
+func TestCalledServeHTTPWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
