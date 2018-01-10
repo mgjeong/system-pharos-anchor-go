@@ -130,7 +130,7 @@ func TestCalled_GetCollcetion_ExpectToCCalled(t *testing.T) {
 	}
 }
 
-func TestCalledAddAgent_ExpectSuccess(t *testing.T) {
+func TestCalledAddNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -152,14 +152,14 @@ func TestCalledAddAgent_ExpectSuccess(t *testing.T) {
 	mgoDial = connectionMockObj
 	executor := Executor{}
 
-	_, err := executor.AddAgent(ip, status, configuration)
+	_, err := executor.AddNode(ip, status, configuration)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledAddNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -180,7 +180,7 @@ func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.AddAgent(ip, status, configuration)
+	_, err := executor.AddNode(ip, status, configuration)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -193,7 +193,7 @@ func TestCalledAddAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateAgentAddress_ExpectSuccess(t *testing.T) {
+func TestCalledUpdateNodeAddress_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -215,14 +215,14 @@ func TestCalledUpdateAgentAddress_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentAddress(nodeId, "192.168.0.1", "48098")
+	err := executor.UpdateNodeAddress(nodeId, "192.168.0.1", "48098")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledUpdateAgentAddressWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateNodeAddressWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -237,7 +237,7 @@ func TestCalledUpdateAgentAddressWithInvalidObjectId_ExpectErrorReturn(t *testin
 	mgoDial = connectionMockObj
 	executor := Executor{}
 
-	err := executor.UpdateAgentAddress(invalidObjectId, "192.168.0.1", "48098")
+	err := executor.UpdateNodeAddress(invalidObjectId, "192.168.0.1", "48098")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -248,7 +248,7 @@ func TestCalledUpdateAgentAddressWithInvalidObjectId_ExpectErrorReturn(t *testin
 	}
 }
 
-func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateNodeAddressWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -270,7 +270,7 @@ func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentAddress(nodeId, "192.168.0.1", "48098")
+	err := executor.UpdateNodeAddress(nodeId, "192.168.0.1", "48098")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -283,7 +283,7 @@ func TestCalledUpdateAgentAddressWhenDBReturnsError_ExpectErrorReturn(t *testing
 	}
 }
 
-func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
+func TestCalledUpdateNodeStatus_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -305,14 +305,14 @@ func TestCalledUpdateAgentStatus_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentStatus(nodeId, "connected")
+	err := executor.UpdateNodeStatus(nodeId, "connected")
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledUpdateAgentStatusWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateNodeStatusWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -326,7 +326,7 @@ func TestCalledUpdateAgentStatusWithInvalidObjectId_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentStatus(invalidObjectId, "connected")
+	err := executor.UpdateNodeStatus(invalidObjectId, "connected")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -337,7 +337,7 @@ func TestCalledUpdateAgentStatusWithInvalidObjectId_ExpectErrorReturn(t *testing
 	}
 }
 
-func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledUpdateNodeStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -359,7 +359,7 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.UpdateAgentStatus(nodeId, "connected")
+	err := executor.UpdateNodeStatus(nodeId, "connected")
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -372,7 +372,7 @@ func TestCalledUpdateAgentStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.
 	}
 }
 
-func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
+func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -403,7 +403,7 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAgent(nodeId)
+	res, err := executor.GetNode(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -414,7 +414,7 @@ func TestCalledGetAgent_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -428,7 +428,7 @@ func TestCalledGetAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgent(invalidObjectId)
+	_, err := executor.GetNode(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -439,7 +439,7 @@ func TestCalledGetAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -462,7 +462,7 @@ func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgent(nodeId)
+	_, err := executor.GetNode(nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -475,7 +475,7 @@ func TestCalledGetAgentWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) 
 	}
 }
 
-func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
+func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -505,7 +505,7 @@ func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAllAgents()
+	res, err := executor.GetNodes()
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -516,7 +516,7 @@ func TestCalledGetAllAgents_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetAllAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodesWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -537,7 +537,7 @@ func TestCalledGetAllAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAllAgents()
+	_, err := executor.GetNodes()
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -550,7 +550,7 @@ func TestCalledGetAllAgentsWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
+func TestCalledGetNodeByAppID_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -581,7 +581,7 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	res, err := executor.GetAgentByAppID(nodeId, appId)
+	res, err := executor.GetNodeByAppID(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -592,7 +592,7 @@ func TestCalledGetAgentByAppID_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodeByAppIDWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -615,7 +615,7 @@ func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgentByAppID(nodeId, appId)
+	_, err := executor.GetNodeByAppID(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -628,7 +628,7 @@ func TestCalledGetAgentByAppIDWhenDBHasNotMatchedAgent_ExpectErrorReturn(t *test
 	}
 }
 
-func TestCalledGetAgentByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledGetNodeByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -642,7 +642,7 @@ func TestCalledGetAgentByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.GetAgentByAppID(invalidObjectId, appId)
+	_, err := executor.GetNodeByAppID(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -653,7 +653,7 @@ func TestCalledGetAgentByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T
 	}
 }
 
-func TestCalledAddAppToAgent_ExpectSuccess(t *testing.T) {
+func TestCalledAddAppToNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -675,14 +675,14 @@ func TestCalledAddAppToAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.AddAppToAgent(nodeId, appId)
+	err := executor.AddAppToNode(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledAddAppToAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledAddAppToNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -696,7 +696,7 @@ func TestCalledAddAppToAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) 
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.AddAppToAgent(invalidObjectId, appId)
+	err := executor.AddAppToNode(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -707,7 +707,7 @@ func TestCalledAddAppToAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) 
 	}
 }
 
-func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledAddAppToNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -729,7 +729,7 @@ func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.AddAppToAgent(nodeId, appId)
+	err := executor.AddAppToNode(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -742,7 +742,7 @@ func TestCalledAddAppToAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledDeleteAppFromAgent_ExpectSuccess(t *testing.T) {
+func TestCalledDeleteAppFromNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -764,14 +764,14 @@ func TestCalledDeleteAppFromAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAppFromAgent(nodeId, appId)
+	err := executor.DeleteAppFromNode(nodeId, appId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledDeleteAppFromAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteAppFromNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -785,7 +785,7 @@ func TestCalledDeleteAppFromAgentWithInvalidObjectId_ExpectErrorReturn(t *testin
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAppFromAgent(invalidObjectId, appId)
+	err := executor.DeleteAppFromNode(invalidObjectId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -796,7 +796,7 @@ func TestCalledDeleteAppFromAgentWithInvalidObjectId_ExpectErrorReturn(t *testin
 	}
 }
 
-func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteAppFromNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -818,7 +818,7 @@ func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAppFromAgent(nodeId, appId)
+	err := executor.DeleteAppFromNode(nodeId, appId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -831,7 +831,7 @@ func TestCalledDeleteAppFromAgentWhenDBReturnsError_ExpectErrorReturn(t *testing
 	}
 }
 
-func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
+func TestCalledDeleteNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -852,14 +852,14 @@ func TestCalledDeleteAgent_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAgent(nodeId)
+	err := executor.DeleteNode(nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 
-func TestCalledDeleteAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -873,7 +873,7 @@ func TestCalledDeleteAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAgent(invalidObjectId)
+	err := executor.DeleteNode(invalidObjectId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -884,7 +884,7 @@ func TestCalledDeleteAgentWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestCalledDeleteAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+func TestCalledDeleteNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -905,7 +905,7 @@ func TestCalledDeleteAgentWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.DeleteAgent(nodeId)
+	err := executor.DeleteNode(nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

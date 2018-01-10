@@ -2,7 +2,7 @@ package group
 
 import (
 	errors "commons/errors"
-	agentdbmocks "db/mongo/agent/mocks"
+	nodedbmocks "db/mongo/node/mocks"
 	mgomocks "db/mongo/wrapper/mocks"
 	"github.com/golang/mock/gomock"
 	"gopkg.in/mgo.v2"
@@ -14,10 +14,10 @@ import (
 const (
 	validUrl        = "127.0.0.1:27017"
 	dbName          = "DeploymentManagerDB"
-	collectionName  = "AGENT"
+	collectionName  = "NODE"
 	status          = "connected"
 	appId           = "000000000000000000000000"
-	agentId         = "000000000000000000000001"
+	nodeId         = "000000000000000000000001"
 	groupId         = "000000000000000000000002"
 	invalidObjectId = ""
 )
@@ -339,7 +339,7 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$addToSet": bson.M{"members": agentId}}
+	update := bson.M{"$addToSet": bson.M{"members": nodeId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -356,7 +356,7 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.JoinGroup(groupId, agentId)
+	err := executor.JoinGroup(groupId, nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -377,7 +377,7 @@ func TestCalledJoinGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *testi
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.JoinGroup(invalidObjectId, agentId)
+	err := executor.JoinGroup(invalidObjectId, nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -388,7 +388,7 @@ func TestCalledJoinGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *testi
 	}
 }
 
-func TestCalledJoinGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledJoinGroupWithInvalidObjectIdAboutNode_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -418,7 +418,7 @@ func TestCalledJoinGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$addToSet": bson.M{"members": agentId}}
+	update := bson.M{"$addToSet": bson.M{"members": nodeId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -435,7 +435,7 @@ func TestCalledJoinGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.JoinGroup(groupId, agentId)
+	err := executor.JoinGroup(groupId, nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -453,7 +453,7 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$pull": bson.M{"members": agentId}}
+	update := bson.M{"$pull": bson.M{"members": nodeId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -470,7 +470,7 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.LeaveGroup(groupId, agentId)
+	err := executor.LeaveGroup(groupId, nodeId)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -491,7 +491,7 @@ func TestCalledLeaveGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *test
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.LeaveGroup(invalidObjectId, agentId)
+	err := executor.LeaveGroup(invalidObjectId, nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
@@ -502,7 +502,7 @@ func TestCalledLeaveGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *test
 	}
 }
 
-func TestCalledLeaveGroupWithInvalidObjectIdAboutAgent_ExpectErrorReturn(t *testing.T) {
+func TestCalledLeaveGroupWithInvalidObjectIdAboutNode_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
@@ -532,7 +532,7 @@ func TestCalledLeaveGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	update := bson.M{"$pull": bson.M{"members": agentId}}
+	update := bson.M{"$pull": bson.M{"members": nodeId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -549,7 +549,7 @@ func TestCalledLeaveGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	err := executor.LeaveGroup(groupId, agentId)
+	err := executor.LeaveGroup(groupId, nodeId)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -567,9 +567,9 @@ func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	groupQuery := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{agentId}}
-	expectedAgentRes := map[string]interface{}{
-		"id":     agentId,
+	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{nodeId}}
+	expectedNodeRes := map[string]interface{}{
+		"id":     nodeId,
 		"host":   "192.168.0.1",
 		"port":   "8888",
 		"apps":   []string{},
@@ -577,7 +577,7 @@ func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
 	}
 
 	expectedRes := []map[string]interface{}{{
-		"id":     agentId,
+		"id":     nodeId,
 		"host":   "192.168.0.1",
 		"port":   "8888",
 		"apps":   []string{},
@@ -589,7 +589,7 @@ func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	agentMockObj := agentdbmocks.NewMockCommand(mockCtrl)
+	nodeMockObj := nodedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -599,10 +599,10 @@ func TestCalledGetGroupMembers_ExpectSuccess(t *testing.T) {
 		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, groupArg).Return(nil),
 		sessionMockObj.EXPECT().Close(),
 
-		agentMockObj.EXPECT().GetAgent(agentId).Return(expectedAgentRes, nil),
+		nodeMockObj.EXPECT().GetNode(nodeId).Return(expectedNodeRes, nil),
 	)
 
-	agentExecutor = agentMockObj
+	nodeExecutor = nodeMockObj
 	mgoDial = connectionMockObj
 	executor := Executor{}
 	res, err := executor.GetGroupMembers(groupId)
@@ -641,17 +641,17 @@ func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	groupQuery := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{agentId}}
+	groupArg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{nodeId}}
 
 	expectedRes := []map[string]interface{}{{
-		"id":     agentId,
+		"id":     nodeId,
 		"host":   "192.168.0.1",
 		"port":   "8888",
 		"apps":   []string{appId},
 		"status": status,
 	}}
-	expectedAgentRes := map[string]interface{}{
-		"id":     agentId,
+	expectedNodeRes := map[string]interface{}{
+		"id":     nodeId,
 		"host":   "192.168.0.1",
 		"port":   "8888",
 		"apps":   []string{appId},
@@ -663,7 +663,7 @@ func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
 	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
-	agentMockObj := agentdbmocks.NewMockCommand(mockCtrl)
+	nodeMockObj := nodedbmocks.NewMockCommand(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
@@ -673,11 +673,11 @@ func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
 		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, groupArg).Return(nil),
 		sessionMockObj.EXPECT().Close(),
 
-		agentMockObj.EXPECT().GetAgentByAppID(agentId, appId).Return(expectedAgentRes, nil),
+		nodeMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(expectedNodeRes, nil),
 	)
 
 	mgoDial = connectionMockObj
-	agentExecutor = agentMockObj
+	nodeExecutor = nodeMockObj
 
 	executor := Executor{}
 	res, err := executor.GetGroupMembersByAppID(groupId, appId)

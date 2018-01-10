@@ -22,26 +22,26 @@ import (
 	"github.com/golang/mock/gomock"
 	msgmocks "messenger/mocks"
 	groupdbmocks "db/mongo/group/mocks"
-	agentdbmocks "db/mongo/agent/mocks"
+	nodedbmocks "db/mongo/node/mocks"
 	"reflect"
 	"testing"
 )
 
 const (
 	appId   = "000000000000000000000000"
-	agentId = "000000000000000000000001"
+	nodeId = "000000000000000000000001"
 	groupId = "000000000000000000000002"
 	ip    = "192.168.0.1"
 	port    = "48098"
 )
 
 var (
-	agent = map[string]interface{}{
-		"id":   agentId,
+	node = map[string]interface{}{
+		"id":   nodeId,
 		"ip": ip,
 		"apps": []string{appId},
 	}
-	members = []map[string]interface{}{agent, agent}
+	members = []map[string]interface{}{node, node}
 	address = map[string]interface{}{
 		"ip": ip,
 	}
@@ -79,17 +79,17 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil).AnyTimes(),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.DeployApp(groupId, body)
@@ -178,17 +178,17 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	expectedUrl := []string{deployUrl, deployUrl}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(notFoundError),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeployApp(groupId, body)
@@ -218,11 +218,11 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		"id": "000000000000000000000000",
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -230,17 +230,17 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbExecutorMockObj.EXPECT().AddAppToAgent(agentId, appId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.DeployApp(groupId, body)
@@ -265,7 +265,7 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 	expectedRes := map[string]interface{}{
 		"apps": []map[string]interface{}{{
 			"id":      appId,
-			"members": []string{agentId, agentId},
+			"members": []string{nodeId, nodeId},
 		}},
 	}
 
@@ -437,12 +437,12 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":          agentId,
+				"id":          nodeId,
 				"code":        results.OK,
 				"description": "description",
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -576,11 +576,11 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -714,11 +714,11 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -852,11 +852,11 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -990,11 +990,11 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -1034,17 +1034,17 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	expectedUrl := []string{baseUrl, baseUrl}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil).AnyTimes(),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(groupId, appId)
@@ -1131,11 +1131,11 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	expectedRes := map[string]interface{}{
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
-				"id":   agentId,
+				"id":   nodeId,
 				"code": results.OK,
 			},
 			map[string]interface{}{
-				"id":      agentId,
+				"id":      nodeId,
 				"code":    results.ERROR,
 				"message": "errorMsg",
 			},
@@ -1143,17 +1143,17 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
-	agentDbExecutorMockObj := agentdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
-		agentDbExecutorMockObj.EXPECT().DeleteAppFromAgent(agentId, appId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
-	agentDbExecutor = agentDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.DeleteApp(groupId, appId)

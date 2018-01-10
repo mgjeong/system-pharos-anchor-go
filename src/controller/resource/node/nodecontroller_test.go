@@ -58,7 +58,7 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
 	expectedRes := map[string]interface{}{
 		"os":        "os",
 		"processor": "processor",
@@ -123,7 +123,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -150,7 +150,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -184,7 +184,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"cpu":"00%","mem":"00%","disk":"00%"}`}
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
 	expectedRes := map[string]interface{}{
 		"cpu":  "00%",
 		"mem":  "00%",
@@ -247,7 +247,7 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -274,7 +274,7 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/resource/performance"}
+	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
