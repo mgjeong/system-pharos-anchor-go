@@ -70,16 +70,16 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 		"id": "000000000000000000000000",
 	}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+		dbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.DeployApp(nodeId, body)
@@ -101,13 +101,13 @@ func TestCalledDeployAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := executor.DeployApp(nodeId, body)
 
@@ -132,15 +132,15 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeployApp(nodeId, body)
@@ -167,16 +167,16 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
 	respStr := []string{`{"id":"000000000000000000000000"}`}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
+		dbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeployApp(nodeId, body)
@@ -206,15 +206,15 @@ func TestCalledGetApps_ExpectSuccess(t *testing.T) {
 		"description": "description",
 	}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.GetApps(nodeId)
@@ -238,15 +238,15 @@ func TestCalledGetAppsWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps"}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.GetApps(nodeId)
@@ -270,13 +270,13 @@ func TestCalledGetAppsWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := executor.GetApps(nodeId)
 
@@ -305,15 +305,15 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 		"description": "description",
 	}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, res, err := executor.GetApp(nodeId, appId)
@@ -337,15 +337,15 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.GetApp(nodeId, appId)
@@ -369,13 +369,13 @@ func TestCalledGetAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := executor.GetApp(nodeId, appId)
 
@@ -400,15 +400,15 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
@@ -426,14 +426,14 @@ func TestCalledUpdateAppInfoWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
@@ -459,15 +459,15 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateAppInfo(nodeId, appId, body)
@@ -493,15 +493,15 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/update"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateApp(nodeId, appId)
@@ -519,14 +519,14 @@ func TestCalledUpdateAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateApp(nodeId, appId)
@@ -552,15 +552,15 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/update"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.UpdateApp(nodeId, appId)
@@ -586,15 +586,15 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/start"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.StartApp(nodeId, appId)
@@ -612,13 +612,13 @@ func TestCalledStartAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := executor.StartApp(nodeId, appId)
 
@@ -643,15 +643,15 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/start"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.StartApp(nodeId, appId)
@@ -677,15 +677,15 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/stop"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.StopApp(nodeId, appId)
@@ -703,14 +703,14 @@ func TestCalledStopAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.StopApp(nodeId, appId)
@@ -736,15 +736,15 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId + "/stop"}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.StopApp(nodeId, appId)
@@ -770,16 +770,16 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, respStr),
-		dbManagerMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
+		dbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
@@ -797,14 +797,14 @@ func TestCalledDeleteAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
@@ -830,15 +830,15 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCode_ExpectSuccess(t *testing.T
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 	
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
@@ -858,15 +858,15 @@ func TestCalledDeleteAppWhenMessengerReturnsErrorCodeWithInvalidResponse_ExpectS
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
@@ -892,16 +892,16 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/" + appId}
 
-	dbManagerMockObj := dbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbManagerMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
+		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		dbManagerMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(notFoundError),
+		dbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	nodeDbExecutor = dbManagerMockObj
+	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
