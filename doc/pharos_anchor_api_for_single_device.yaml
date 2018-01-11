@@ -1,0 +1,569 @@
+swagger: '2.0'
+info:
+  title: Pharos Anchor API for Single Edge Device
+  description: >-
+    Pharos Anchor provides service deployment and device management functionalities to an edge device with a container-based edge S/W platform.
+    This description explains how to use Pharos Anchor Agent APIs to deploy, update,
+    start, stop, delete service and manage edge devices.
+  version: v1-20180110
+schemes:
+  - http
+tags:
+  - name: Application Deployment
+    description: Distribution & Control Apps
+  - name: Pharos Node Management
+    description: Registered Pharos Node Management Functionalities
+  - name: Resource Monitoring
+    description: Resource information collector
+paths:
+  '/api/v1/management/nodes/register':
+    post:
+      tags:
+        - Pharos Node Management
+      description: |
+        Request to register new pharos node. This api is called automatically after a pharos node container starts successfully.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: ip
+          in: body
+          description: >-
+           The sender address of the registration message. This is used to add node information to database.
+          required: false
+          schema:
+            $ref: '#/definitions/request_of_node_register'
+      responses:
+        '200':
+          description: Node insert succeeds
+          schema:
+            $ref: '#/definitions/response_of_node_register'
+  '/api/v1/management/nodes/{node_id}/unregister':
+    post:
+      tags:
+        - Pharos Node Management
+      description: |
+        Request to unregister specific node
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Node delete succeeds
+  '/api/v1/management/nodes/{node_id}/ping':
+    post:
+      tags:
+        - Pharos Node Management
+      description: |
+        Request to check whether a specific node is up and sending next request in interval time
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: interval
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/health_check_interval'
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_node_register'
+  '/api/v1/management/nodes':
+    get:
+      tags:
+        - Pharos Node Management
+      description: |
+        Request get list of nodes
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_nodes'
+  '/api/v1/management/nodes/{node_id}':
+    get:
+      tags:
+        - Pharos Node Management
+      description: |
+        Request get target node's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_node'
+  '/api/v1/management/nodes/{node_id}/apps/deploy':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request an deployment of edge services to a specific edge device
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: docker-compose.yml
+          in: body
+          description: >-
+            Information of multi-container docker applications include several
+            images information and containers execute option.
+          required: true
+          schema:
+            $ref: '#/definitions/docker-compose'
+      responses:
+        '201':
+          description: docker service deployment succeeds
+          headers:
+            location:
+              description: >-
+                URI pointing to the location of the newly deployed App, e.g.
+                http://192.168.0.1:8080/api/v1/management/nodes/{node_id}/apps/{app_id}
+              type: string
+          schema:
+            $ref: '#/definitions/response_of_deployment'
+  '/api/v1/management/nodes/{node_id}/apps':
+    get:
+      tags:
+        - Application Deployment
+      description: |
+        Request list of applications that is deployed to target edge device
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: list of applications
+          schema:
+            $ref: '#/definitions/response_of_app_list'
+  '/api/v1/management/nodes/{node_id}/apps/{app_id}':
+    get:
+      tags:
+        - Application Deployment
+      description: |
+        Request get target application's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_app'
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request update target application's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+        - name: docker-compose.yml
+          in: body
+          description: >-
+            Information of multi-container docker applications include several
+            images information and containers execute option.
+          required: true
+          schema:
+            $ref: '#/definitions/docker-compose'
+      responses:
+        '200':
+          description: Application update succeeds
+    delete:
+      tags:
+        - Application Deployment
+      description: |
+        Request delete target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application delete succeeds
+  '/api/v1/management/nodes/{node_id}/apps/{app_id}/update':
+    post:
+      tags:
+        - Application Deployment
+      description: >
+        Request checking and updating all of images which is included target
+        application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application update succeeds
+  '/api/v1/management/nodes/{node_id}/apps/{app_id}/start':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request start target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application start succeeds
+  '/api/v1/management/nodes/{node_id}/apps/{app_id}/stop':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request stop target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application stop succeeds
+  '/api/v1/monitoring/nodes/{node_id}/resource':
+    post:
+      tags:
+        - Resource Monitoring
+      description: |
+        Request to get the device information (os, processor model name, cpu/memory/disk usage)
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Resource information get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_resource'
+  '/api/v1/monitoring/nodes/{node_id}/resource/performance':
+    post:
+      tags:
+        - Resource Monitoring
+      description: |
+        Request to get the device cpu, memory, disk usage information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Resource information get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_performance'
+definitions:
+  service_name:
+    required:
+      - image
+    properties:
+      image:
+        type: string
+        example: Specify the image to start the container
+  services:
+    required:
+      - Specify the service name 
+    properties:
+      Specify the service name:
+        $ref: '#/definitions/service_name'
+  docker-compose:
+    required:
+      - version
+      - services
+    properties:
+      version:
+        type: integer
+        example: 1
+      services:
+        $ref: '#/definitions/services'
+  node:
+    required:
+      - id
+      - host
+      - port
+      - apps
+    properties:
+      id:
+        type: string
+        example: node_id_sample
+      host:
+        type: string
+        example: 192.168.0.1
+      port:
+        type: string
+        example: 8080
+      apps:
+        example:
+          - app_id_sample1
+          - app_id_sample2
+  health_check_interval:
+    required:
+      - interval
+    properties:
+      interval:
+        type: integer
+        example: 10
+  config:
+    required:
+      - deviceid
+      - devicename
+      - os
+      - platform
+      - serialnumber
+      - location
+      - manufacturer
+      - modelnumber
+      - pinginterval
+    properties:
+      deviceid:
+        type: string
+        example: 54919CA5-4101-4AE4-595B-353C51AA983C
+      devicename:
+        type: string
+        example: "Edge#1"
+      os:
+        type: string
+        example: Operationg system name and version
+      platform:
+        type: string
+        example: Platform name and version
+      serialnumber:
+        type: string
+        example: Serial number
+      location:
+        type: string
+        example: Human readable location
+      manufacturer:
+        type: string
+        example: Manufacturer Name
+      modelnumber:
+        type: string
+        example: Model number as designated by the manufacturer
+      pinginterval:
+        type: string
+        example: 10
+  os:
+    description: OS information of edge device where Pharos Node exists
+    example: Linux 4.10.0-42-generic x86_64
+  processor_model_name:
+    description: The processor model name of the edge device where the Pharos Node exists
+    example: Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
+  cpu:
+    description: Information about cpu usage of edge device where Pharos Node exists
+    example: |-
+      cpu 1562574 3836 740832 137355483 29108 0 22765 0 0 0 
+      cpu0 208670 29 89836 17181639 1062 0 5266 0 0 0
+  memory:
+    description: Information about memory usage of edge device where Pharos Node exists
+    example: |-
+      MemTotal: 8127136 kB
+      MemFree: 141108 kB
+      MemAvailable: 1515464 kB
+  disk:
+    description: Information about disk usage of edge device where Pharos Node exists
+    example: |
+      Filesystem  1M-blocks  Used Available  Use%  Mounted on
+      udev  3947  0  3947  0%  /dev
+  request_of_node_register:
+    required:
+      - ip
+      - config
+    properties:
+      ip:
+        type: string
+        example: 192.168.0.1
+      config:
+        $ref: '#/definitions/config'
+  response_of_node_register:
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: node_id_sample
+  response_of_get_nodes:
+    required:
+      - nodes
+    properties:
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/node'
+  response_of_get_node:
+    $ref: '#/definitions/node'
+  response_of_app_list:
+    required:
+      - apps
+    properties:
+      apps:
+        type: array
+        items:
+          $ref: '#/definitions/response_of_get_app'
+  response_of_get_app:
+    required:
+      - id
+      - state
+      - description
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+      state:
+        type: string
+        example: start
+      description:
+        $ref: '#/definitions/docker-compose'
+  response_of_deployment:
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+  response_of_get_resource:
+    required:
+      - os
+      - processor
+      - cpu
+      - memory
+      - disk
+    properties:
+      os:
+        $ref: '#/definitions/os'
+      processor:
+        $ref: '#/definitions/processor_model_name'
+      cpu:
+        $ref: '#/definitions/cpu'
+      memory:
+        $ref: '#/definitions/memory'
+      disk:
+        $ref: '#/definitions/disk'
+  response_of_get_performance:
+    required:
+      - cpu
+      - memory
+      - disk
+    properties:
+      cpu:
+        $ref: '#/definitions/cpu'
+      memory:
+        $ref: '#/definitions/memory'
+      disk:
+        $ref: '#/definitions/disk'

@@ -1,0 +1,457 @@
+swagger: '2.0'
+info:
+  title: Pharos Anchor Group API for Multiple Edge Devices
+  description: >-
+    Pharos Anchor provides service deployment and device management functionalities to an edge device with a container-based edge S/W platform.
+    This description explains how to use Pharos Anchor Group APIs to deploy, update,
+    start, stop, delete service and manage a group of edge devices.
+  version: v1-20180110
+schemes:
+  - http
+tags:
+  - name: Application Deployment
+    description: Distribution & Control Apps
+  - name: Group Management
+    description: Group of Pharos Nodes Management Functionalities
+  - name: Resource Monitoring
+    description: Resource information collector
+paths:
+  /api/v1/management/groups:
+    get:
+      tags:
+        - Group Management
+      description: |
+        Request get list of groups
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_groups'
+  /api/v1/management/groups/create:
+    post:
+      tags:
+        - Group Management
+      description: |
+        Request create group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Group create succeeds
+          headers:
+            location:
+              description: >-
+                URI pointing to the location of the newly created group, e.g.
+                http://192.168.0.1:8080/api/v1/management/groups/{group_id}/apps/{app_id}
+              type: string
+          schema:
+            $ref: '#definitions/response_of_create_group'
+  '/api/v1/management/groups/{group_id}':
+    get:
+      tags:
+        - Group Management
+      description: |
+        Request get target group's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Group get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_group'
+    delete:
+      tags:
+        - Group Management
+      description: |
+        Request delete target group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Group delete succeeds
+  '/api/v1/management/groups/{group_id}/join':
+    post:
+      tags:
+        - Group Management
+      description: |
+        Request join a group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: nodes
+          in: body
+          description: IDs of node wish to join a group
+          required: true
+          schema:
+            $ref: '#/definitions/node_ids'
+      responses:
+        '200':
+          description: Group join succeeds
+  '/api/v1/management/groups/{group_id}/leave':
+    post:
+      tags:
+        - Group Management
+      description: |
+        Request leave a group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: nodes
+          in: body
+          description: IDs of node wish to leave a group
+          required: true
+          schema:
+            $ref: '#/definitions/node_ids'
+      responses:
+        '200':
+          description: Group leave succeeds
+  '/api/v1/management/groups/{group_id}/apps/deploy':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request an deployment of edge services to a specific edge device group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: docker-compose.yml
+          in: body
+          description: >-
+            Information of multi-container docker applications include several
+            images information and containers execute option.
+          required: true
+          schema:
+            $ref: '#/definitions/docker-compose'
+      responses:
+        '201':
+          description: docker service deployment succeeds
+          headers:
+            location:
+              description: >-
+                URI pointing to the location of the newly deployed App, e.g.
+                http://192.168.0.1:8080/api/v1/groups/{group_id}/apps/{app_id}
+              type: string
+          schema:
+            $ref: '#/definitions/response_of_deployment'
+  '/api/v1/management/groups/{group_id}/apps':
+    get:
+      tags:
+        - Application Deployment
+      description: |
+        Request list of applications that is deployed to edge devices of group
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Group get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_apps'
+  '/api/v1/management/groups/{group_id}/apps/{app_id}':
+    get:
+      tags:
+        - Application Deployment
+      description: |
+        Request get target application's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_app'
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request update target application's information
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+        - name: docker-compose.yml
+          in: body
+          description: >-
+            Information of multi-container docker applications include several
+            images information and containers execute option.
+          required: true
+          schema:
+            $ref: '#/definitions/docker-compose'
+      responses:
+        '200':
+          description: Application update succeeds
+    delete:
+      tags:
+        - Application Deployment
+      description: |
+        Request delete target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application delete succeeds
+  '/api/v1/management/groups/{group_id}/apps/{app_id}/update':
+    post:
+      tags:
+        - Application Deployment
+      description: >
+        Request checking and updating all of images which is included target
+        application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application update succeeds
+  '/api/v1/management/groups/{group_id}/apps/{app_id}/start':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request start target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application start succeeds
+  '/api/v1/management/groups/{group_id}/apps/{app_id}/stop':
+    post:
+      tags:
+        - Application Deployment
+      description: |
+        Request stop target application
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: group_id
+          in: path
+          description: ID of created group
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of deployed app on target group
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Application stop succeeds
+definitions:
+  service_name:
+    required:
+      - image
+    properties:
+      image:
+        type: string
+        example: Specify the image to start the container
+  services:
+    required:
+      - Specify the service name
+    properties:
+      Specify the service name:
+        $ref: '#/definitions/service_name'
+  docker-compose:
+    required:
+      - version
+      - services
+    properties:
+      version:
+        type: integer
+        example: 1
+      services:
+        $ref: '#/definitions/services'
+  response_of_deployment:
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+  node_ids:
+    properties:
+      nodes:
+        example:
+          - node_id_sample1
+          - node_id_sample2
+          - ...
+  group:
+    required:
+      - id
+      - members
+    properties:
+      id:
+        type: string
+        example: group_id_sample
+      members:
+        example:
+          - node_id_sample1
+          - node_id_sample2
+          - ...
+  response_of_get_group:
+    $ref: '#/definitions/group'
+  response_of_get_groups:
+    required:
+      - groups
+    properties:
+      groups:
+        items:
+          $ref: '#/definitions/group'
+  response_of_create_group:
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: group_id_sample
+  app:
+    required:
+      - id
+      - description
+    properties:
+      id:
+        type: string
+        example: node_id_sample
+      description:
+        $ref: '#/definitions/docker-compose'
+  apps:
+    required:
+      - id
+      - members
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+      members:
+        example:
+          - node_id_sample1
+          - node_id_sample2
+  response_of_get_app:
+    required:
+      - members
+    properties:
+      members:
+        type: array
+        items:
+          $ref: '#/definitions/app'
+  response_of_get_apps:
+    required:
+      - apps
+    properties:
+      apps:
+        type: array
+        items:
+          $ref: '#/definitions/apps'
