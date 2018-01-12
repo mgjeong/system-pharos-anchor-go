@@ -31,6 +31,14 @@ import (
 	"strings"
 )
 
+var managementHandler management.Command
+var monitoringHandler monitoring.Command
+
+func init() {
+	managementHandler = management.RequestHandler{}
+	monitoringHandler = monitoring.RequestHandler{}
+}
+
 // RunWebServer starts web server service with given address and port number.
 func RunWebServer(addr string, port int) {
 	http.ListenAndServe(addr+":"+strconv.Itoa(port), &Handler)
@@ -55,10 +63,10 @@ func (RequestHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	case strings.Contains(url, URL.Management()):
 		logger.Logging(logger.DEBUG, "Request Management APIs")
-		management.Handler.Handle(w, req)
+		managementHandler.Handle(w, req)
 
 	case strings.Contains(url, URL.Monitoring()):
 		logger.Logging(logger.DEBUG, "Request Monitoring APIs")
-		monitoring.Handler.Handle(w, req)
+		monitoringHandler.Handle(w, req)
 	}
 }

@@ -27,9 +27,17 @@ import (
 	"strings"
 )
 
-var Handler RequestHandler
+type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
 
 type RequestHandler struct{}
+
+var resourceMonitoringHandler resource.Command
+
+func init() {
+	resourceMonitoringHandler = resource.RequestHandler{}
+}
 
 func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
@@ -46,6 +54,6 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	case strings.Contains(url, URL.Resource()):
 		logger.Logging(logger.DEBUG, "Request Resource APIs")
-		resource.Handler.Handle(w, req)
+		resourceMonitoringHandler.Handle(w, req)
 	}
 }

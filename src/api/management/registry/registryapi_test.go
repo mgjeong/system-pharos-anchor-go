@@ -15,12 +15,12 @@
  *
  *******************************************************************************/
 
-package group
+package registry
 
 import (
 	"bytes"
-	groupmanagermocks "controller/management/group/mocks"
 	"encoding/json"
+	registrymanagermocks "controller/management/registry/mocks"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -45,13 +45,13 @@ func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/invalid", nil)
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
@@ -60,129 +60,111 @@ func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/management/groups", nil)
+	req, _ := http.NewRequest("GET", "/management/registries", nil)
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithGroupsRequest_ExpectCalledGetGroups(t *testing.T) {
+func TestCalledHandleWithGetRegistriesRequest_ExpectCalledGetRegistries(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupmanageMockObj.EXPECT().GetGroups(),
+		registrymanageMockObj.EXPECT().GetDockerRegistries(),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/groups", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/registries", nil)
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithGetGroupRequest_ExpectCalledGetGroup(t *testing.T) {
+func TestCalledHandleWithGetRegistryRequest_ExpectCalledGetRegistry(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupmanageMockObj.EXPECT().GetGroup("groupID"),
+		registrymanageMockObj.EXPECT().GetDockerRegistry("registryID"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/groups/groupID", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/management/registries/registryID", nil)
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithDeleteGroupRequest_ExpectCalledDeleteGroup(t *testing.T) {
+func TestCalledHandleWithAddRegistryRequest_ExpectCalledAddDockerRegistry(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupmanageMockObj.EXPECT().DeleteGroup("groupID"),
-	)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("DELETE", "/api/v1/management/groups/groupID", nil)
-
-	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
-
-	Handler.Handle(w, req)
-}
-
-func TestCalledHandleWithCreateGroupRequest_ExpectCalledCreateGroup(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		groupmanageMockObj.EXPECT().CreateGroup(),
-	)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/create", nil)
-
-	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
-
-	Handler.Handle(w, req)
-}
-
-func TestCalledHandleWithJoinGroupRequest_ExpectCalledJoinGroup(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		groupmanageMockObj.EXPECT().JoinGroup("groupID", testBodyString),
+		registrymanageMockObj.EXPECT().AddDockerRegistry(testBodyString),
 	)
 
 	w := httptest.NewRecorder()
 	body, _ := json.Marshal(testBody)
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/join", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", "/api/v1/management/registries", bytes.NewReader(body))
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithLeaveGroupRequest_ExpectCalledLeaveGroup(t *testing.T) {
+func TestCalledHandleWithDeleteRegistryRequest_ExpectCalledDeleteDockerRegistry(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupmanageMockObj.EXPECT().LeaveGroup("groupID", testBodyString),
+		registrymanageMockObj.EXPECT().DeleteDockerRegistry("registryID"),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("DELETE", "/api/v1/management/registries/registryID", nil)
+
+	// pass mockObj to a real object.
+	registryExecutor = registrymanageMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithGetImagesRequest_ExpectCalledGetDockerImages(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		registrymanageMockObj.EXPECT().DockerRegistryEventHandler(testBodyString),
 	)
 
 	w := httptest.NewRecorder()
 	body, _ := json.Marshal(testBody)
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/groupID/leave", bytes.NewReader(body))
+	req, _ := http.NewRequest("POST", "/api/v1/management/registries/events", bytes.NewReader(body))
 
 	// pass mockObj to a real object.
-	managementExecutor = groupmanageMockObj
+	registryExecutor = registrymanageMockObj
 
 	Handler.Handle(w, req)
 }
+

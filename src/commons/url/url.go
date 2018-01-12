@@ -54,9 +54,6 @@ func Monitoring() string { return "/monitoring" }
 // Base returns the events url as a type of string.
 func Events() string { return "/events" }
 
-// Base returns the registry url as a type of string.
-func Registry() string { return "/registry" }
-
 // Base returns the create url as a type of string.
 func Create() string { return "/create" }
 

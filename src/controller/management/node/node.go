@@ -38,7 +38,7 @@ type Command interface {
 	GetNode(nodeId string) (int, map[string]interface{}, error)
 	GetNodes() (int, map[string]interface{}, error)
 	UpdateNodeStatus(nodeId string, status string) error
-	Checker
+	PingNode(nodeId string, body string) (int, error)
 }
 
 const (

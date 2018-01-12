@@ -37,6 +37,10 @@ const (
 )
 
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type deploymentAPI interface {
 	groupDeployApp(w http.ResponseWriter, req *http.Request, groupID string)
 	groupInfoApps(w http.ResponseWriter, req *http.Request, groupID string)
 	groupInfoApp(w http.ResponseWriter, req *http.Request, groupID string, appID string)
@@ -47,23 +51,21 @@ type Command interface {
 	groupUpdateApp(w http.ResponseWriter, req *http.Request, groupID string, appID string)
 }
 
-type appsHandler struct{}
+type RequestHandler struct{}
 type appsAPIExecutor struct {
-	Command
+	deploymentAPI
 }
 
 var deploymentExecutor deployment.Command
 var appsAPI appsAPIExecutor
-var Handler appsHandler
 
 func init() {
 	deploymentExecutor = deployment.Executor{}
 	appsAPI = appsAPIExecutor{}
-	Handler = appsHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (appsHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Groups(), "", -1)
 	split := strings.Split(url, "/")
 	switch len(split) {

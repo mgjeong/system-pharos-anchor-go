@@ -37,33 +37,37 @@ const (
 )
 
 type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
+
+type registryManagementAPI interface {
 	registerDockerRegistry(w http.ResponseWriter, req *http.Request)
+	deleteDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
 	getDockerRegistries(w http.ResponseWriter, req *http.Request)
 	getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
 	handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request)
 }
 
-type registryHandler struct{}
+type RequestHandler struct{}
 type registryAPIExecutor struct{
-	Command
+	registryManagementAPI
 }
 
-var Handler registryHandler
 var registryAPI registryAPIExecutor
 var registryExecutor registry.Command
 
 func init() {
 	registryAPI = registryAPIExecutor{}
 	registryExecutor = registry.Executor{}
-	Handler = registryHandler{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
-func (registryHandler) Handle(w http.ResponseWriter, req *http.Request) {
+func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
+	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
 
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Registry(), "", -1)
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Registries(), "", -1)
 	split := strings.Split(url, "/")
 
 	switch len(split) {
@@ -87,6 +91,9 @@ func (registryHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			if req.Method == GET {
 				registryID := split[1]
 				registryAPI.getDockerRegistry(w, req, registryID)
+			} else if req.Method == DELETE{
+				registryID := split[1]
+				registryAPI.deleteDockerRegistry(w, req, registryID)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
@@ -107,6 +114,15 @@ func (registryAPIExecutor) registerDockerRegistry(w http.ResponseWriter, req *ht
 	result, resp, err := registryExecutor.AddDockerRegistry(body)
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+func (registryAPIExecutor) deleteDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	result, err := registryExecutor.DeleteDockerRegistry(registryID)
+
+	common.MakeResponse(w, result, common.ChangeToJson(nil), err)
 }
 
 func (registryAPIExecutor) getDockerRegistries(w http.ResponseWriter, req *http.Request) {

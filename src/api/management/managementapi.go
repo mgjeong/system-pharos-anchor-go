@@ -29,9 +29,22 @@ import (
 	"strings"
 )
 
-var Handler RequestHandler
+type Command interface {
+	Handle(w http.ResponseWriter, req *http.Request)
+}
 
 type RequestHandler struct{}
+
+var nodeManagementHandler node.Command
+var groupManagementHandler group.Command
+var registryManagementHandler registry.Command
+
+func init() {
+	nodeManagementHandler = node.RequestHandler{}
+	groupManagementHandler = group.RequestHandler{}
+	registryManagementHandler = registry.RequestHandler{}
+}
+
 
 func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
@@ -47,16 +60,16 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		common.WriteError(w, errors.NotFoundURL{})
 
 	case strings.Contains(url, URL.Nodes()):
-		logger.Logging(logger.DEBUG, "Request Nodes APIs")
-		node.Handler.Handle(w, req)
+		logger.Logging(logger.DEBUG, "Request Agents APIs")
+		nodeManagementHandler.Handle(w, req)
 		
 	case strings.Contains(url, URL.Groups()):
 		logger.Logging(logger.DEBUG, "Request Groups APIs")
-		group.Handler.Handle(w, req)
+		groupManagementHandler.Handle(w, req)
 
 	case strings.Contains(url, URL.Registries()):
 		logger.Logging(logger.DEBUG, "Request Registries APIs")
-		registry.Handler.Handle(w, req)
+		registryManagementHandler.Handle(w, req)
 	}
 }
 

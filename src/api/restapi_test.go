@@ -14,84 +14,86 @@
  * limitations under the License.
  *
  *******************************************************************************/
+
 package api
 
 import (
-	"api/agent"
-	"api/group"
+	managementmocks "api/management/mocks"
+	monitoringmocks "api/monitoring/mocks"
 	"net/http"
 	"net/http/httptest"
+	"github.com/golang/mock/gomock"
 	"testing"
 )
 
-type agentMock struct {
-	handlerCall bool
-}
-type groupMock struct {
-	handlerCall bool
-}
+func TestCalledServeHTTPWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-var am agentMock
-var gm groupMock
-
-func setUp() func() {
-	am.handlerCall = false
-	gm.handlerCall = false
-	defaultSdamAgentHandle := agent.SdamAgentHandle
-	defaultSdamGroupHandle := group.SdamGroupHandle
-	agent.SdamAgentHandle = &am
-	group.SdamGroupHandle = &gm
-	return func() {
-		agent.SdamAgentHandle = defaultSdamAgentHandle
-		group.SdamGroupHandle = defaultSdamGroupHandle
-	}
-}
-
-func TestServeHTTPsendAgent(t *testing.T) {
-	tearDown := setUp()
-	defer tearDown()
+	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
+	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/agents", nil)
-	_SDAMApis.ServeHTTP(w, req)
+	req, _ := http.NewRequest("GET", "/api/v1/invalid", nil)
+	
+	// pass mockObj to a real object.
+	managementHandler = managementHandlerMockObj
+	monitoringHandler = monitoringHandlerMockObj
 
-	if !am.handlerCall || gm.handlerCall {
-		t.Error("ServeHTTPsendAgent is invalid")
-	}
+	Handler.ServeHTTP(w, req)
 }
 
-func TestServeHTTPsendGroup(t *testing.T) {
-	tearDown := setUp()
-	defer tearDown()
+func TestCalledServeHTTPWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
+	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/groups", nil)
-	_SDAMApis.ServeHTTP(w, req)
+	req, _ := http.NewRequest("GET", "/monitoring/resource", nil)
+	
+	// pass mockObj to a real object.
+	managementHandler = managementHandlerMockObj
+	monitoringHandler = monitoringHandlerMockObj
 
-	if !gm.handlerCall || am.handlerCall {
-		t.Error("ServeHTTPsendGroup is invalid")
-	}
+	Handler.ServeHTTP(w, req)
 }
 
-func TestServeHTTPURLisEmpty(t *testing.T) {
+func TestCalledServeHTTPWithManagementRequest_ExpectCalledManagementHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		managementHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "", nil)
-	_SDAMApis.ServeHTTP(w, req)
-	if w.Code != http.StatusNotFound {
-		t.Error("ServeHTTPURLisEmpty is invalid")
-	}
+	req, _ := http.NewRequest("GET", "/api/v1/management/nodes", nil)
+	
+	// pass mockObj to a real object.
+	managementHandler = managementHandlerMockObj
+
+	Handler.ServeHTTP(w, req)
 }
 
-func TestServeHTTPinvalidURL(t *testing.T) {
+func TestCalledServeHTTPWithMonitoringRequest_ExpectCalledMonitoringHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		monitoringHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+	
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/", nil)
-	_SDAMApis.ServeHTTP(w, req)
-	if w.Code != http.StatusNotFound {
-		t.Error("ServeHTTPinvalidURL is invalid")
-	}
-}
+	req, _ := http.NewRequest("GET", "/api/v1/monitoring/resource", nil)
+	
+	// pass mockObj to a real object.
+	monitoringHandler = monitoringHandlerMockObj
 
-func (am *agentMock) Handle(w http.ResponseWriter, req *http.Request) {
-	am.handlerCall = true
-}
-func (gm *groupMock) Handle(w http.ResponseWriter, req *http.Request) {
-	gm.handlerCall = true
+	Handler.ServeHTTP(w, req)
 }
