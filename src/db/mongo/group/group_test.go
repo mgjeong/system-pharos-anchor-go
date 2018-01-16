@@ -17,8 +17,9 @@ const (
 	collectionName  = "NODE"
 	status          = "connected"
 	appId           = "000000000000000000000000"
-	nodeId         = "000000000000000000000001"
+	nodeId          = "000000000000000000000001"
 	groupId         = "000000000000000000000002"
+	groupName       = "testGroup"
 	invalidObjectId = ""
 )
 
@@ -123,7 +124,7 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.CreateGroup()
+	_, err := executor.CreateGroup(groupName)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -149,7 +150,7 @@ func TestCalledCreateGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.CreateGroup()
+	_, err := executor.CreateGroup(groupName)
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -167,9 +168,10 @@ func TestCalledGetGroup_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
-	arg := Group{ID: bson.ObjectIdHex(groupId), Members: []string{}}
+	arg := Group{ID: bson.ObjectIdHex(groupId), Name: groupName, Members: []string{}}
 	expectedRes := map[string]interface{}{
 		"id":      groupId,
+		"name":    groupName,
 		"members": []string{},
 	}
 
@@ -266,9 +268,10 @@ func TestCalledGetGroups_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	args := []Group{{ID: bson.ObjectIdHex(groupId), Members: []string{}}}
+	args := []Group{{ID: bson.ObjectIdHex(groupId), Name: groupName, Members: []string{}}}
 	expectedRes := []map[string]interface{}{{
 		"id":      groupId,
+		"name":    groupName,
 		"members": []string{},
 	}}
 
@@ -657,7 +660,7 @@ func TestCalledGetGroupMembersByAppID_ExpectSuccess(t *testing.T) {
 		"apps":   []string{appId},
 		"status": status,
 	}
-	
+
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
