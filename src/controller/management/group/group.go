@@ -28,7 +28,7 @@ import (
 
 type Command interface {
 	// CreateGroup inserts a new group to databases.
-	CreateGroup() (int, map[string]interface{}, error)
+	CreateGroup(body string) (int, map[string]interface{}, error)
 
 	// GetGroup returns the information of the group specified by groupId parameter.
 	GetGroup(groupId string) (int, map[string]interface{}, error)
@@ -47,8 +47,9 @@ type Command interface {
 }
 
 const (
-	AGENTS        = "nodes"      // used to indicate a list of nodes.
-	GROUPS        = "groups"      // used to indicate a list of groups.
+	AGENTS     = "nodes"  // used to indicate a list of nodes.
+	GROUPS     = "groups" // used to indicate a list of groups.
+	GROUP_NAME = "name"   // used to indicate a group name.
 )
 
 type Executor struct{}
@@ -61,11 +62,24 @@ func init() {
 
 // CreateGroup inserts a new group to databases.
 // This function returns a unique id in case of success and an error otherwise.
-func (Executor) CreateGroup() (int, map[string]interface{}, error) {
+func (Executor) CreateGroup(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbExecutor.CreateGroup()
+	bodyMap, err := convertJsonToMap(body)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	// Check whether 'name' is included.
+	_, exists := bodyMap[GROUP_NAME]
+	if !exists {
+		return results.ERROR, nil, errors.InvalidJSON{"name field is required"}
+	}
+
+	name := bodyMap[GROUP_NAME].(string)
+	group, err := dbExecutor.CreateGroup(name)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
