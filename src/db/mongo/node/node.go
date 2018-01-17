@@ -53,9 +53,9 @@ type Command interface {
 }
 
 const (
-	DB_NAME          = "DeploymentManagerDB"
+	DB_NAME         = "DeploymentManagerDB"
 	NODE_COLLECTION = "NODE"
-	DB_URL           = "127.0.0.1:27017"
+	DB_URL          = "127.0.0.1:27017"
 )
 
 type Node struct {
@@ -66,7 +66,7 @@ type Node struct {
 	Config map[string]interface{}
 }
 
-type Executor struct {}
+type Executor struct{}
 
 var mgoDial Connection
 

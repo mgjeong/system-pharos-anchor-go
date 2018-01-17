@@ -28,11 +28,11 @@ import (
 )
 
 const (
-	testBodyString  = `{"test":"body"}`
+	testBodyString = `{"test":"body"}`
 )
 
 var testBody = map[string]interface{}{
-	"test":   "body",
+	"test": "body",
 }
 
 var Handler Command
@@ -135,11 +135,12 @@ func TestCalledHandleWithCreateGroupRequest_ExpectCalledCreateGroup(t *testing.T
 	groupmanageMockObj := groupmanagermocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupmanageMockObj.EXPECT().CreateGroup(),
+		groupmanageMockObj.EXPECT().CreateGroup(testBodyString),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/management/groups/create", nil)
+	body, _ := json.Marshal(testBody)
+	req, _ := http.NewRequest("POST", "/api/v1/management/groups/create", bytes.NewReader(body))
 
 	// pass mockObj to a real object.
 	managementExecutor = groupmanageMockObj

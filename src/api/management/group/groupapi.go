@@ -127,7 +127,13 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 //    responses: if successful, 200 status code will be returned.
 func (groupAPIExecutor) createGroup(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "[GROUP] Create Group")
-	result, resp, err := managementExecutor.CreateGroup()
+	body, err := common.GetBodyFromReq(req)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	result, resp, err := managementExecutor.CreateGroup(body)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 

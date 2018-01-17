@@ -50,8 +50,8 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 }
 
 // CreateGroup mocks base method
-func (m *MockCommand) CreateGroup() (int, map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "CreateGroup")
+func (m *MockCommand) CreateGroup(body string) (int, map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "CreateGroup", body)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(map[string]interface{})
 	ret2, _ := ret[2].(error)
@@ -59,8 +59,8 @@ func (m *MockCommand) CreateGroup() (int, map[string]interface{}, error) {
 }
 
 // CreateGroup indicates an expected call of CreateGroup
-func (mr *MockCommandMockRecorder) CreateGroup() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGroup", reflect.TypeOf((*MockCommand)(nil).CreateGroup))
+func (mr *MockCommandMockRecorder) CreateGroup(body interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateGroup", reflect.TypeOf((*MockCommand)(nil).CreateGroup), body)
 }
 
 // GetGroup mocks base method

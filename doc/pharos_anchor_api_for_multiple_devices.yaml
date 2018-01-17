@@ -41,6 +41,13 @@ paths:
         - application/json
       produces:
         - application/json
+      parameters:
+        - name: name
+          in: body
+          description: Human readable name
+          required: true
+          schema:
+            $ref: '#/definitions/group_name'
       responses:
         '200':
           description: Group create succeeds
@@ -388,14 +395,25 @@ definitions:
           - node_id_sample1
           - node_id_sample2
           - ...
+  group_name:
+    required:
+      - name
+    properties:
+      id:
+        type: string
+        example: "EdgeGroup#1"
   group:
     required:
       - id
+      - name
       - members
     properties:
       id:
         type: string
         example: group_id_sample
+      name:
+        type: string
+        example: "EdgeGroup#1"
       members:
         example:
           - node_id_sample1
@@ -411,12 +429,7 @@ definitions:
         items:
           $ref: '#/definitions/group'
   response_of_create_group:
-    required:
-      - id
-    properties:
-      id:
-        type: string
-        example: group_id_sample
+    $ref: '#/definitions/group'
   app:
     required:
       - id

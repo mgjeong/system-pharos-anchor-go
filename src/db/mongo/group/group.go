@@ -27,7 +27,7 @@ import (
 
 type Command interface {
 	// CreateGroup insert new Group.
-	CreateGroup() (map[string]interface{}, error)
+	CreateGroup(name string) (map[string]interface{}, error)
 
 	// GetGroup returns single document from db related to group.
 	GetGroup(groupId string) (map[string]interface{}, error)
@@ -59,10 +59,11 @@ const (
 
 type Group struct {
 	ID      bson.ObjectId `bson:"_id,omitempty"`
+	Name    string
 	Members []string
 }
 
-type Executor struct {}
+type Executor struct{}
 
 var mgoDial Connection
 var nodeExecutor nodeDB.Command
@@ -101,6 +102,7 @@ func getCollection(mgoSession Session, dbname string, collectionName string) Col
 func (group Group) convertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"id":      group.ID.Hex(),
+		"name":    group.Name,
 		"members": group.Members,
 	}
 }
@@ -108,7 +110,7 @@ func (group Group) convertToMap() map[string]interface{} {
 // CreateGroup inserts new Group to 'group' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) CreateGroup() (map[string]interface{}, error) {
+func (Executor) CreateGroup(name string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -119,7 +121,9 @@ func (Executor) CreateGroup() (map[string]interface{}, error) {
 	defer close(session)
 
 	group := Group{
-		ID: bson.NewObjectId(),
+		ID:      bson.NewObjectId(),
+		Name:    name,
+		Members: []string{},
 	}
 
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Insert(group)
