@@ -26,14 +26,15 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	nodeDB "db/mongo/node"
+	appDB "db/mongo/app"
 	groupDB "db/mongo/group"
+	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
 )
 
 const (
-	NODES             = "nodes"      // used to indicate a list of nodes.
+	NODES              = "nodes"       // used to indicate a list of nodes.
 	GROUPS             = "groups"      // used to indicate a list of groups.
 	MEMBERS            = "members"     // used to indicate a list of members.
 	APPS               = "apps"        // used to indicate a list of apps.
@@ -47,11 +48,13 @@ const (
 
 type Executor struct{}
 
+var appDbExecutor appDB.Command
 var nodeDbExecutor nodeDB.Command
 var groupDbExecutor groupDB.Command
 var httpExecutor messenger.Command
 
 func init() {
+	appDbExecutor = appDB.Executor{}
 	nodeDbExecutor = nodeDB.Executor{}
 	groupDbExecutor = groupDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
@@ -116,6 +119,12 @@ func (Executor) DeployApp(groupId string, body string) (int, map[string]interfac
 	installedAppId := ""
 	for i, node := range members {
 		if isSuccessCode(codes[i]) {
+			err = appDbExecutor.AddApp(respMap[i]["id"].(string), []byte(respMap[i]["description"].(string)))
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, nil, err
+			}
+
 			err = nodeDbExecutor.AddAppToNode(node[ID].(string), respMap[i][ID].(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
@@ -318,6 +327,12 @@ func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interfa
 	for i, node := range members {
 		if isSuccessCode(codes[i]) {
 			err = nodeDbExecutor.DeleteAppFromNode(node[ID].(string), appId)
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, nil, err
+			}
+
+			err = appDbExecutor.DeleteApp(appId)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, nil, err
