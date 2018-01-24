@@ -36,8 +36,8 @@ type Command interface {
 	// GetNode returns single document from db related to node.
 	GetNode(nodeId string) (map[string]interface{}, error)
 
-	// GetNodes returns all documents from db related to node.
-	GetNodes() ([]map[string]interface{}, error)
+	// GetNodes returns all matches for the query-string which is passed in call to function.
+	GetNodes(queryOptional ...map[string]interface{}) ([]map[string]interface{}, error)
 
 	// GetNodeByAppID returns single document including specific app.
 	GetNodeByAppID(nodeId string, appId string) (map[string]interface{}, error)
@@ -229,7 +229,7 @@ func (Executor) GetNode(nodeId string) (map[string]interface{}, error) {
 // GetNodes returns all documents from 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) GetNodes() ([]map[string]interface{}, error) {
+func (Executor) GetNodes(queryOptional ...map[string]interface{}) ([]map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -239,8 +239,16 @@ func (Executor) GetNodes() ([]map[string]interface{}, error) {
 	}
 	defer close(session)
 
+	var query interface{}
+	switch len(queryOptional) {
+	case 1:
+		for key, val := range queryOptional[0] {
+			query = bson.M{key: bson.M{"$in": []string{val.(string)}}}
+		}
+	}
+
 	nodes := []Node{}
-	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(nil).All(&nodes)
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).All(&nodes)
 	if err != nil {
 		return nil, ConvertMongoError(err)
 	}
