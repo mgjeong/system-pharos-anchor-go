@@ -37,7 +37,7 @@ func (httpClient) DoWrapper(req *http.Request) (*http.Response, error) {
 }
 
 type Command interface {
-	SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string)
+	SendHttpRequest(method string, urls []string, queries map[string]interface{}, dataOptional ...[]byte) ([]int, []string)
 }
 
 type Executor struct {
@@ -75,7 +75,7 @@ func (arr sortRespSlice) Swap(i, j int) {
 }
 
 // sendHttpRequest creates a new request and sends it to target device.
-func (executor Executor) SendHttpRequest(method string, urls []string, dataOptional ...[]byte) ([]int, []string) {
+func (executor Executor) SendHttpRequest(method string, urls []string, queries map[string]interface{}, dataOptional ...[]byte) ([]int, []string) {
 	var wg sync.WaitGroup
 	wg.Add(len(urls))
 
@@ -102,6 +102,12 @@ func (executor Executor) SendHttpRequest(method string, urls []string, dataOptio
 				resp.err = err.Error()
 				respChannel <- resp
 			} else {
+				query := req.URL.Query()
+				for key, value := range queries {
+					query.Add(key, value.(string))
+				}
+				req.URL.RawQuery = query.Encode()
+
 				resp.resp, err = executor.client.DoWrapper(req)
 				if err != nil {
 					resp.err = err.Error()
