@@ -139,22 +139,22 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			return results.ERROR, err
 		}
 		//TODO: search matched App ID by repository information.
-		imageName := parsedEvent[HOST].(string) + parsedEvent[REPOSITORY].(string)
+		imageName := parsedEvent[HOST].(string) + "/" + parsedEvent[REPOSITORY].(string)
 		_, apps, err := appmanagementExecutor.GetAppsWithImageName(imageName)
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, err
 		}
 
-		for _, app := range apps[APPS].([]interface{}) {
-			appId := app.(map[string]interface{})[ID]
+		for _, app := range apps[APPS].([]map[string]interface {}) {
+			appId := app[ID]
 			_, nodes, err := nodemanagementExecutor.GetNodesWithAppID(appId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, err
 			}
 			address := getMemberAddress(nodes[NODES].([]map[string]interface{}))
-			urls := makeRequestUrl(address, url.Management(), url.Apps(), appId.(string), url.Events())
+			urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
 			_, _ = httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 		}
 	}

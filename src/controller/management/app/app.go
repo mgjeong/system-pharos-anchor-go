@@ -31,8 +31,8 @@ type Command interface {
 }
 
 const (
-	APPS       = "apps"      // used to indicate a list of apps.
-	IMAGE_NAME = "imagename" // used to indicate name of image.
+	APPS   = "apps"   // used to indicate a list of apps.
+	IMAGES = "images" // used to indicate name of image.
 )
 
 // Executor implements the Command interface.
@@ -49,7 +49,7 @@ func (Executor) GetAppsWithImageName(imageName string) (int, map[string]interfac
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	query := make(map[string]interface{})
-	query[IMAGE_NAME] = imageName
+	query[IMAGES] = imageName
 
 	// Get matched apps with query stored in the database.
 	apps, err := appDbExecutor.GetApps(query)

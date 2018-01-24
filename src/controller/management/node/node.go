@@ -45,6 +45,7 @@ type Command interface {
 const (
 	NODES                       = "nodes"        // used to indicate a list of nodes.
 	ID                          = "id"           // used to indicate an node id.
+	APPS                        = "apps"         // used to indicate a list of apps.
 	HOST                        = "host"         // used to indicate an node address.
 	PORT                        = "port"         // used to indicate an node port.
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
@@ -193,7 +194,7 @@ func (Executor) GetNodesWithAppID(appID string) (int, map[string]interface{}, er
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	query := make(map[string]interface{})
-	query[ID] = appID
+	query[APPS] = appID
 
 	// Get matched nodes with query stored in the database.
 	nodes, err := nodeDbExecutor.GetNodes(query)
