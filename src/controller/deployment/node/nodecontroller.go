@@ -25,6 +25,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	appDB "db/mongo/app"
 	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
@@ -36,10 +37,12 @@ const (
 
 type Executor struct{}
 
+var appDbExecutor appDB.Command
 var nodeDbExecutor nodeDB.Command
 var httpExecutor messenger.Command
 
 func init() {
+	appDbExecutor = appDB.Executor{}
 	nodeDbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
@@ -104,6 +107,11 @@ func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface
 	// if response code represents success, insert the installed appId into nodeDbExecutor.
 	result := codes[0]
 	if isSuccessCode(result) {
+		err = appDbExecutor.AddApp(respMap["id"].(string), []byte(respMap["description"].(string)))
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, nil, err
+		}
 		err = nodeDbExecutor.AddAppToNode(nodeId, respMap["id"].(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
@@ -241,6 +249,12 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 
 	// if response code represents success, delete the appId from nodeDbExecutor.
 	err = nodeDbExecutor.DeleteAppFromNode(nodeId, appId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	err = appDbExecutor.DeleteApp(appId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err

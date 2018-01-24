@@ -18,6 +18,17 @@
 // Package commons/errors defines error structs of system-edge-manager.
 package errors
 
+// Struct Unknown will be used for return case of error
+// which not a defined errors.
+type Unknown struct {
+	Message string
+}
+
+// Implements of Error functionality of Unknown for error interface.
+func (e Unknown) Error() string {
+	return "unknown error : " + e.Message
+}
+
 // Struct NotFoundURL will be used for return case of error
 // which value of unknown or invalid url.
 type NotFoundURL struct {
@@ -60,6 +71,17 @@ type InvalidJSON struct {
 // Error sets an error message of InvalidJSON.
 func (e InvalidJSON) Error() string {
 	return "invalid json format: " + e.Message
+}
+
+// Struct InvalidYaml will be used for return case of error
+// which input yaml form is invalid.
+type InvalidYaml struct {
+	Message string
+}
+
+// Implements of Error functionality of InvalidYaml for error interface.
+func (e InvalidYaml) Error() string {
+	return "invalid yaml file : " + e.Message
 }
 
 // Struct InvalidJSON will be used for return case of error
