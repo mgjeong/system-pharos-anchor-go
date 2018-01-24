@@ -78,5 +78,3 @@ func Resource() string { return "/resource" }
 // Base returns the performance url as a type of string.
 func Performance() string { return "/performance" }
 
-// Base returns the catalog url as a type of string.
-func Catalog() string { return "/v2/_catalog" }
