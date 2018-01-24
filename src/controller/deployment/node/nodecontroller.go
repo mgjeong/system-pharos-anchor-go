@@ -95,7 +95,7 @@ func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
 
 	// Request an deployment of edge services to a specific node.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -141,7 +141,7 @@ func (Executor) GetApps(nodeId string) (int, map[string]interface{}, error) {
 	urls := makeRequestUrl(address, url.Management(), url.Apps())
 
 	// Request list of applications that is deployed to node.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -172,7 +172,7 @@ func (Executor) GetApp(nodeId string, appId string) (int, map[string]interface{}
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request get target application's information
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -203,7 +203,7 @@ func (Executor) UpdateAppInfo(nodeId string, appId string, body string) (int, ma
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request update target application's information.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -234,7 +234,7 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request delete target application
-	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -282,7 +282,7 @@ func (Executor) UpdateApp(nodeId string, appId string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -313,7 +313,7 @@ func (Executor) StartApp(nodeId string, appId string) (int, map[string]interface
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -344,7 +344,7 @@ func (Executor) StopApp(nodeId string, appId string) (int, map[string]interface{
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]

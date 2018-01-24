@@ -86,7 +86,7 @@ func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, err
 	// Check the URL is valiadated or not with catalog API.
 	urls := makeRequestUrl(reqBody[IP].(string), URL.Catalog())
 
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 	respMap, err := convertRespToMap(respStr)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
