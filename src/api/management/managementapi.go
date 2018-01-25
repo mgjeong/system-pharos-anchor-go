@@ -60,7 +60,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		common.WriteError(w, errors.NotFoundURL{})
 
 	case strings.Contains(url, URL.Nodes()):
-		logger.Logging(logger.DEBUG, "Request Agents APIs")
+		logger.Logging(logger.DEBUG, "Request Nodes APIs")
 		nodeManagementHandler.Handle(w, req)
 		
 	case strings.Contains(url, URL.Groups()):
