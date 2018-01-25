@@ -41,6 +41,7 @@ type Command interface {
 const (
 	ID                 = "id"
 	IP                 = "ip"
+	POST               = "POST"
 	APPS               = "apps"
 	NODES              = "nodes" // used to indicate a list of nodes.
 	HOST               = "host"
@@ -50,20 +51,20 @@ const (
 	REGISTRIES         = "registries"
 	REGISTRY           = "registry"
 	EVENTS             = "events"
-	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-node port.
+	DEFAULT_NODES_PORT = "48098" // used to indicate a default system-management-node port.
 )
 
 type Executor struct{}
 
 var appmanagementExecutor appmanager.Command
 var nodemanagementExecutor nodemanager.Command
-var dbExecutor registry.Command
+var registryDbExecutor registry.Command
 var httpExecutor messenger.Command
 
 func init() {
 	appmanagementExecutor = appmanager.Executor{}
 	nodemanagementExecutor = nodemanager.Executor{}
-	dbExecutor = registry.Executor{}
+	registryDbExecutor = registry.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
@@ -77,7 +78,13 @@ func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, err
 		return results.ERROR, nil, err
 	}
 
-	registry, err := dbExecutor.AddDockerRegistry(reqBody[IP].(string))
+	// Check whether 'ip' is included.
+	ip, exists := reqBody[IP].(string)
+	if !exists {
+		return results.ERROR, nil, errors.InvalidJSON{"ip field is required"}
+	}
+
+	registry, err := registryDbExecutor.AddDockerRegistry(ip)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -94,7 +101,7 @@ func (Executor) DeleteDockerRegistry(registryId string) (int, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Delete registry specified by registryId parameter.
-	err := dbExecutor.DeleteDockerRegistry(registryId)
+	err := registryDbExecutor.DeleteDockerRegistry(registryId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -108,7 +115,7 @@ func (Executor) GetDockerRegistries() (int, map[string]interface{}, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get all of registries list.
-	registries, err := dbExecutor.GetDockerRegistries()
+	registries, err := registryDbExecutor.GetDockerRegistries()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -138,7 +145,7 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, err
 		}
-		//TODO: search matched App ID by repository information.
+
 		imageName := parsedEvent[HOST].(string) + "/" + parsedEvent[REPOSITORY].(string)
 		_, apps, err := appmanagementExecutor.GetAppsWithImageName(imageName)
 		if err != nil {
@@ -146,7 +153,7 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			return results.ERROR, err
 		}
 
-		for _, app := range apps[APPS].([]map[string]interface {}) {
+		for _, app := range apps[APPS].([]map[string]interface{}) {
 			appId := app[ID]
 			_, nodes, err := nodemanagementExecutor.GetNodesWithAppID(appId.(string))
 			if err != nil {
@@ -155,7 +162,7 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			}
 			address := getMemberAddress(nodes[NODES].([]map[string]interface{}))
 			urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
-			_, _ = httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+			_, _ = httpExecutor.SendHttpRequest(POST, urls, nil, []byte(body))
 		}
 	}
 	return results.OK, nil
@@ -210,7 +217,7 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 	for i := range address {
 		full_url.Reset()
 		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_AGENT_PORT + url.Base())
+			":" + DEFAULT_NODES_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}

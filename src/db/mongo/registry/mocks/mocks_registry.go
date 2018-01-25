@@ -5,6 +5,7 @@ package mocks
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockCommand is a mock of Command interface
@@ -54,19 +55,6 @@ func (m *MockCommand) GetDockerRegistries() ([]map[string]interface{}, error) {
 // GetDockerRegistries indicates an expected call of GetDockerRegistries
 func (mr *MockCommandMockRecorder) GetDockerRegistries() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDockerRegistries", reflect.TypeOf((*MockCommand)(nil).GetDockerRegistries))
-}
-
-// GetDockerRegistry mocks base method
-func (m *MockCommand) GetDockerRegistry(url string) (map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "GetDockerRegistry", url)
-	ret0, _ := ret[0].(map[string]interface{})
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetDockerRegistry indicates an expected call of GetDockerRegistry
-func (mr *MockCommandMockRecorder) GetDockerRegistry(url interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDockerRegistry", reflect.TypeOf((*MockCommand)(nil).GetDockerRegistry), url)
 }
 
 // DeleteDockerRegistry mocks base method
