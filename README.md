@@ -18,8 +18,7 @@ This provides how to build sources codes to an excutable binary and dockerize it
 ```shell
 $ ./build.sh
 ```
-If source codes are successfully built, you can find an output binary file, **main**, on a root of project folder.
-Note that, you can find other build scripts, **build_arm.sh** and **build_arm64**, which can be used to build the codes for ARM and ARM64 machines, respectively.
+If source codes are successfully built, you can find an output binary file, **pharos-anchor**, on a root of project folder.
 
 #### 2. Docker Image  ####
 Next, you can create it to a Docker image.
@@ -32,7 +31,6 @@ $ sudo docker images
 REPOSITORY                         TAG        IMAGE ID        CREATED           SIZE
 system-pharos-anchor-go-ubuntu     latest     fcbbd4c401c2    31 seconds ago    157MB
 ```
-Note that, you can find other Dockerfiles, **Dockerfile_arm** and **Dockerfile_arm64**, which can be used to dockerize for ARM and ARM64 machines, respectively.
 
 ## How to run with Docker image ##
 Required options to run Docker image
@@ -76,25 +74,11 @@ $ docker run -it -p 48099:48099 -v /data/db:/data/db system-pharos-anchor-go-ubu
 2018-01-17T10:29:53.023+0000 I FTDC     [ftdc] Unclean full-time diagnostic data capture shutdown detected, found interim file, some metrics may have been lost. OK
 ```
 
-## (Optional) How to enable QEMU environment on your computer
-QEMU could be useful if you want to test your implemetation on various CPU architectures(e.g. ARM, ARM64) but you have only Ubuntu PC. To enable QEMU on your machine, please do as follows.
+## API Document ##
+Pharos Anchor provides a set of REST APIs for its operations. Descriptions for the APIs are stored in <root>/doc folder.
+- **pharos_anchor_api_for_single_device.yaml**
+  - Describes APIs of service deployment for single device
+- **pharos_anchor_api_for_multiple_devices.yaml**
+  - Describes APIs of group management with a number of devices and service deployment in a group manner
 
-Required packages for QEMU:
-```shell
-$ apt-get install -y qemu-user-static binfmt-support
-```
-For ARM 32bit:
-```shell
-$ echo ':arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:' > /proc/sys/fs/binfmt_misc/register <br />
-```
-For ARM 64bit:
-```shell
-$ echo ':aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7:\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:' > /proc/sys/fs/binfmt_misc/register <br />
-```
-
-Now, you can build your implementation and dockerize it for ARM and ARM64 on your Ubuntu PC. The below is an example for ARM build.
-
-```shell
-$ ./build_arm.sh
-$ docker build -t system-pharos-anchor-go-arm -f Dockerfile_arm .
-```
+Note that you can visit [Swagger Editor](https://editor.swagger.io/) to graphically investigate the REST APIs in YAML.
