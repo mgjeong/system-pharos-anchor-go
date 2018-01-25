@@ -79,7 +79,7 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 		dbExecutorMockObj.EXPECT().AddNode(ip, status, configuration).Return(node, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, res, err := manager.RegisterNode(body)
 
@@ -153,7 +153,7 @@ func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *te
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
 	code, _, err := manager.RegisterNode(body)
@@ -184,12 +184,12 @@ func TestCalledUnRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, respStr),
 		dbExecutorMockObj.EXPECT().DeleteNode(nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	httpExecutor = msgMockObj
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, err := manager.UnRegisterNode(nodeId)
 
@@ -212,7 +212,7 @@ func TestCalledUnRegisterNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testin
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, err := manager.UnRegisterNode(nodeId)
 
@@ -242,7 +242,7 @@ func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, res, err := manager.GetNode(nodeId)
 
@@ -270,7 +270,7 @@ func TestCalledGetNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := manager.GetNode(nodeId)
 
@@ -302,7 +302,7 @@ func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, res, err := manager.GetNodes()
 
@@ -330,7 +330,7 @@ func TestCalledGetNodesWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := manager.GetNodes()
 
@@ -360,7 +360,7 @@ func TestCalledUpdateNodeStatus_ExpectSuccess(t *testing.T) {
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	err := manager.UpdateNodeStatus(nodeId, status)
 
@@ -380,7 +380,7 @@ func TestCalledUpdateNodeStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T
 	)
 
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	err := manager.UpdateNodeStatus(nodeId, status)
 
@@ -405,7 +405,7 @@ func TestCalledPingNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	code, err := Executor{}.PingNode(nodeId, "")
 
@@ -434,7 +434,7 @@ func TestCalledPingNodeWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	invalidKeyBody := `{"key":"value"}`
 	code, err := Executor{}.PingNode(nodeId, invalidKeyBody)
@@ -464,7 +464,7 @@ func TestCalledPingNodeWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	nodeDbExecutor = dbExecutorMockObj
 
 	invalidValueBody := `{"interval":"value"}`
 	code, err := Executor{}.PingNode(nodeId, invalidValueBody)

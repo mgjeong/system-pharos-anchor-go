@@ -105,6 +105,11 @@ func (Executor) AddApp(appId string, description []byte) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
+	if len(appId) == 0 {
+		err := errors.InvalidParam{"Invalid param error : app_id is empty."}
+		return err
+	}
+
 	session, err := connect(DB_URL)
 	if err != nil {
 		return err
@@ -241,9 +246,7 @@ func getImageAndServiceNames(source []byte) ([]string, []string, error) {
 		return nil, nil, errors.InvalidYaml{"Invalid YAML error : description has not service information."}
 	}
 
-	yamlData = convert(yamlData)
-
-	jsonData, err := json.Marshal(yamlData)
+	jsonData, err := json.Marshal(convert(yamlData))
 	if err != nil {
 		return nil, nil, errors.InvalidYaml{"Invalid YAML error : description has not service information."}
 	}

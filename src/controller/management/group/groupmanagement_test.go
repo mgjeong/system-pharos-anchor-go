@@ -80,7 +80,7 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	body = map[string]interface{}{"name": groupName}
+	body := `{"name":"testGroup"}`
 	code, res, err := manager.CreateGroup(body)
 
 	if err != nil {
@@ -108,7 +108,7 @@ func TestCalledCreateGroupWhenFailedToInsertGroupToDB_ExpectErrorReturn(t *testi
 	// pass mockObj to a real object.
 	dbExecutor = dbExecutorMockObj
 
-	body = map[string]interface{}{"name": groupName}
+	body := `{"name":"testGroup"}`
 	code, _, err := manager.CreateGroup(body)
 
 	if code != results.ERROR {
