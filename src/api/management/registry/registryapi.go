@@ -44,7 +44,6 @@ type registryManagementAPI interface {
 	registerDockerRegistry(w http.ResponseWriter, req *http.Request)
 	deleteDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
 	getDockerRegistries(w http.ResponseWriter, req *http.Request)
-	getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string)
 	handleDockerRegistryEvent(w http.ResponseWriter, req *http.Request)
 }
 
@@ -88,10 +87,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
 		} else {
-			if req.Method == GET {
-				registryID := split[1]
-				registryAPI.getDockerRegistry(w, req, registryID)
-			} else if req.Method == DELETE{
+			if req.Method == DELETE{
 				registryID := split[1]
 				registryAPI.deleteDockerRegistry(w, req, registryID)
 			} else {
@@ -130,15 +126,6 @@ func (registryAPIExecutor) getDockerRegistries(w http.ResponseWriter, req *http.
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	result, resp, err := registryExecutor.GetDockerRegistries()
-
-	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
-}
-
-func (registryAPIExecutor) getDockerRegistry(w http.ResponseWriter, req *http.Request, registryID string) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	result, resp, err := registryExecutor.GetDockerRegistry(registryID)
 
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }

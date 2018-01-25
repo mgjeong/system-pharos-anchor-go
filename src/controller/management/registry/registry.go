@@ -22,7 +22,9 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	URL "commons/url"
+	"commons/url"
+	appmanager "controller/management/app"
+	nodemanager "controller/management/node"
 	"db/mongo/registry"
 	"encoding/json"
 	"messenger"
@@ -31,44 +33,36 @@ import (
 type Command interface {
 	// AddDockerRegistry add docker registry to database.
 	AddDockerRegistry(body string) (int, map[string]interface{}, error)
-
 	DeleteDockerRegistry(registryId string) (int, error)
-
 	GetDockerRegistries() (int, map[string]interface{}, error)
-
-	GetDockerRegistry(registryId string) (int, map[string]interface{}, error)
-
-	GetDockerImages(registryId string) (int, map[string]interface{}, error)
-
 	DockerRegistryEventHandler(body string) (int, error)
 }
 
 const (
-	ID           = "id"
-	IP           = "ip"
-	TARGETINFO   = "target"
-	REQUESTINFO  = "request"
-	REGISTRIES   = "registries"
-	REGISTRY     = "registry"
-	IMAGES       = "images"
-	REPOSITORIES = "repositories"
-	HOST         = "host"
-	REPOSITORY   = "repository"
-	TAG          = "tag"
-	SIZE         = "size"
-	ACTION       = "action"
-	EVENTS       = "events"
-	TIMESTAMP    = "timestamp"
-	PUSH         = "push"
-	DELETE       = "delete"
+	ID                 = "id"
+	IP                 = "ip"
+	APPS               = "apps"
+	NODES              = "nodes" // used to indicate a list of nodes.
+	HOST               = "host"
+	REPOSITORY         = "repository"
+	TARGETINFO         = "target"
+	REQUESTINFO        = "request"
+	REGISTRIES         = "registries"
+	REGISTRY           = "registry"
+	EVENTS             = "events"
+	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-node port.
 )
 
 type Executor struct{}
 
+var appmanagementExecutor appmanager.Command
+var nodemanagementExecutor nodemanager.Command
 var dbExecutor registry.Command
 var httpExecutor messenger.Command
 
 func init() {
+	appmanagementExecutor = appmanager.Executor{}
+	nodemanagementExecutor = nodemanager.Executor{}
 	dbExecutor = registry.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
@@ -83,53 +77,16 @@ func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, err
 		return results.ERROR, nil, err
 	}
 
-	// Check the URL is valiadated or not with catalog API.
-	urls := makeRequestUrl(reqBody[IP].(string), URL.Catalog())
-
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
-	respMap, err := convertRespToMap(respStr)
+	registry, err := dbExecutor.AddDockerRegistry(reqBody[IP].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
 
-	result := codes[0]
-	if isSuccessCode(result) {
-		// Add new registry to database with given url.
-		registry, err := dbExecutor.AddDockerRegistry(reqBody[IP].(string))
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return results.ERROR, nil, err
-		}
+	res := make(map[string]interface{})
+	res[ID] = registry[ID]
 
-		imagesList := respMap[REPOSITORIES]
-
-		// if registry has repository, add the list of repository.
-		if len(imagesList.([]interface{})) > 0 {
-			imagesInfo := make([]map[string]interface{}, len(imagesList.([]interface{})))
-
-			for i, imageInfo := range imagesList.([]interface{}) {
-				imagesInfo[i][REPOSITORY] = imageInfo.(string)
-				imagesInfo[i][TAG] = ""
-				imagesInfo[i][SIZE] = ""
-				imagesInfo[i][ACTION] = ""
-				imagesInfo[i][TIMESTAMP] = ""
-			}
-
-			err = dbExecutor.AddDockerImages(registry[ID].(string), imagesInfo)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-				return results.ERROR, nil, err
-			}
-		}
-
-		res := make(map[string]interface{})
-		res[ID] = registry[ID]
-
-		return results.OK, nil, err
-	}
-
-	return result, nil, err
+	return results.OK, res, err
 }
 
 func (Executor) DeleteDockerRegistry(registryId string) (int, error) {
@@ -163,40 +120,6 @@ func (Executor) GetDockerRegistries() (int, map[string]interface{}, error) {
 	return results.OK, res, err
 }
 
-func (Executor) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	// Get registry specified by registryId parameter.
-	registry, err := dbExecutor.GetDockerRegistry(registryId)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return results.ERROR, nil, err
-	}
-
-	res := make(map[string]interface{})
-	res[REGISTRY] = registry
-
-	return results.OK, res, err
-}
-
-func (Executor) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	// Get all of images list on registry specified by registryId parameter.
-	images, err := dbExecutor.GetDockerImages(registryId)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return results.ERROR, nil, err
-	}
-
-	res := make(map[string]interface{})
-	res[IMAGES] = images
-
-	return results.OK, res, err
-}
-
 func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
@@ -215,68 +138,27 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, err
 		}
+		//TODO: search matched App ID by repository information.
+		imageName := parsedEvent[HOST].(string) + "/" + parsedEvent[REPOSITORY].(string)
+		_, apps, err := appmanagementExecutor.GetAppsWithImageName(imageName)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, err
+		}
 
-		switch parsedEvent[ACTION] {
-		case PUSH:
-			err := addDockerImage(parsedEvent)
+		for _, app := range apps[APPS].([]map[string]interface {}) {
+			appId := app[ID]
+			_, nodes, err := nodemanagementExecutor.GetNodesWithAppID(appId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return results.ERROR, err
 			}
-		case DELETE:
-			err := deleteDockerImage(parsedEvent)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-				return results.ERROR, err
-			}
+			address := getMemberAddress(nodes[NODES].([]map[string]interface{}))
+			urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
+			_, _ = httpExecutor.SendHttpRequest("POST", urls, []byte(body))
 		}
 	}
-
 	return results.OK, nil
-}
-
-func addDockerImage(imageInfo map[string]interface{}) error {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	host, err := dbExecutor.GetDockerRegistry(imageInfo[HOST].(string))
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return err
-	}
-
-	delete(imageInfo, HOST)
-	images := make([]map[string]interface{}, 0)
-	images = append(images, imageInfo)
-
-	err = dbExecutor.AddDockerImages(host[ID].(string), images)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func deleteDockerImage(imageInfo map[string]interface{}) error {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	host, err := dbExecutor.GetDockerRegistry(imageInfo[HOST].(string))
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return err
-	}
-
-	delete(imageInfo, HOST)
-
-	err = dbExecutor.DeleteDockerImage(host[ID].(string), imageInfo)
-	if err != nil {
-		logger.Logging(logger.ERROR, err.Error())
-		return err
-	}
-
-	return nil
 }
 
 // convertRespToMap converts a response in the form of JSON data into a map.
@@ -309,22 +191,31 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 	return result, err
 }
 
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(ip string, api_parts ...string) (urls []string) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
+// getNodeAddress returns an member's address as an array.
+func getMemberAddress(members []map[string]interface{}) []map[string]interface{} {
+	result := make([]map[string]interface{}, len(members))
+	for i, node := range members {
+		result[i] = map[string]interface{}{
+			"ip": node["ip"],
+		}
+	}
+	return result
+}
 
+// makeRequestUrl make a list of urls that can be used to send a http request.
+func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
 	var httpTag string = "http://"
 	var full_url bytes.Buffer
 
-	full_url.Reset()
-	full_url.WriteString(httpTag + ip)
-
-	for _, api_part := range api_parts {
-		full_url.WriteString(api_part)
+	for i := range address {
+		full_url.Reset()
+		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+			":" + DEFAULT_AGENT_PORT + url.Base())
+		for _, api_part := range api_parts {
+			full_url.WriteString(api_part)
+		}
+		urls = append(urls, full_url.String())
 	}
-	urls = append(urls, full_url.String())
-
 	return urls
 }
 
@@ -351,12 +242,8 @@ func parseEventInfo(eventInfo map[string]interface{}) (map[string]interface{}, e
 	targetInfoEvent = eventInfo[TARGETINFO].(map[string]interface{})
 	requestInfoEvent = eventInfo[REQUESTINFO].(map[string]interface{})
 
-	parsedEvent[ACTION] = eventInfo[ACTION]
-	parsedEvent[TIMESTAMP] = eventInfo[TIMESTAMP]
-	parsedEvent[REPOSITORY] = targetInfoEvent[REPOSITORY]
-	parsedEvent[TAG] = targetInfoEvent[TAG]
-	parsedEvent[SIZE] = targetInfoEvent[SIZE]
 	parsedEvent[HOST] = requestInfoEvent[HOST]
+	parsedEvent[REPOSITORY] = targetInfoEvent[REPOSITORY]
 
 	return parsedEvent, nil
 }
