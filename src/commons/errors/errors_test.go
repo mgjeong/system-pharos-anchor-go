@@ -35,6 +35,8 @@ func TestTError(t *testing.T) {
 	}
 
 	testList := []testObj{
+		{testName: "Unknown", testPrefix: "unknown error",
+			testError: &Unknown{msg}},
 		{testName: "NotFoundURL", testPrefix: "unsupported url",
 			testError: &NotFoundURL{msg}},
 		{testName: "InvalidMethod", testPrefix: "invalid method",
@@ -43,6 +45,8 @@ func TestTError(t *testing.T) {
 			testError: &InvalidParam{msg}},
 		{testName: "InvalidJSON", testPrefix: "invalid json format",
 			testError: &InvalidJSON{msg}},
+		{testName: "InvalidYaml", testPrefix: "invalid yaml file",
+			testError: &InvalidYaml{msg}},
 		{testName: "InvalidObjectId", testPrefix: "invalid objectId",
 			testError: &InvalidObjectId{msg}},
 		{testName: "NotFound", testPrefix: "not found target",
