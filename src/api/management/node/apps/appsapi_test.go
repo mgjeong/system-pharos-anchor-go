@@ -29,16 +29,24 @@ import (
 
 const (
 	testBodyString = `{"test":"body"}`
+	testQueryKey   = "testKey"
+	testQueryValue = "testValue"
 )
 
 var testBody = map[string]interface{}{
 	"test": "body",
 }
 
+var testQuery map[string]interface{}
+
 var Handler Command
 
 func init() {
 	Handler = RequestHandler{}
+	testQuery = make(map[string]interface{})
+	testQueryValueList := make([]string, 1)
+	testQueryValueList[0] = testQueryValue
+	testQuery[testQueryKey] = testQueryValueList
 }
 
 func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
@@ -168,19 +176,41 @@ func TestCalledHandleWithDeleteAppRequest_ExpectCalledDeleteApp(t *testing.T) {
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithUpdateAppRequest_ExpectCalledUpdateApp(t *testing.T) {
+func TestCalledHandleWithUpdateAppRequestWithoutQuery_ExpectCalledUpdateApp(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().UpdateApp("nodeID", "appID"),
+		deploymentMockObj.EXPECT().UpdateApp("nodeID", "appID", nil),
 	)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID/update", nil)
 
+	// pass mockObj to a real object.
+	deploymentExecutor = deploymentMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithUpdateAppRequestWithQuery_ExpectCalledUpdateApp(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		deploymentMockObj.EXPECT().UpdateApp("nodeID", "appID", testQuery),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/apps/appID/update", nil)
+
+	query := req.URL.Query()
+	query.Add(testQueryKey, testQueryValue)
+	req.URL.RawQuery = query.Encode()
 	// pass mockObj to a real object.
 	deploymentExecutor = deploymentMockObj
 
