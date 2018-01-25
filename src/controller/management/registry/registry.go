@@ -155,7 +155,7 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 			}
 			address := getMemberAddress(nodes[NODES].([]map[string]interface{}))
 			urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
-			_, _ = httpExecutor.SendHttpRequest("POST", urls, []byte(body))
+			_, _ = httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 		}
 	}
 	return results.OK, nil
