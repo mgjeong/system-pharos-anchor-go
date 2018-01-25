@@ -177,7 +177,7 @@ func TestCalledUnRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, respStr),
 		dbExecutorMockObj.EXPECT().DeleteNode(nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.

@@ -105,6 +105,11 @@ func (Executor) AddApp(appId string, description []byte) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
+	if len(appId) == 0 {
+		err := errors.InvalidParam{"Invalid param error : app_id is empty."}
+		return err
+	}
+
 	session, err := connect(DB_URL)
 	if err != nil {
 		return err
@@ -241,9 +246,7 @@ func getImageAndServiceNames(source []byte) ([]string, []string, error) {
 		return nil, nil, errors.InvalidYaml{"Invalid YAML error : description has not service information."}
 	}
 
-	yamlData = convert(yamlData)
-
-	jsonData, err := json.Marshal(yamlData)
+	jsonData, err := json.Marshal(convert(yamlData))
 	if err != nil {
 		return nil, nil, errors.InvalidYaml{"Invalid YAML error : description has not service information."}
 	}
@@ -268,9 +271,18 @@ func getImageAndServiceNames(source []byte) ([]string, []string, error) {
 		}
 
 		fullImageName := service_info.(map[string]interface{})[IMAGE_FIELD].(string)
-		words := strings.Split(fullImageName, ":")
-		imageNameWithoutTag := strings.Join(words[:len(words)-1], ":")
-		images = append(images, imageNameWithoutTag)
+		var registryUrl, imageName string
+		words := strings.Split(fullImageName, "/")
+		if len(words) == 2 {
+			registryUrl += words[0] + "/"
+			imageName += words[1]
+		} else {
+			imageName += words[0]
+		}
+
+		words = strings.Split(imageName, ":")
+		imageNameWithoutTag := words[0]
+		images = append(images, registryUrl+imageNameWithoutTag)
 	}
 	return images, services, nil
 }
