@@ -268,8 +268,9 @@ func getImageAndServiceNames(source []byte) ([]string, []string, error) {
 		}
 
 		fullImageName := service_info.(map[string]interface{})[IMAGE_FIELD].(string)
-		s := strings.Split(fullImageName, ":")
-		images = append(images, s[0])
+		words := strings.Split(fullImageName, ":")
+		imageNameWithoutTag := strings.Join(words[:len(words)-1], ":")
+		images = append(images, imageNameWithoutTag)
 	}
 	return images, services, nil
 }
