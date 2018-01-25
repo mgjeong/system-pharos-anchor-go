@@ -71,7 +71,7 @@ func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -130,7 +130,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *test
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -157,7 +157,7 @@ func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_Exp
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -195,7 +195,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -254,7 +254,7 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, respStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -281,7 +281,7 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(errorRespCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
