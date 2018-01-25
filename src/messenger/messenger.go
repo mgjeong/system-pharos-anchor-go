@@ -103,8 +103,10 @@ func (executor Executor) SendHttpRequest(method string, urls []string, queries m
 				respChannel <- resp
 			} else {
 				query := req.URL.Query()
-				for key, value := range queries {
-					query.Add(key, value.(string))
+				for key, values := range queries {
+					for _, value := range values.([]string) {
+						query.Add(key, value)
+					}
 				}
 				req.URL.RawQuery = query.Encode()
 
