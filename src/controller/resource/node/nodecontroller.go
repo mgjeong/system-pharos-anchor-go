@@ -65,7 +65,7 @@ func (Executor) GetResourceInfo(nodeId string) (int, map[string]interface{}, err
 	urls := makeRequestUrl(address, url.Monitoring(), url.Resource())
 
 	// Request to return node's resource information.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -96,7 +96,7 @@ func (Executor) GetPerformanceInfo(nodeId string) (int, map[string]interface{}, 
 	urls := makeRequestUrl(address, url.Monitoring(), url.Resource(), url.Performance())
 
 	// Request to return node's performance information.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]

@@ -106,7 +106,7 @@ func (Executor) DeployApp(groupId string, body string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Deploy())
 
 	// Request an deployment of edge services to a specific group.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -215,7 +215,7 @@ func (Executor) GetApp(groupId string, appId string) (int, map[string]interface{
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request get target application's information.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -275,7 +275,7 @@ func (Executor) UpdateAppInfo(groupId string, appId string, body string) (int, m
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request update target application's information.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, []byte(body))
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -314,7 +314,7 @@ func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interfa
 	urls := makeRequestUrl(address, url.Apps(), "/", appId)
 
 	// Request delete target application.
-	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls, nil)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -370,7 +370,7 @@ func (Executor) UpdateApp(groupId string, appId string) (int, map[string]interfa
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -409,7 +409,7 @@ func (Executor) StartApp(groupId string, appId string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -448,7 +448,7 @@ func (Executor) StopApp(groupId string, appId string) (int, map[string]interface
 	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
