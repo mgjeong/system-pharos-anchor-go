@@ -42,7 +42,7 @@ func TestCalledSendHttpRequestWithoutData_ExpectSuccess(t *testing.T) {
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}
-	messengerObj.SendHttpRequest("POST", testUrls)
+	messengerObj.SendHttpRequest("POST", testUrls, nil)
 }
 
 func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
@@ -61,7 +61,7 @@ func TestCalledSendHttpRequestWithData_ExpectSuccess(t *testing.T) {
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}
-	messengerObj.SendHttpRequest("POST", testUrls)
+	messengerObj.SendHttpRequest("POST", testUrls, nil)
 }
 
 func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *testing.T) {
@@ -78,5 +78,5 @@ func TestCalledSendHttpRequestWhenFailedToSendHttpRequest_ExpectErrorReturn(t *t
 	messengerObj.client = httpMockObj
 
 	testUrls := []string{"/test/url", "/test/url"}
-	messengerObj.SendHttpRequest("POST", testUrls)
+	messengerObj.SendHttpRequest("POST", testUrls, nil)
 }

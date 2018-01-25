@@ -82,16 +82,20 @@ func (mr *MockCommandMockRecorder) GetNode(nodeId interface{}) *gomock.Call {
 }
 
 // GetNodes mocks base method
-func (m *MockCommand) GetNodes() ([]map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "GetNodes")
+func (m *MockCommand) GetNodes(queryOptional ...map[string]interface{}) ([]map[string]interface{}, error) {
+	varargs := []interface{}{}
+	for _, a := range queryOptional {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetNodes", varargs...)
 	ret0, _ := ret[0].([]map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetNodes indicates an expected call of GetNodes
-func (mr *MockCommandMockRecorder) GetNodes() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodes", reflect.TypeOf((*MockCommand)(nil).GetNodes))
+func (mr *MockCommandMockRecorder) GetNodes(queryOptional ...interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodes", reflect.TypeOf((*MockCommand)(nil).GetNodes), queryOptional...)
 }
 
 // GetNodeByAppID mocks base method
