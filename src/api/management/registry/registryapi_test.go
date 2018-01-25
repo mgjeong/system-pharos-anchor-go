@@ -90,25 +90,6 @@ func TestCalledHandleWithGetRegistriesRequest_ExpectCalledGetRegistries(t *testi
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithGetRegistryRequest_ExpectCalledGetRegistry(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		registrymanageMockObj.EXPECT().GetDockerRegistry("registryID"),
-	)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/management/registries/registryID", nil)
-
-	// pass mockObj to a real object.
-	registryExecutor = registrymanageMockObj
-
-	Handler.Handle(w, req)
-}
-
 func TestCalledHandleWithAddRegistryRequest_ExpectCalledAddDockerRegistry(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

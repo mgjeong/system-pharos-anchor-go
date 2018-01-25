@@ -37,6 +37,7 @@ type Command interface {
 	UnRegisterNode(nodeId string) (int, error)
 	GetNode(nodeId string) (int, map[string]interface{}, error)
 	GetNodes() (int, map[string]interface{}, error)
+	GetNodesWithAppID(appId string) (int, map[string]interface{}, error)
 	UpdateNodeStatus(nodeId string, status string) error
 	PingNode(nodeId string, body string) (int, error)
 }
@@ -44,6 +45,7 @@ type Command interface {
 const (
 	NODES                       = "nodes"        // used to indicate a list of nodes.
 	ID                          = "id"           // used to indicate an node id.
+	APPS                        = "apps"         // used to indicate a list of apps.
 	HOST                        = "host"         // used to indicate an node address.
 	PORT                        = "port"         // used to indicate an node port.
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
@@ -51,17 +53,17 @@ const (
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
 	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
-	DEFAULT_NODE_PORT          = "48098"        // used to indicate a default pharos node port.
+	DEFAULT_NODE_PORT           = "48098"        // used to indicate a default pharos node port.
 )
 
 // Executor implements the Command interface.
 type Executor struct{}
 
-var dbExecutor nodeDB.Command
+var nodeDbExecutor nodeDB.Command
 var httpExecutor messenger.Command
 
 func init() {
-	dbExecutor = nodeDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
 
@@ -93,7 +95,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Add new node to database with given ip, port, status.
-	node, err := dbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	node, err := nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -112,7 +114,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get node specified by nodeId parameter.
-	node, err := dbExecutor.GetNode(nodeId)
+	node, err := nodeDbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -141,7 +143,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	delete(common.timers, nodeId)
 
 	// Delete node specified by nodeId parameter.
-	err = dbExecutor.DeleteNode(nodeId)
+	err = nodeDbExecutor.DeleteNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -158,7 +160,7 @@ func (Executor) GetNode(nodeId string) (int, map[string]interface{}, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get node specified by nodeId parameter.
-	node, err := dbExecutor.GetNode(nodeId)
+	node, err := nodeDbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -175,7 +177,27 @@ func (Executor) GetNodes() (int, map[string]interface{}, error) {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get all nodes stored in the database.
-	nodes, err := dbExecutor.GetNodes()
+	nodes, err := nodeDbExecutor.GetNodes()
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	res := make(map[string]interface{})
+	res[NODES] = nodes
+
+	return results.OK, res, err
+}
+
+func (Executor) GetNodesWithAppID(appID string) (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	query := make(map[string]interface{})
+	query[APPS] = appID
+
+	// Get matched nodes with query stored in the database.
+	nodes, err := nodeDbExecutor.GetNodes(query)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -195,7 +217,7 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	// Get node specified by nodeId parameter.
-	err := dbExecutor.UpdateNodeStatus(nodeId, status)
+	err := nodeDbExecutor.UpdateNodeStatus(nodeId, status)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return err
