@@ -234,6 +234,21 @@ func (appsAPIExecutor) nodeStopApp(w http.ResponseWriter, req *http.Request, nod
 //    responses: if successful, 200 status code will be returned.
 func (appsAPIExecutor) nodeUpdateApp(w http.ResponseWriter, req *http.Request, nodeID string, appID string) {
 	logger.Logging(logger.DEBUG, "[NODE] Update App")
-	result, resp, err := deploymentExecutor.UpdateApp(nodeID, appID)
+	result, resp, err := deploymentExecutor.UpdateApp(nodeID, appID, parseQuery(req))
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+func parseQuery(req *http.Request) map[string]interface{} {
+	query := make(map[string]interface{})
+
+	keys := req.URL.Query()
+	if len(keys) == 0 {
+		return nil
+	}
+
+	for key, value := range req.URL.Query() {
+		query[key] = value
+	}
+
+	return query
 }

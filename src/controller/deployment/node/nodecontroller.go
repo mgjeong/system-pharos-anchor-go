@@ -68,7 +68,7 @@ type Command interface {
 
 	// UpdateAppInfo request to update all of images which is included an application
 	// specified by appId parameter.
-	UpdateApp(nodeId string, appId string) (int, map[string]interface{}, error)
+	UpdateApp(nodeId string, appId string, query map[string]interface{}) (int, map[string]interface{}, error)
 
 	// StartApp request to start an application specified by appId parameter.
 	StartApp(nodeId string, appId string) (int, map[string]interface{}, error)
@@ -267,7 +267,7 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 // specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UpdateApp(nodeId string, appId string) (int, map[string]interface{}, error) {
+func (Executor) UpdateApp(nodeId string, appId string , query map[string]interface{}) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -282,7 +282,7 @@ func (Executor) UpdateApp(nodeId string, appId string) (int, map[string]interfac
 	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
+	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, query)
 
 	// Convert the received response from string to map.
 	result := codes[0]
