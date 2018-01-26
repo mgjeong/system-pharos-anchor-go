@@ -33,9 +33,9 @@ var logFlag int
 // init initializes package global value.
 func init() {
 	logFlag = log.Ldate | log.Ltime
-	loggers[0] = log.New(os.Stdout, "[INFO][EM]", logFlag)
-	loggers[1] = log.New(os.Stdout, "[DEBUG][EM]", logFlag)
-	loggers[2] = log.New(os.Stdout, "[ERROR][EM]", logFlag)
+	loggers[0] = log.New(os.Stdout, "[INFO][ANCHOR]", logFlag)
+	loggers[1] = log.New(os.Stdout, "[DEBUG][ANCHOR]", logFlag)
+	loggers[2] = log.New(os.Stdout, "[ERROR][ANCHOR]", logFlag)
 }
 
 const (
