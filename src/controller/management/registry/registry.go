@@ -168,21 +168,6 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 	return results.OK, nil
 }
 
-// convertRespToMap converts a response in the form of JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertRespToMap(respStr []string) (map[string]interface{}, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	resp, err := convertJsonToMap(respStr[0])
-	if err != nil {
-		logger.Logging(logger.ERROR, "Failed to convert response from string to map")
-		return nil, errors.InternalServerError{"Json Converting Failed"}
-	}
-	return resp, err
-}
-
 // convertJsonToMap converts JSON data into a map.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
@@ -224,17 +209,6 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 		urls = append(urls, full_url.String())
 	}
 	return urls
-}
-
-// isSuccessCode returns true in case of success and false otherwise.
-func isSuccessCode(code int) bool {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	if code >= 200 && code <= 299 {
-		return true
-	}
-	return false
 }
 
 // parseEventInfo parse data which is matched image-info on DB from event-notification.
