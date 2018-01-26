@@ -18,8 +18,7 @@ This provides how to build sources codes to an excutable binary and dockerize it
 ```shell
 $ ./build.sh
 ```
-If source codes are successfully built, you can find an output binary file, **main**, on a root of project folder.
-Note that, you can find other build scripts, **build_arm.sh** and **build_arm64**, which can be used to build the codes for ARM and ARM64 machines, respectively.
+If source codes are successfully built, you can find an output binary file, **pharos-anchor**, on a root of project folder.
 
 #### 2. Docker Image  ####
 Next, you can create it to a Docker image.
@@ -32,7 +31,6 @@ $ sudo docker images
 REPOSITORY                         TAG        IMAGE ID        CREATED           SIZE
 system-pharos-anchor-go-ubuntu     latest     fcbbd4c401c2    31 seconds ago    157MB
 ```
-Note that, you can find other Dockerfiles, **Dockerfile_arm** and **Dockerfile_arm64**, which can be used to dockerize for ARM and ARM64 machines, respectively.
 
 ## How to run with Docker image ##
 Required options to run Docker image
@@ -75,26 +73,109 @@ $ docker run -it -p 48099:48099 -v /data/db:/data/db system-pharos-anchor-go-ubu
 2018-01-17T10:29:52.878+0000 I NETWORK  [thread1] waiting for connections on port 27017
 2018-01-17T10:29:53.023+0000 I FTDC     [ftdc] Unclean full-time diagnostic data capture shutdown detected, found interim file, some metrics may have been lost. OK
 ```
+## API Document ##
+Pharos Anchor provides a set of REST APIs for its operations. Descriptions for the APIs are stored in <root>/doc folder.
+- **[pharos_anchor_api_for_single_device.yaml](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_single_device.yaml)**
+  - Describes APIs of service deployment for single device
+- **[pharos_anchor_api_for_multiple_devices.yaml](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_multiple_devices.yaml)**
+  - Describes APIs of group management with a number of devices and service deployment in a group manner
 
-## (Optional) How to enable QEMU environment on your computer
-QEMU could be useful if you want to test your implemetation on various CPU architectures(e.g. ARM, ARM64) but you have only Ubuntu PC. To enable QEMU on your machine, please do as follows.
+Note that you can visit [Swagger Editor](https://editor.swagger.io/) to graphically investigate the REST APIs in YAML.
 
-Required packages for QEMU:
+## How to work ##
+#### 0. Prerequisites ####
+  - 1 PC with Ubuntu 14.04(or above) and Docker
+  - Pharos Anchor Docker image
+    - Please see the above explaination to know how to build Pharos Anchor Docker image
+  - Pharos Node Docker image
+    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-node-go) to know how to build Pharos Node Docker image
+
+#### 1. Run Pharos Anchor and Pharos Node containers ####
+Run Pharos Anchor container:
 ```shell
-$ apt-get install -y qemu-user-static binfmt-support
+$ docker run -it -p 48099:48099 -v /pharos-anchor/data/db:/data/db system-pharos-anchor-go-ubuntu
 ```
-For ARM 32bit:
+Run Pharos Node container:
 ```shell
-$ echo ':arm:M::\x7fELF\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x28\x00:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff\xff:/usr/bin/qemu-arm-static:' > /proc/sys/fs/binfmt_misc/register <br />
-```
-For ARM 64bit:
-```shell
-$ echo ':aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7:\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:' > /proc/sys/fs/binfmt_misc/register <br />
+$ docker run -it -p 48098:48098 -v /pharos-node/data/db:/data/db -v /var/run/docker.sock:/var/run/docker.sock system-pharos-node-go-ubuntu
 ```
 
-Now, you can build your implementation and dockerize it for ARM and ARM64 on your Ubuntu PC. The below is an example for ARM build.
+#### 2. Register Pharos Node to Pharos Anchor ####
+***TO BE UPDATED***
+
+If you want to verify if the Node is successfully registered to the Anchor, you can send a request as below:
 
 ```shell
-$ ./build_arm.sh
-$ docker build -t system-pharos-anchor-go-arm -f Dockerfile_arm .
+$ curl -X GET "http://<Pharos Anchor IP>:48099/api/v1/management/nodes" -H "accept: application/json"
+
+{"nodes":[{"apps":[],"config":{"deviceid":"54919CA5-4101-4AE4-595B-353C51AA983C","devicename":"Edge #1","location":"Human readable location","manufacturer":"Manufacturer Name","modelnumber":"Model number as designated by the manufacturer","os":"Operationg system name and version","pinginterval":"10","platform":"Platform name and version","serialnumber":"Serial number"},"id":" "","ip":"<Pharos Anchor IP>","status":"connected"}]}
+$
+```
+Note that values of the above configuration will be changed, later. Only you care is "id" field which is used for an unique identifier of a device that the Node is running on. With the ID, you can send a request of service deployment to the device. Also, you can inspect the device with the ID, not all registered devices as below:
+```shell
+$ curl -X GET "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a69599a1fee050007865f3a" -H "accept: application/json"
+
+{"apps":[],"config":{"deviceid":"54919CA5-4101-4AE4-595B-353C51AA983C","devicename":"Edge #1","location":"Human readable location","manufacturer":"Manufacturer Name","modelnumber":"Model number as designated by the manufacturer","os":"Operationg system name and version","pinginterval":"10","platform":"Platform name and version","serialnumber":"Serial number"},"id":"5a695f2ad5fd9300089dbd91","ip":"<Pharos Anchor IP>","status":"connected"}
+$
+```
+Note that **5a69599a1fee050007865f3a** will be used as a **node ID** of Pharos Node device.
+
+#### 3. Deploy a new service to Pharos Node device ####
+Before deploying a new service to a device, you should write a docker-compose YAML file to describe how to run the service. For example, let's deploy MongoDB service. For the deployment, the below description in YAML will be used:
+```shell
+version: '2'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: "mongodb"
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - 27017:27017
+```
+Note that, the above YAML description is absolutly identical to one for docker-compose tool and can define a number of containers. We called a unit of the containers an **application**.
+
+Then, let's send a request to install a new application consisting of a MongoDB service to the Node's device:
+```shell
+$ curl -X POST "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a695f2ad5fd9300089dbd91/apps/deploy" -H "accept: application/json" -H "Content-Type: application/json" -d "version: '2'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: "mongodb"
+    volumes:
+      - ./data/db:/data/db
+    ports:
+      - 27017:27017"
+
+{"description":"services:\n  mongodb:\n    container_name: mongodb\n    image: mongo:latest\n    ports:\n    - 27017:27017\n    volumes:\n    - ./data/db:/data/db\nversion: \"2\"\n","id":"1f04ccc14635062ad8a478d08dd94ebdd934efa5","images":[{"name":"mongo"}],"services":[{"name":"mongodb","state":{"ExitCode":"0","Status":"running"}}],"state":"DEPLOY"}
+$
+```
+If the MongoDB service is successfully installed, you can check it as below:
+```shell
+<Pharos Node Machine> $ docker ps
+CONTAINER ID        IMAGE                            COMMAND                  CREATED             STATUS              PORTS                      NAMES
+3bd2b0ec8126        mongo:latest                     "docker-entrypoint.s…"   8 seconds ago       Up 7 seconds        0.0.0.0:27017->27017/tcp   mongodb
+```
+Note that **1f04ccc14635062ad8a478d08dd94ebdd934efa5** will be used as a **App ID** of a service of Pharos Node device.
+#### 4. Update/Stop/Delete an existing service in Pharos Node device ####
+
+Note that starting, stopping, updating, and deleting an application will be applied to all corresponding containers defined in the application. For example, deleting an application will stop all containers and erase all Docker images defined in an application.
+
+To update a MongoDB service in Pharos Node device if an update of the service is availble, send a corresponding request as below:
+```shell
+$ curl -X POST "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a695f2ad5fd9300089dbd91/apps/1f04ccc14635062ad8a478d08dd94ebdd934efa5/update" -H "accept: application/json"
+```
+
+To stop a running service or start a paused service, send corresponding requests as below, respectively:
+```shell
+(For stop a running service)
+$ curl -X POST "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a695f2ad5fd9300089dbd91/apps/1f04ccc14635062ad8a478d08dd94ebdd934efa5/stop" -H "accept: application/json"
+
+(For start a paused service)
+$ curl -X POST "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a695f2ad5fd9300089dbd91/apps/1f04ccc14635062ad8a478d08dd94ebdd934efa5/start" -H "accept: application/json"
+```
+
+To stop a service and delete a corresponding Docker image, send a corresponding request as below:
+```shell
+$ curl -X DELETE "http://<Pharos Anchor IP>:48099/api/v1/management/nodes/5a695f2ad5fd9300089dbd91/apps/1f04ccc14635062ad8a478d08dd94ebdd934efa5" -H "accept: application/json"
 ```
