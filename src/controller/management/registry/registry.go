@@ -222,7 +222,6 @@ func parseEventInfo(eventInfo map[string]interface{}) (map[string]interface{}, e
 
 	targetInfoEvent = eventInfo[TARGETINFO].(map[string]interface{})
 	requestInfoEvent = eventInfo[REQUESTINFO].(map[string]interface{})
-
 	parsedEvent[HOST] = requestInfoEvent[HOST]
 	parsedEvent[REPOSITORY] = targetInfoEvent[REPOSITORY]
 

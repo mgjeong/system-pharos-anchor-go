@@ -339,3 +339,26 @@ func TestCalledDockerRegistryEventHandlerWithValidRegistryEvent_ExpectSendReques
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 }
+
+func TestCalledDockerRegistryEventHandlerWithInValidJsonFormatBody_ExpectErrorReturn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	invalidBody := `{"invalidBody"}`
+
+	code, err := manager.DockerRegistryEventHandler(invalidBody)
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "InvalidJSON", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "InvalidJSON", err.Error())
+	case errors.InvalidJSON:
+	}
+}
