@@ -90,34 +90,6 @@ func (mr *MockCommandMockRecorder) GetDockerRegistries() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDockerRegistries", reflect.TypeOf((*MockCommand)(nil).GetDockerRegistries))
 }
 
-// GetDockerRegistry mocks base method
-func (m *MockCommand) GetDockerRegistry(registryId string) (int, map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "GetDockerRegistry", registryId)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(map[string]interface{})
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetDockerRegistry indicates an expected call of GetDockerRegistry
-func (mr *MockCommandMockRecorder) GetDockerRegistry(registryId interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDockerRegistry", reflect.TypeOf((*MockCommand)(nil).GetDockerRegistry), registryId)
-}
-
-// GetDockerImages mocks base method
-func (m *MockCommand) GetDockerImages(registryId string) (int, map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "GetDockerImages", registryId)
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(map[string]interface{})
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
-}
-
-// GetDockerImages indicates an expected call of GetDockerImages
-func (mr *MockCommandMockRecorder) GetDockerImages(registryId interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDockerImages", reflect.TypeOf((*MockCommand)(nil).GetDockerImages), registryId)
-}
-
 // DockerRegistryEventHandler mocks base method
 func (m *MockCommand) DockerRegistryEventHandler(body string) (int, error) {
 	ret := m.ctrl.Call(m, "DockerRegistryEventHandler", body)

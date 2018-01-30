@@ -27,11 +27,12 @@ import (
 )
 
 const (
-	status  = "connected"
-	appId   = "000000000000000000000000"
-	nodeId = "000000000000000000000001"
-	ip      = "127.0.0.1"
-	port    = "48098"
+	status       = "connected"
+	appId        = "000000000000000000000000"
+	invalidAppId = "000000000000000000000001"
+	nodeId       = "000000000000000000000001"
+	ip           = "127.0.0.1"
+	port         = "48098"
 )
 
 var (
@@ -41,21 +42,13 @@ var (
 		"apps":   []string{},
 		"config": configuration,
 	}
-	address = []map[string]interface{}{
-		map[string]interface{}{
-			"ip": ip,
-		}}
 	configuration = map[string]interface{}{
 		"key": "value",
 	}
 	body             = `{"description":"description"}`
 	respCode         = []int{results.OK}
-	errorRespCode    = []int{results.ERROR}
 	respStr          = []string{`{"response":"response"}`}
-	invalidRespStr   = []string{`{"invalidJson"}`}
 	notFoundError    = errors.NotFound{}
-	connectionError  = errors.DBConnectionError{}
-	invalidJsonError = errors.InvalidJSON{}
 )
 
 var manager Command
@@ -333,6 +326,74 @@ func TestCalledGetNodesWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	nodeDbExecutor = dbExecutorMockObj
 
 	code, _, err := manager.GetNodes()
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledGetNodesWithAppId_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	nodes := []map[string]interface{}{node}
+
+	//make the query
+	query := make(map[string]interface{})
+	query[APPS] = appId
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNodes(query).Return(nodes, nil),
+	)
+
+	// pass mockObj to a real object.
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, res, err := manager.GetNodesWithAppID(appId)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodes) {
+		t.Error()
+	}
+}
+
+func TestCalledGetNodesWithInvalidAppId_ExpectErrorReturn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	//make the query
+	query := make(map[string]interface{})
+	query[APPS] = invalidAppId
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNodes(query).Return(nil, notFoundError),
+	)
+
+	// pass mockObj to a real object.
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, _, err := manager.GetNodesWithAppID(invalidAppId)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

@@ -19,8 +19,8 @@ package registry
 
 import (
 	"bytes"
-	"encoding/json"
 	registrymanagermocks "controller/management/registry/mocks"
+	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -28,11 +28,11 @@ import (
 )
 
 const (
-	testBodyString  = `{"test":"body"}`
+	testBodyString = `{"test":"body"}`
 )
 
 var testBody = map[string]interface{}{
-	"test":   "body",
+	"test": "body",
 }
 
 var Handler Command
@@ -129,7 +129,22 @@ func TestCalledHandleWithDeleteRegistryRequest_ExpectCalledDeleteDockerRegistry(
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithGetImagesRequest_ExpectCalledGetDockerImages(t *testing.T) {
+func TestCalledHandleWithoutImagesEventReq_ExpectNotCalledEventHandler(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	registrymanageMockObj := registrymanagermocks.NewMockCommand(ctrl)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/management/registries/events", nil)
+
+	// pass mockObj to a real object.
+	registryExecutor = registrymanageMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithImagesEventReq_ExpectCalledEventHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -148,4 +163,3 @@ func TestCalledHandleWithGetImagesRequest_ExpectCalledGetDockerImages(t *testing
 
 	Handler.Handle(w, req)
 }
-

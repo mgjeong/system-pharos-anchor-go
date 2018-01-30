@@ -120,8 +120,8 @@ func (mr *MockCommandMockRecorder) DeleteApp(nodeId, appId interface{}) *gomock.
 }
 
 // UpdateApp mocks base method
-func (m *MockCommand) UpdateApp(nodeId, appId string) (int, map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "UpdateApp", nodeId, appId)
+func (m *MockCommand) UpdateApp(nodeId, appId string, query map[string]interface{}) (int, map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "UpdateApp", nodeId, appId, query)
 	ret0, _ := ret[0].(int)
 	ret1, _ := ret[1].(map[string]interface{})
 	ret2, _ := ret[2].(error)
@@ -129,8 +129,8 @@ func (m *MockCommand) UpdateApp(nodeId, appId string) (int, map[string]interface
 }
 
 // UpdateApp indicates an expected call of UpdateApp
-func (mr *MockCommandMockRecorder) UpdateApp(nodeId, appId interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateApp", reflect.TypeOf((*MockCommand)(nil).UpdateApp), nodeId, appId)
+func (mr *MockCommandMockRecorder) UpdateApp(nodeId, appId, query interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateApp", reflect.TypeOf((*MockCommand)(nil).UpdateApp), nodeId, appId, query)
 }
 
 // StartApp mocks base method

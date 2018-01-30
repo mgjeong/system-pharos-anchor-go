@@ -30,9 +30,6 @@ type Command interface {
 	// GetDockerRegistries returns all documents from db related to docker registry.
 	GetDockerRegistries() ([]map[string]interface{}, error)
 
-	// GetDockerRegistry returns a single document from db related to docker registry.
-	GetDockerRegistry(url string) (map[string]interface{}, error)
-
 	// DeleteDockerRegistry delete a specific docker registry information from db related to registry.
 	DeleteDockerRegistry(registryId string) error
 }
@@ -142,32 +139,6 @@ func (Executor) GetDockerRegistries() ([]map[string]interface{}, error) {
 		// Remove unused 'images' field from map.
 		delete(result[i], "images")
 	}
-	return result, err
-}
-
-// GetDockerRegistry returns a single document specified by url parameter.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func (Executor) GetDockerRegistry(url string) (map[string]interface{}, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	session, err := connect(DB_URL)
-	if err != nil {
-		return nil, err
-	}
-	defer close(session)
-
-	registry := Registry{}
-	query := bson.M{"url": url}
-	err = getCollection(session, DB_NAME, REGISTRY_COLLECTION).Find(query).One(&registry)
-	if err != nil {
-		return nil, ConvertMongoError(err, url)
-	}
-
-	result := registry.convertToMap()
-	// Remove unused 'images' field from map.
-	delete(result, "images")
 	return result, err
 }
 
