@@ -78,3 +78,5 @@ func Resource() string { return "/resource" }
 // Base returns the performance url as a type of string.
 func Performance() string { return "/performance" }
 
+// Base returns the search url as a type of string.
+func Search() string { return "/search" }
