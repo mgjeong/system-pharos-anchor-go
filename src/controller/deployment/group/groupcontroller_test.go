@@ -19,26 +19,27 @@ package group
 import (
 	"commons/errors"
 	"commons/results"
-	"github.com/golang/mock/gomock"
-	msgmocks "messenger/mocks"
+	appdbmocks "db/mongo/app/mocks"
 	groupdbmocks "db/mongo/group/mocks"
 	nodedbmocks "db/mongo/node/mocks"
+	"github.com/golang/mock/gomock"
+	msgmocks "messenger/mocks"
 	"reflect"
 	"testing"
 )
 
 const (
 	appId   = "000000000000000000000000"
-	nodeId = "000000000000000000000001"
+	nodeId  = "000000000000000000000001"
 	groupId = "000000000000000000000002"
-	ip    = "192.168.0.1"
+	ip      = "192.168.0.1"
 	port    = "48098"
 )
 
 var (
 	node = map[string]interface{}{
 		"id":   nodeId,
-		"ip": ip,
+		"ip":   ip,
 		"apps": []string{appId},
 	}
 	members = []map[string]interface{}{node, node}
@@ -48,7 +49,7 @@ var (
 	membersAddress = []map[string]interface{}{address, address}
 	group          = map[string]interface{}{
 		"id":      groupId,
-		"members": []string{},
+		"members": []string{nodeId, nodeId},
 	}
 
 	body                   = `{"description":"description"}`
@@ -72,7 +73,10 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	respStr := []string{`{"id":"000000000000000000000000"}`, `{"id":"000000000000000000000000"}`}
+	respStr := []string{
+		`{"id":"000000000000000000000000", "description":"description"}`,
+		`{"id":"000000000000000000000000", "description":"description"}`,
+	}
 	expectedUrl := []string{deployUrl, deployUrl}
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000000",
@@ -80,15 +84,20 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
-		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil).AnyTimes(),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, respStr),
+		appDbExecutorMockObj.EXPECT().AddApp(appId, gomock.Any()).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+		appDbExecutorMockObj.EXPECT().AddApp(appId, gomock.Any()).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
@@ -147,7 +156,7 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -174,20 +183,23 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	respStr := []string{`{"id":"000000000000000000000000"}`}
+	respStr := []string{`{"id":"000000000000000000000000", "description":"description"}`}
 	expectedUrl := []string{deployUrl, deployUrl}
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, respStr),
+		appDbExecutorMockObj.EXPECT().AddApp(appId, []byte("description")).Return(nil).AnyTimes(),
 		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
@@ -212,7 +224,7 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	partialSuccessRespStr := []string{`{"id":"000000000000000000000000"}`, `{"message":"errorMsg"}`}
+	partialSuccessRespStr := []string{`{"id":"000000000000000000000000", "description":"description"}`, `{"message":"errorMsg"}`}
 	expectedUrl := []string{deployUrl, deployUrl}
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000000",
@@ -231,15 +243,18 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
+		appDbExecutorMockObj.EXPECT().AddApp(appId, []byte("description")).Return(nil).AnyTimes(),
 		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
@@ -343,7 +358,7 @@ func TestCalledGetApp_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, respStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(respCode, respStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -405,7 +420,7 @@ func TestCalledGetAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *te
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -454,7 +469,7 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -486,7 +501,7 @@ func TestCalledUpdateAppInfo_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -544,7 +559,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsInvalidResponse_ExpectErrorRetur
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -592,7 +607,7 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -624,7 +639,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -682,7 +697,7 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -730,7 +745,7 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -762,7 +777,7 @@ func TestCalledStartApp_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -820,7 +835,7 @@ func TestCalledStartAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -868,7 +883,7 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -900,7 +915,7 @@ func TestCalledStopApp_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, nil),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -958,7 +973,7 @@ func TestCalledStopAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t *t
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -1006,7 +1021,7 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(partialSuccessRespCode, partialSuccessRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -1035,15 +1050,20 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, nil),
-		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil).AnyTimes(),
+		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl, nil).Return(respCode, nil),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
+		appDbExecutorMockObj.EXPECT().DeleteApp(appId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
+		appDbExecutorMockObj.EXPECT().DeleteApp(appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
@@ -1099,7 +1119,7 @@ func TestCalledDeleteAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(respCode, invalidRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl, nil).Return(respCode, invalidRespStr),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
@@ -1144,15 +1164,18 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 
 	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
-		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl).Return(partialSuccessRespCode, partialSuccessRespStr),
+		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl, nil).Return(partialSuccessRespCode, partialSuccessRespStr),
 		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
+		appDbExecutorMockObj.EXPECT().DeleteApp(appId).Return(nil).AnyTimes(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
 
