@@ -271,18 +271,16 @@ func getImageAndServiceNames(source []byte) ([]string, []string, error) {
 		}
 
 		fullImageName := service_info.(map[string]interface{})[IMAGE_FIELD].(string)
-		var registryUrl, imageName string
 		words := strings.Split(fullImageName, "/")
-		if len(words) == 2 {
-			registryUrl += words[0] + "/"
-			imageName += words[1]
-		} else {
-			imageName += words[0]
-		}
+		imageNameWithoutRepo := strings.Join(words[:len(words)-1], "/")
+		repo := strings.Split(words[len(words)-1], ":")
 
-		words = strings.Split(imageName, ":")
-		imageNameWithoutTag := words[0]
-		images = append(images, registryUrl+imageNameWithoutTag)
+		imageNameWithoutTag := imageNameWithoutRepo
+		if len(words) > 1 {
+			imageNameWithoutTag += "/"
+		}
+		imageNameWithoutTag += repo[0]
+		images = append(images, imageNameWithoutTag)
 	}
 	return images, services, nil
 }
