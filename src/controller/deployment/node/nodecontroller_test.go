@@ -512,7 +512,7 @@ func TestCalledUpdateApp_ExpectSuccess(t *testing.T) {
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(nodeId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId, nil)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -537,7 +537,7 @@ func TestCalledUpdateAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) 
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(nodeId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId, nil)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -571,7 +571,7 @@ func TestCalledUpdateAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.UpdateApp(nodeId, appId)
+	code, _, err := executor.UpdateApp(nodeId, appId, nil)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
