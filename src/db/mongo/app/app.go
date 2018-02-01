@@ -32,6 +32,9 @@ type Command interface {
 	// AddApp insert a deployed application information.
 	AddApp(appId string, description []byte) error
 
+	// GetApp returns single document from db related to app.
+	GetApp(appId string) (map[string]interface{}, error)
+
 	// GetApps returns all matches for the query-string which is passed in call to function.
 	GetApps(queryOptional ...map[string]interface{}) ([]map[string]interface{}, error)
 
@@ -155,6 +158,30 @@ func (Executor) AddApp(appId string, description []byte) error {
 		return ConvertMongoError(err, "Failed to increase reference count")
 	}
 	return err
+}
+
+// GetApp returns single document specified by appId parameter.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func (Executor) GetApp(appId string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	app := App{}
+	query := bson.M{"_id": appId}
+	err = getCollection(session, DB_NAME, APP_COLLECTION).Find(query).One(&app)
+	if err != nil {
+		return nil, ConvertMongoError(err, appId)
+	}
+
+	result := app.convertToMap()
+	return result, err
 }
 
 // GetApps returns all matches for the query-string which is passed in call to function.
