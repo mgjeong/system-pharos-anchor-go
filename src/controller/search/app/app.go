@@ -18,6 +18,28 @@
 package app
 
 import (
-
+	"commons/logger"
+	"commons/results"
 )
 
+// Command is an interface of apps operations.
+type Command interface {
+	Search(query map[string]interface{}) (int, map[string]interface{}, error)
+}
+
+// Executor implements the Command interface.
+type Executor struct{}
+
+//var appDbExecutor appDB.Command
+//
+//func init() {
+//	appDbExecutor = appDB.Executor{}
+//}
+
+func (Executor) Search(query map[string]interface{}) (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	return results.OK, nil, nil
+//	return results.OK, res, err
+}
