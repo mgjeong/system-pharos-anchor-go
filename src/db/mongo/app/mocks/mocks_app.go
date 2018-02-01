@@ -44,6 +44,19 @@ func (mr *MockCommandMockRecorder) AddApp(appId, description interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddApp", reflect.TypeOf((*MockCommand)(nil).AddApp), appId, description)
 }
 
+// GetApp mocks base method
+func (m *MockCommand) GetApp(appId string) (map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "GetApp", appId)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApp indicates an expected call of GetApp
+func (mr *MockCommandMockRecorder) GetApp(appId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApp", reflect.TypeOf((*MockCommand)(nil).GetApp), appId)
+}
+
 // GetApps mocks base method
 func (m *MockCommand) GetApps(queryOptional ...map[string]interface{}) ([]map[string]interface{}, error) {
 	varargs := []interface{}{}
