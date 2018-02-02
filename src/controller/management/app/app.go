@@ -28,6 +28,7 @@ import (
 // Command is an interface of app operations.
 type Command interface {
 	GetAppsWithImageName(imageName string) (int, map[string]interface{}, error)
+	GetApp(appId string) (int, map[string]interface{}, error)
 }
 
 const (
@@ -62,4 +63,18 @@ func (Executor) GetAppsWithImageName(imageName string) (int, map[string]interfac
 	res[APPS] = apps
 
 	return results.OK, res, err
+}
+
+func (Executor) GetApp(appId string) (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get matched app with appId stored in the database.
+	app, err := appDbExecutor.GetApp(appId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	return results.OK, app, err
 }
