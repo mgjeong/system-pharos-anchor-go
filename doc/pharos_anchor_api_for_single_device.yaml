@@ -444,15 +444,15 @@ definitions:
   processor_model_name:
     description: The processor model name of the edge device where the Pharos Node exists
     example: Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
-  CPU:
+  cpu:
     description: Information about cpu usage of edge device where Pharos Node exists
     example: ["8.00%", "3.03%", "7.07%", "16.16%", "9.90%", "18.00%", "11.22%", "4.12%"]
-  MEM:
+  mem:
     description: Information about memory usage of edge device where Pharos Node exists
-    example: {"Free":"0KB", "Total":"0KB", "Used":"0KB", "UsedPercnet":"0%"}
-  DISK:
+    example: {"free":"0KB", "total":"0KB", "used":"0KB", "usedpercnet":"0%"}
+  disk:
     description: Information about disk usage of edge device where Pharos Node exists
-    example: [{"Free":"0G", "Path":"/root", "Total":"0G", "Used":"0G", "UsedPercent":"0%"}]
+    example: [{"free":"0G", "path":"/root", "total":"0G", "used":"0G", "usedpercent":"0%"}]
   request_of_node_register:
     required:
       - ip
@@ -515,9 +515,9 @@ definitions:
       - mem
       - disk
     properties:
-      CPU:
-        $ref: '#/definitions/CPU'
-      MEM:
-        $ref: '#/definitions/MEM'
-      DISK:
-        $ref: '#/definitions/DISK'
+      cpu:
+        $ref: '#/definitions/cpu'
+      mem:
+        $ref: '#/definitions/mem'
+      disk:
+        $ref: '#/definitions/disk'
