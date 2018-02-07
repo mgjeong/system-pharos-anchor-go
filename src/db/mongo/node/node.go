@@ -33,6 +33,9 @@ type Command interface {
 	// UpdateNodeStatus updates status of node from db related to node.
 	UpdateNodeStatus(nodeId string, status string) error
 
+	// UpdateNodeConfiguration updates configuration information of node from db related to node.
+	UpdateNodeConfiguration(nodeId string, config map[string]interface{}) error
+
 	// GetNode returns single document from db related to node.
 	GetNode(nodeId string) (map[string]interface{}, error)
 
@@ -189,6 +192,31 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 
 	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
 	update := bson.M{"$set": bson.M{"status": status}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
+	if err != nil {
+		return ConvertMongoError(err, "Failed to update status")
+	}
+	return err
+}
+
+func (Executor) UpdateNodeConfiguration(nodeId string, config map[string]interface{}) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+
+	// Verify id is ObjectId, otherwise fail
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
+		return err
+	}
+
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	update := bson.M{"$set": bson.M{"config": config}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, "Failed to update status")
