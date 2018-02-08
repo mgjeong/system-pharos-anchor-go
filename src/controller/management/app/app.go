@@ -29,6 +29,7 @@ import (
 type Command interface {
 	GetAppsWithImageName(imageName string) (int, map[string]interface{}, error)
 	GetApp(appId string) (int, map[string]interface{}, error)
+	GetApps() (int, map[string]interface{}, error)
 }
 
 const (
@@ -77,4 +78,21 @@ func (Executor) GetApp(appId string) (int, map[string]interface{}, error) {
 	}
 
 	return results.OK, app, err
+}
+
+func (Executor) GetApps() (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get all of apps stored in the database.
+	apps, err := appDbExecutor.GetApps()
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	res := make(map[string]interface{})
+	res[APPS] = apps
+
+	return results.OK, res, err
 }
