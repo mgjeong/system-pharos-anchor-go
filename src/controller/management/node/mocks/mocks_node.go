@@ -142,3 +142,30 @@ func (m *MockCommand) PingNode(nodeId, body string) (int, error) {
 func (mr *MockCommandMockRecorder) PingNode(nodeId, body interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PingNode", reflect.TypeOf((*MockCommand)(nil).PingNode), nodeId, body)
 }
+
+// GetNodeConfiguration mocks base method
+func (m *MockCommand) GetNodeConfiguration(nodeId string) (int, map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "GetNodeConfiguration", nodeId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(map[string]interface{})
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetNodeConfiguration indicates an expected call of GetNodeConfiguration
+func (mr *MockCommandMockRecorder) GetNodeConfiguration(nodeId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeConfiguration", reflect.TypeOf((*MockCommand)(nil).GetNodeConfiguration), nodeId)
+}
+
+// SetNodeConfiguration mocks base method
+func (m *MockCommand) SetNodeConfiguration(nodeId, body string) (int, error) {
+	ret := m.ctrl.Call(m, "SetNodeConfiguration", nodeId, body)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetNodeConfiguration indicates an expected call of SetNodeConfiguration
+func (mr *MockCommandMockRecorder) SetNodeConfiguration(nodeId, body interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetNodeConfiguration", reflect.TypeOf((*MockCommand)(nil).SetNodeConfiguration), nodeId, body)
+}
