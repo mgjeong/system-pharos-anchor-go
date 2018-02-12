@@ -20,8 +20,9 @@ import (
 	"commons/errors"
 	"commons/results"
 	dbmocks "db/mongo/node/mocks"
-	msgmocks "messenger/mocks"
+	"encoding/json"
 	"github.com/golang/mock/gomock"
+	msgmocks "messenger/mocks"
 	"reflect"
 	"testing"
 )
@@ -36,19 +37,33 @@ const (
 )
 
 var (
+	properties = []map[string]interface{}{{
+		"name":   "name",
+		"policy": []string{"readable"},
+		"value":  "value",
+	}}
+	configuration = map[string]interface{}{
+		"properties": properties,
+	}
+	registrationBody = map[string]interface{}{
+		"ip":     ip,
+		"config": configuration,
+	}
 	node = map[string]interface{}{
 		"id":     nodeId,
 		"ip":     ip,
 		"apps":   []string{},
 		"config": configuration,
 	}
-	configuration = map[string]interface{}{
-		"key": "value",
+	nodeWithoutConfig = map[string]interface{}{
+		"id":   nodeId,
+		"ip":   ip,
+		"apps": []string{},
 	}
-	body             = `{"description":"description"}`
-	respCode         = []int{results.OK}
-	respStr          = []string{`{"response":"response"}`}
-	notFoundError    = errors.NotFound{}
+	body          = `{"description":"description"}`
+	respCode      = []int{results.OK}
+	respStr       = []string{`{"response":"response"}`}
+	notFoundError = errors.NotFound{}
 )
 
 var manager Command
@@ -61,7 +76,6 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
 	expectedRes := map[string]interface{}{
 		"id": "000000000000000000000001",
 	}
@@ -69,12 +83,13 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().AddNode(ip, status, configuration).Return(node, nil),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 
-	code, res, err := manager.RegisterNode(body)
+	jsonString, _ := json.Marshal(registrationBody)
+	code, res, err := manager.RegisterNode(string(jsonString))
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -142,14 +157,14 @@ func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *te
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().AddNode(ip, status, configuration).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 
-	body := `{"ip":"127.0.0.1", "config":{"key":"value"}}`
-	code, _, err := manager.RegisterNode(body)
+	jsonString, _ := json.Marshal(registrationBody)
+	code, _, err := manager.RegisterNode(string(jsonString))
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -247,7 +262,7 @@ func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res, node) {
+	if !reflect.DeepEqual(res, nodeWithoutConfig) {
 		t.Error()
 	}
 }
@@ -287,6 +302,7 @@ func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	nodes := []map[string]interface{}{node}
+	nodesWithoutConfig := []map[string]interface{}{nodeWithoutConfig}
 
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
@@ -307,7 +323,7 @@ func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodes) {
+	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodesWithoutConfig) {
 		t.Error()
 	}
 }
@@ -347,6 +363,7 @@ func TestCalledGetNodesWithAppId_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	nodes := []map[string]interface{}{node}
+	nodesWithoutConfig := []map[string]interface{}{nodeWithoutConfig}
 
 	//make the query
 	query := make(map[string]interface{})
@@ -371,7 +388,7 @@ func TestCalledGetNodesWithAppId_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodes) {
+	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodesWithoutConfig) {
 		t.Error()
 	}
 }
@@ -468,7 +485,7 @@ func TestCalledPingNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 
-	code, err := Executor{}.PingNode(nodeId, "")
+	code, err := manager.PingNode(nodeId, "")
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -498,7 +515,7 @@ func TestCalledPingNodeWithInvalidBody_ExpectErrorReturn(t *testing.T) {
 	nodeDbExecutor = dbExecutorMockObj
 
 	invalidKeyBody := `{"key":"value"}`
-	code, err := Executor{}.PingNode(nodeId, invalidKeyBody)
+	code, err := manager.PingNode(nodeId, invalidKeyBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -528,7 +545,7 @@ func TestCalledPingNodeWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	nodeDbExecutor = dbExecutorMockObj
 
 	invalidValueBody := `{"interval":"value"}`
-	code, err := Executor{}.PingNode(nodeId, invalidValueBody)
+	code, err := manager.PingNode(nodeId, invalidValueBody)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -542,5 +559,165 @@ func TestCalledPingNodeWithInvalidValueBody_ExpectErrorReturn(t *testing.T) {
 	default:
 		t.Errorf("Expected err: %s, actual err: %s", "InvalidJSON", err.Error())
 	case errors.InvalidJSON:
+	}
+}
+
+func TestCalledGetNodeConfiguration_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+	)
+
+	// pass mockObj to a real object.
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, res, err := manager.GetNodeConfiguration(nodeId)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if !reflect.DeepEqual(res, configuration) {
+		t.Error()
+	}
+}
+
+func TestCalledGetNodeConfigurationWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+	)
+
+	// pass mockObj to a real object.
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, _, err := manager.GetNodeConfiguration(nodeId)
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledSetNodeConfiguration_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	jsonBody, _ := json.Marshal(configuration)
+	jsonNodeData, _ := json.Marshal(node)
+	nodeDataMap, _ := convertJsonToMap(string(jsonNodeData))
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nodeDataMap, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, jsonBody).Return(respCode, respStr),
+		dbExecutorMockObj.EXPECT().UpdateNodeConfiguration(nodeId, gomock.Any()).Return(nil),
+	)
+	// pass mockObj to a real object.
+	httpExecutor = msgMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.SetNodeConfiguration(nodeId, string(jsonBody))
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestCalledSetNodeConfigurationWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+	)
+	// pass mockObj to a real object.
+	httpExecutor = msgMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	body, _ := json.Marshal(configuration)
+	code, err := manager.SetNodeConfiguration(nodeId, string(body))
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestCalledSetNodeConfigurationWhenFailedToUpdateConfiguration_ExpectErrorReturn(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	jsonBody, _ := json.Marshal(configuration)
+	jsonNodeData, _ := json.Marshal(node)
+	nodeDataMap, _ := convertJsonToMap(string(jsonNodeData))
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nodeDataMap, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, jsonBody).Return(respCode, respStr),
+		dbExecutorMockObj.EXPECT().UpdateNodeConfiguration(nodeId, gomock.Any()).Return(notFoundError),
+	)
+	// pass mockObj to a real object.
+	httpExecutor = msgMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.SetNodeConfiguration(nodeId, string(jsonBody))
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
 	}
 }

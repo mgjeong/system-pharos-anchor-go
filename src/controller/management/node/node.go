@@ -170,10 +170,15 @@ func (Executor) GetNode(nodeId string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, err
 	}
 
-	// Remove unnecessory field.
-	delete(node, "config")
+	// Copy from the original map to the target map, except "config" field.
+	res := make(map[string]interface{})
+	for key, value := range node {
+		if strings.Compare(key, "config") != 0 {
+			res[key] = value
+		}
+	}
 
-	return results.OK, node, err
+	return results.OK, res, err
 }
 
 // GetNodes returns all nodes in databases as an array.
@@ -189,14 +194,21 @@ func (Executor) GetNodes() (int, map[string]interface{}, error) {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
-	
-	// Remove unnecessory field.
+
+	copiedNodes := make([]map[string]interface{}, 0)
 	for _, node := range nodes {
-		delete(node, "config")
+		// Copy from the original map to the target map, except "config" field.
+		res := make(map[string]interface{})
+		for key, value := range node {
+			if strings.Compare(key, "config") != 0 {
+				res[key] = value
+			}
+		}
+		copiedNodes = append(copiedNodes, res)
 	}
-	
+
 	res := make(map[string]interface{})
-	res[NODES] = nodes
+	res[NODES] = copiedNodes
 
 	return results.OK, res, err
 }
@@ -215,8 +227,20 @@ func (Executor) GetNodesWithAppID(appID string) (int, map[string]interface{}, er
 		return results.ERROR, nil, err
 	}
 
+	copiedNodes := make([]map[string]interface{}, 0)
+	for _, node := range nodes {
+		// Copy from the original map to the target map, except "config" field.
+		res := make(map[string]interface{})
+		for key, value := range node {
+			if strings.Compare(key, "config") != 0 {
+				res[key] = value
+			}
+		}
+		copiedNodes = append(copiedNodes, res)
+	}
+
 	res := make(map[string]interface{})
-	res[NODES] = nodes
+	res[NODES] = copiedNodes
 
 	return results.OK, res, err
 }
