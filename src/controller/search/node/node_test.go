@@ -33,8 +33,8 @@ var (
 		{
 			"name": "test",
 			"state": map[string]interface{}{
-				"Status":   "testStatus",
-				"ExitCode": "testExitCode",
+				"Status":   "teststatus",
+				"ExitCode": "testexitcode",
 			},
 		},
 	}
@@ -93,21 +93,6 @@ var (
 	groups = []map[string]interface{}{
 		group1,
 	}
-
-	members = []map[string]interface{}{node1, node2}
-	address = map[string]interface{}{
-		"host": host,
-		"port": port,
-	}
-	membersAddress = []map[string]interface{}{address, address}
-
-	body                   = `{"description":"description"}`
-	respCode               = []int{results.OK, results.OK}
-	partialSuccessRespCode = []int{results.OK, results.ERROR}
-	errorRespCode          = []int{results.ERROR, results.ERROR}
-	invalidRespStr         = []string{`{"invalidJson"}`}
-	notFoundError          = errors.NotFound{}
-	connectionError        = errors.DBConnectionError{}
 )
 
 var searchExecutor Command
