@@ -36,7 +36,7 @@ const (
 	IMAGE_NAME string = "imageName"
 	NODES      string = "nodes"
 	GROUPS     string = "groups"
-	apps       string = "apps"
+	APPS       string = "apps"
 )
 
 type Executor struct{}
