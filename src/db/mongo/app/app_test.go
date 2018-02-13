@@ -27,7 +27,7 @@ import (
 )
 
 const (
-	validUrl       = "localhost:27017"
+	validUrl       = "127.0.0.1:27017"
 	dbName         = "DeploymentManagerDB"
 	collectionName = "APP"
 	appId          = "000000000000000000000000"
