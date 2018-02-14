@@ -68,6 +68,18 @@ func (mr *MockCommandMockRecorder) UpdateNodeStatus(nodeId, status interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeStatus", reflect.TypeOf((*MockCommand)(nil).UpdateNodeStatus), nodeId, status)
 }
 
+// UpdateNodeConfiguration mocks base method
+func (m *MockCommand) UpdateNodeConfiguration(nodeId string, config map[string]interface{}) error {
+	ret := m.ctrl.Call(m, "UpdateNodeConfiguration", nodeId, config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateNodeConfiguration indicates an expected call of UpdateNodeConfiguration
+func (mr *MockCommandMockRecorder) UpdateNodeConfiguration(nodeId, config interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeConfiguration", reflect.TypeOf((*MockCommand)(nil).UpdateNodeConfiguration), nodeId, config)
+}
+
 // GetNode mocks base method
 func (m *MockCommand) GetNode(nodeId string) (map[string]interface{}, error) {
 	ret := m.ctrl.Call(m, "GetNode", nodeId)

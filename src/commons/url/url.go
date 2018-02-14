@@ -80,3 +80,9 @@ func Performance() string { return "/performance" }
 
 // Base returns the search url as a type of string.
 func Search() string { return "/search" }
+
+//Returning Device url as string.
+func Device() string { return "/device" }
+
+//Returning Configuration url as string.
+func Configuration() string { return "/configuration" }
