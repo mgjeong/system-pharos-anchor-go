@@ -15,6 +15,8 @@ tags:
     description: Registered Pharos Node Management Functionalities
   - name: Resource Monitoring
     description: Resource information collector
+  - name: Configuration
+    description: Properties and configurations of Pharos Node
 paths:
   '/api/v1/management/nodes/register':
     post:
@@ -348,6 +350,39 @@ paths:
           description: Resource information get succeeds
           schema:
             $ref: '#/definitions/response_of_get_resource'
+  '/api/v1/management/nodes/{node_id}/configuration':
+    get:
+      tags:
+        - Configuration
+      description: 'Returns device properties and configurations (deviceName, pinginterval, os, platform, processor)'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Configuration get succeeds
+          schema:
+            $ref: '#/definitions/response_of_get_configuration'
+    post:
+      tags:
+        - Configuration
+      description: 'Update device configurations (deviceName, pinginterval)'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: properties
+          in: body
+          description: >-
+            Configuration sets to be updated.
+          required: false
+          schema:
+            $ref: '#/definitions/configuration'
+      responses:
+        '200':
+          description: Configuration update succeeds
 definitions:
   service_name:
     required:
@@ -453,6 +488,15 @@ definitions:
   disk:
     description: Information about disk usage of edge device where Pharos Node exists
     example: [{"free":"0G", "path":"/root", "total":"0G", "used":"0G", "usedpercent":"0%"}]
+  configuration:
+    required:
+      - properties
+    properties:
+      properties:
+        type: array
+        example:
+          - {"name":"devicename", "value":"EdgeDevice"}
+          - {"name":"pinginterval", "value":"10"}
   request_of_node_register:
     required:
       - ip
@@ -521,3 +565,15 @@ definitions:
         $ref: '#/definitions/mem'
       disk:
         $ref: '#/definitions/disk'
+  response_of_get_configuration:
+    required:
+      - properties
+    properties:
+      properties:
+        type: array
+        example:
+          - {"name":"devicename", "value":"EdgeDevice", "policy":["readable", "writable"]}
+          - {"name":"pinginterval", "value":"10", "policy":["readable", "writable"]}
+          - {"name":"os", "value":"linux", "policy":["readable"]}
+          - {"name":"platform", "value":{"family":"debian","platform":"ubuntu","version":"14.04"}, "policy":["readable"]}
+          - {"name":"processor", "value":[{"cpu":"0", "modelname":"Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz"}], "policy":["readable"]}
