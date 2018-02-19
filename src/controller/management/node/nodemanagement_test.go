@@ -83,6 +83,7 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
 		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(node, nil),
 	)
 	// pass mockObj to a real object.
@@ -157,6 +158,7 @@ func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *te
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
 		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(nil, notFoundError),
 	)
 
