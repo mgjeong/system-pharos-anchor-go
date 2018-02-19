@@ -45,6 +45,9 @@ type Command interface {
 	// GetNodeByAppID returns single document including specific app.
 	GetNodeByAppID(nodeId string, appId string) (map[string]interface{}, error)
 
+	// GetNodeByIP returns single document from db related to node.
+	GetNodeByIP(ip string) (map[string]interface{}, error)
+
 	// AddAppToNode add specific app to the target node.
 	AddAppToNode(nodeId string, appId string) error
 
@@ -313,6 +316,31 @@ func (Executor) GetNodeByAppID(nodeId string, appId string) (map[string]interfac
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
 		return nil, ConvertMongoError(err, nodeId)
+	}
+
+	result := node.convertToMap()
+	return result, err
+}
+
+// GetNodeByIP returns single document specified by ip parameter.
+// If successful, this function returns an error as nil.
+// But if the target node does not include the given appId,
+// an appropriate error will be returned.
+func (Executor) GetNodeByIP(ip string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	node := Node{}
+	query := bson.M{"ip": ip}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
+	if err != nil {
+		return nil, ConvertMongoError(err, ip)
 	}
 
 	result := node.convertToMap()
