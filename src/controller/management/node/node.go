@@ -98,8 +98,17 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
 
+	// check whether device already exists.
+	node, err := nodeDbExecutor.GetNodeByIP(ip)
+	if err == nil {
+		logger.Logging(logger.DEBUG, "This device is already registered")
+		res := make(map[string]interface{})
+		res[ID] = node[ID]
+		return results.OK, res, err
+	}
+
 	// Add new node to database with given ip, port, status.
-	node, err := nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
