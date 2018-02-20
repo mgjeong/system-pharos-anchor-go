@@ -320,14 +320,14 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 	}
 
 	originProps := node["config"].(map[string]interface{})["properties"]
-	for i, originProp := range originProps.([]interface{}) {
-		originPropMap := originProp.(map[string]interface{})
-
-		for _, updatedProp := range updatedProps["properties"].([]interface{}) {
-			updatedPropMap := updatedProp.(map[string]interface{})
-
-			if strings.Compare(originPropMap["name"].(string), updatedPropMap["name"].(string)) == 0 {
-				originProps.([]interface{})[i].(map[string]interface{})["value"] = updatedPropMap["value"]
+	for _, originProp := range originProps.([]interface{}) {
+		for originKey, _ := range originProp.(map[string]interface{}) {
+			for _, updatedProp := range updatedProps["properties"].([]interface{}) {
+				for updatedKey, updatedValue := range updatedProp.(map[string]interface{}) {
+					if strings.Compare(originKey, updatedKey) == 0 {
+						originProp.(map[string]interface{})[originKey] = updatedValue
+					}
+				}
 			}
 		}
 	}
