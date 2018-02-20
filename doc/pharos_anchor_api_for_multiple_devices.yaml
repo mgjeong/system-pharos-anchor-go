@@ -399,7 +399,7 @@ definitions:
     required:
       - name
     properties:
-      id:
+      name:
         type: string
         example: "EdgeGroup#1"
   group:
