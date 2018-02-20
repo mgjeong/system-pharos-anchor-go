@@ -14,27 +14,70 @@
  * limitations under the License.
  *
  *******************************************************************************/
-
 // Package api/search/node provides functionality to handle request related to node.
 package node
 
 import (
+	"api/common"
+	"commons/errors"
+	"commons/logger"
+	"commons/results"
 	URL "commons/url"
+	nodeSearch "controller/search/node"
 	"net/http"
 	"strings"
+)
+
+const (
+	GET string = "GET"
 )
 
 type Command interface {
 	Handle(w http.ResponseWriter, req *http.Request)
 }
 
-type RequestHandler struct{}
+type nodeSearchAPI interface {
+	searchNodes(w http.ResponseWriter, req *http.Request)
+}
 
+type RequestHandler struct{}
+type nodeAPIExecutor struct {
+	nodeSearchAPI
+}
+
+var searchExecutor nodeSearch.Command
+var nodeAPI nodeAPIExecutor
+
+func init() {
+	searchExecutor = nodeSearch.Executor{}
+}
 
 // Handle calls a proper function according to the url and method received from remote device.
 func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
-	_ = strings.Split(url, "/")
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Search()+URL.Nodes(), "", -1)
+	split := strings.Split(url, "/")
 
-	// TODO:
+	switch len(split) {
+	default:
+		logger.Logging(logger.DEBUG, "Unknown URL")
+		common.WriteError(w, errors.NotFoundURL{})
+	case 1:
+		if req.Method == GET {
+			nodeAPI.searchNodes(w, req)
+		} else {
+			common.WriteError(w, errors.InvalidMethod{req.Method})
+		}
+	}
+}
+
+func (nodeAPIExecutor) searchNodes(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[NODE] Get Nodes maching the condition")
+
+	result, resp, err := searchExecutor.SearchNodes(req.URL.Query())
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }

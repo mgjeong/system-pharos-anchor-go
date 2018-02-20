@@ -97,7 +97,7 @@ $ docker run -it -p 48099:48099 -v /pharos-anchor/data/db:/data/db system-pharos
 ```
 Run Pharos Node container:
 ```shell
-$ docker run -it -p 48098:48098 -v /pharos-node/data/db:/data/db -v /var/run/docker.sock:/var/run/docker.sock system-pharos-node-go-ubuntu
+$ docker run -it -p 48098:48098 -e ANCHOR_ADDRESS=<Pharos Anchor IP> -e NODE_ADDRESS=<Pharos Node IP> -v /pharos-node/data/db:/data/db -v /var/run/docker.sock:/var/run/docker.sock system-pharos-node-go-ubuntu
 ```
 
 #### 2. Register Pharos Node to Pharos Anchor ####

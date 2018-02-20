@@ -19,8 +19,8 @@ package node
 
 import (
 	"bytes"
-	"encoding/json"
 	nodemanagermocks "controller/management/node/mocks"
+	"encoding/json"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -28,11 +28,11 @@ import (
 )
 
 const (
-	testBodyString  = `{"test":"body"}`
+	testBodyString = `{"test":"body"}`
 )
 
 var testBody = map[string]interface{}{
-	"test":   "body",
+	"test": "body",
 }
 
 var Handler Command
@@ -168,3 +168,41 @@ func TestCalledHandleWithPingNodeRequest_ExpectCalledPingNode(t *testing.T) {
 	Handler.Handle(w, req)
 }
 
+func TestCalledHandleWithConfigurationNodeRequest_ExpectCalledGetNodeConfiguration(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	nodemanageMockObj := nodemanagermocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		nodemanageMockObj.EXPECT().GetNodeConfiguration("nodeID"),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/management/nodes/nodeID/configuration", nil)
+
+	// pass mockObj to a real object.
+	managementExecutor = nodemanageMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithConfigurationNodeRequest_ExpectCalledSetNodeConfiguration(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	nodemanageMockObj := nodemanagermocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		nodemanageMockObj.EXPECT().SetNodeConfiguration("nodeID", testBodyString),
+	)
+
+	w := httptest.NewRecorder()
+	body, _ := json.Marshal(testBody)
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/configuration", bytes.NewReader(body))
+
+	// pass mockObj to a real object.
+	managementExecutor = nodemanageMockObj
+
+	Handler.Handle(w, req)
+}

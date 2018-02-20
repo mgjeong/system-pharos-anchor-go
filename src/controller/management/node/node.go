@@ -28,6 +28,7 @@ import (
 	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
+	"strings"
 	"time"
 )
 
@@ -40,6 +41,8 @@ type Command interface {
 	GetNodesWithAppID(appId string) (int, map[string]interface{}, error)
 	UpdateNodeStatus(nodeId string, status string) error
 	PingNode(nodeId string, body string) (int, error)
+	GetNodeConfiguration(nodeId string) (int, map[string]interface{}, error)
+	SetNodeConfiguration(nodeId string, body string) (int, error)
 }
 
 const (
@@ -54,6 +57,7 @@ const (
 	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
 	DEFAULT_NODE_PORT           = "48098"        // used to indicate a default pharos node port.
+	PROPERTIES                  = "properties"
 )
 
 // Executor implements the Command interface.
@@ -94,8 +98,17 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
 
+	// check whether device already exists.
+	node, err := nodeDbExecutor.GetNodeByIP(ip)
+	if err == nil {
+		logger.Logging(logger.DEBUG, "This device is already registered")
+		res := make(map[string]interface{})
+		res[ID] = node[ID]
+		return results.OK, res, err
+	}
+
 	// Add new node to database with given ip, port, status.
-	node, err := nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -166,7 +179,15 @@ func (Executor) GetNode(nodeId string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, err
 	}
 
-	return results.OK, node, err
+	// Copy from the original map to the target map, except "config" field.
+	res := make(map[string]interface{})
+	for key, value := range node {
+		if strings.Compare(key, "config") != 0 {
+			res[key] = value
+		}
+	}
+
+	return results.OK, res, err
 }
 
 // GetNodes returns all nodes in databases as an array.
@@ -183,8 +204,20 @@ func (Executor) GetNodes() (int, map[string]interface{}, error) {
 		return results.ERROR, nil, err
 	}
 
+	copiedNodes := make([]map[string]interface{}, 0)
+	for _, node := range nodes {
+		// Copy from the original map to the target map, except "config" field.
+		res := make(map[string]interface{})
+		for key, value := range node {
+			if strings.Compare(key, "config") != 0 {
+				res[key] = value
+			}
+		}
+		copiedNodes = append(copiedNodes, res)
+	}
+
 	res := make(map[string]interface{})
-	res[NODES] = nodes
+	res[NODES] = copiedNodes
 
 	return results.OK, res, err
 }
@@ -203,8 +236,20 @@ func (Executor) GetNodesWithAppID(appID string) (int, map[string]interface{}, er
 		return results.ERROR, nil, err
 	}
 
+	copiedNodes := make([]map[string]interface{}, 0)
+	for _, node := range nodes {
+		// Copy from the original map to the target map, except "config" field.
+		res := make(map[string]interface{})
+		for key, value := range node {
+			if strings.Compare(key, "config") != 0 {
+				res[key] = value
+			}
+		}
+		copiedNodes = append(copiedNodes, res)
+	}
+
 	res := make(map[string]interface{})
-	res[NODES] = nodes
+	res[NODES] = copiedNodes
 
 	return results.OK, res, err
 }
@@ -224,6 +269,76 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	}
 
 	return err
+}
+
+func (Executor) GetNodeConfiguration(nodeId string) (int, map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get matched nodes with query stored in the database.
+	node, err := nodeDbExecutor.GetNode(nodeId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, nil, err
+	}
+
+	res := node["config"].(map[string]interface{})
+	return results.OK, res, err
+}
+
+func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get node specified by nodeId parameter.
+	node, err := nodeDbExecutor.GetNode(nodeId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	address, err := getNodeAddress(node)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Configuration())
+
+	codes, _ := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+
+	result := codes[0]
+	if !isSuccessCode(result) {
+		return results.ERROR, err
+	}
+
+	// Update configuration information.
+	updatedProps, err := convertJsonToMap(body)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	originProps := node["config"].(map[string]interface{})["properties"]
+	for i, originProp := range originProps.([]interface{}) {
+		originPropMap := originProp.(map[string]interface{})
+
+		for _, updatedProp := range updatedProps["properties"].([]interface{}) {
+			updatedPropMap := updatedProp.(map[string]interface{})
+
+			if strings.Compare(originPropMap["name"].(string), updatedPropMap["name"].(string)) == 0 {
+				originProps.([]interface{})[i].(map[string]interface{})["value"] = updatedPropMap["value"]
+			}
+		}
+	}
+
+	err = nodeDbExecutor.UpdateNodeConfiguration(nodeId, node["config"].(map[string]interface{}))
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	return results.OK, nil
 }
 
 // convertJsonToMap converts JSON data into a map.

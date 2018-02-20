@@ -33,6 +33,9 @@ type Command interface {
 	// UpdateNodeStatus updates status of node from db related to node.
 	UpdateNodeStatus(nodeId string, status string) error
 
+	// UpdateNodeConfiguration updates configuration information of node from db related to node.
+	UpdateNodeConfiguration(nodeId string, config map[string]interface{}) error
+
 	// GetNode returns single document from db related to node.
 	GetNode(nodeId string) (map[string]interface{}, error)
 
@@ -41,6 +44,9 @@ type Command interface {
 
 	// GetNodeByAppID returns single document including specific app.
 	GetNodeByAppID(nodeId string, appId string) (map[string]interface{}, error)
+
+	// GetNodeByIP returns single document from db related to node.
+	GetNodeByIP(ip string) (map[string]interface{}, error)
 
 	// AddAppToNode add specific app to the target node.
 	AddAppToNode(nodeId string, appId string) error
@@ -196,6 +202,31 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	return err
 }
 
+func (Executor) UpdateNodeConfiguration(nodeId string, config map[string]interface{}) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+
+	// Verify id is ObjectId, otherwise fail
+	if !bson.IsObjectIdHex(nodeId) {
+		err = errors.InvalidObjectId{nodeId}
+		return err
+	}
+
+	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	update := bson.M{"$set": bson.M{"config": config}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
+	if err != nil {
+		return ConvertMongoError(err, "Failed to update status")
+	}
+	return err
+}
+
 // GetNode returns single document specified by nodeId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
@@ -285,6 +316,31 @@ func (Executor) GetNodeByAppID(nodeId string, appId string) (map[string]interfac
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
 		return nil, ConvertMongoError(err, nodeId)
+	}
+
+	result := node.convertToMap()
+	return result, err
+}
+
+// GetNodeByIP returns single document specified by ip parameter.
+// If successful, this function returns an error as nil.
+// But if the target node does not include the given appId,
+// an appropriate error will be returned.
+func (Executor) GetNodeByIP(ip string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	node := Node{}
+	query := bson.M{"ip": ip}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
+	if err != nil {
+		return nil, ConvertMongoError(err, ip)
 	}
 
 	result := node.convertToMap()

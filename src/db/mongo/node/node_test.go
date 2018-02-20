@@ -28,11 +28,12 @@ import (
 
 const (
 	validUrl        = "127.0.0.1:27017"
+	ip              = "127.0.0.1"
 	dbName          = "DeploymentManagerDB"
 	collectionName  = "NODE"
 	status          = "connected"
 	appId           = "000000000000000000000000"
-	nodeId         = "000000000000000000000001"
+	nodeId          = "000000000000000000000001"
 	invalidObjectId = ""
 )
 
@@ -650,6 +651,37 @@ func TestCalledGetNodeByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T)
 
 	if err.Error() != invalidObjectError.Error() {
 		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
+	}
+}
+
+func TestCalledGetNodeByIPWhenDBHasMatchedNode_ExpectSuccess(t *testing.T) {
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	query := bson.M{"ip": ip}
+	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+
+	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
+	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
+	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
+	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
+
+	gomock.InOrder(
+		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).SetArg(0, arg).Return(nil),
+		sessionMockObj.EXPECT().Close(),
+	)
+
+	mgoDial = connectionMockObj
+	executor := Executor{}
+	_, err := executor.GetNodeByIP(ip)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
 	}
 }
 

@@ -31,7 +31,8 @@ import (
 )
 
 const (
-	GET string = "GET"
+	GET  string = "GET"
+	POST string = "POST"
 )
 
 type Command interface {
@@ -44,6 +45,7 @@ type nodeManagementAPI interface {
 	register(w http.ResponseWriter, req *http.Request)
 	ping(w http.ResponseWriter, req *http.Request, nodeID string)
 	unregister(w http.ResponseWriter, req *http.Request, nodeID string)
+	configuration(w http.ResponseWriter, req *http.Request, nodeID string)
 }
 
 type RequestHandler struct{}
@@ -96,6 +98,9 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			} else if "/"+split[2] == URL.Ping() {
 				nodeID := split[1]
 				nodeAPI.ping(w, req, nodeID)
+			} else if "/"+split[2] == URL.Configuration() {
+				nodeID := split[1]
+				nodeAPI.configuration(w, req, nodeID)
 			} else {
 				common.WriteError(w, errors.NotFoundURL{})
 			}
@@ -183,4 +188,35 @@ func (nodeAPIExecutor) ping(w http.ResponseWriter, req *http.Request, nodeID str
 
 	result, err := managementExecutor.PingNode(nodeID, body)
 	common.MakeResponse(w, result, nil, err)
+}
+
+//  configuration handles requests which is used to get/set a node configuration.
+//
+//    paths: '/api/v1/management/nodes/{nodeID}/configuration'
+//    method: GET, POST
+//    responses: if successful, 200 status code will be returned.
+func (nodeAPIExecutor) configuration(w http.ResponseWriter, req *http.Request, nodeID string) {
+	logger.Logging(logger.DEBUG, "[NODE] Configure Service Deployment Node")
+
+	response := make(map[string]interface{})
+	var result int
+	var err error
+	switch req.Method {
+	case GET:
+		result, response, err = managementExecutor.GetNodeConfiguration(nodeID)
+	case POST:
+		var bodyStr string
+		bodyStr, err = common.GetBodyFromReq(req)
+		if err != nil {
+			common.MakeResponse(w, results.ERROR, nil, err)
+			return
+		}
+		result, err = managementExecutor.SetNodeConfiguration(nodeID, bodyStr)
+	}
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	common.MakeResponse(w, result, common.ChangeToJson(response), err)
 }
