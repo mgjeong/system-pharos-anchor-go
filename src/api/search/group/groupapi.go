@@ -19,22 +19,73 @@
 package group
 
 import (
+	"api/common"
+	"commons/errors"
+	"commons/logger"
 	URL "commons/url"
+	groupSearcher "controller/search/group"
 	"net/http"
 	"strings"
+)
+
+const (
+	GET string = "GET"
 )
 
 type Command interface {
 	Handle(w http.ResponseWriter, req *http.Request)
 }
 
-type RequestHandler struct{}
+type groupSearchAPI interface {
+	searchGroups(w http.ResponseWriter, req *http.Request)
+}
 
+type RequestHandler struct{}
+type groupAPIExecutor struct {
+	groupSearchAPI
+}
+
+var searchExecutor groupSearcher.Command
+var groupAPI groupAPIExecutor
+
+func init() {
+	searchExecutor = groupSearcher.Executor{}
+	groupAPI = groupAPIExecutor{}
+}
 
 // Handle calls a proper function according to the url and method received from remote device.
 func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
-	url := strings.Replace(req.URL.Path, URL.Base()+URL.Management()+URL.Nodes(), "", -1)
-	_ = strings.Split(url, "/")
+	url := strings.Replace(req.URL.Path, URL.Base()+URL.Search()+URL.Groups(), "", -1)
+	split := strings.Split(url, "/")
 
-	// TODO:
+	switch len(split) {
+	case 1:
+		if req.Method == GET {
+			groupAPI.searchGroups(w, req)
+		} else {
+			common.WriteError(w, errors.InvalidMethod{req.Method})
+		}
+	}
+}
+
+func (groupAPIExecutor) searchGroups(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[GROUP] Search Group")
+
+	result, resp, err := searchExecutor.SearchGroups(parseQuery(req))
+	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
+}
+
+func parseQuery(req *http.Request) map[string]interface{} {
+	query := make(map[string]interface{})
+
+	keys := req.URL.Query()
+	if len(keys) == 0 {
+		return nil
+	}
+
+	for key, value := range req.URL.Query() {
+		query[key] = value
+	}
+
+	return query
 }
