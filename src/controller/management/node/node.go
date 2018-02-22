@@ -140,13 +140,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	}
 
 	urls := makeRequestUrl(address, url.Management(), url.Unregister())
-
-	codes, _ := httpExecutor.SendHttpRequest("POST", urls, nil)
-
-	result := codes[0]
-	if !isSuccessCode(result) {
-		return results.ERROR, err
-	}
+	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Stop timer and close the channel for ping.
 	if common.timers[nodeId] != nil {
