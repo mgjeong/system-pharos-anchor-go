@@ -116,7 +116,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) node(w http.ResponseWriter, req *http.Request, nodeID string) {
-	logger.Logging(logger.DEBUG, "[NODE] Get Service Deployment Nodes")
+	logger.Logging(logger.DEBUG, "[NODE] Get Pharos Nodes")
 	result, resp, err := managementExecutor.GetNode(nodeID)
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
@@ -132,7 +132,7 @@ func (nodeAPIExecutor) node(w http.ResponseWriter, req *http.Request, nodeID str
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) nodes(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[NODE] Get All Service Deployment Nodes")
+	logger.Logging(logger.DEBUG, "[NODE] Get All Pharos Nodes")
 	result, resp, err := managementExecutor.GetNodes()
 	if err != nil {
 		common.MakeResponse(w, results.ERROR, nil, err)
@@ -148,7 +148,7 @@ func (nodeAPIExecutor) nodes(w http.ResponseWriter, req *http.Request) {
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
-	logger.Logging(logger.DEBUG, "[NODE] Register New Service Deployment Node")
+	logger.Logging(logger.DEBUG, "[NODE] Register New Pharos Node")
 
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
@@ -166,7 +166,7 @@ func (nodeAPIExecutor) register(w http.ResponseWriter, req *http.Request) {
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) unregister(w http.ResponseWriter, req *http.Request, nodeID string) {
-	logger.Logging(logger.DEBUG, "[NODE] Unregister New Service Deployment Node")
+	logger.Logging(logger.DEBUG, "[NODE] Unregister New Pharos Node")
 
 	result, err := managementExecutor.UnRegisterNode(nodeID)
 	common.MakeResponse(w, result, nil, err)
@@ -178,7 +178,7 @@ func (nodeAPIExecutor) unregister(w http.ResponseWriter, req *http.Request, node
 //    method: POST
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) ping(w http.ResponseWriter, req *http.Request, nodeID string) {
-	logger.Logging(logger.DEBUG, "[NODE] Ping From Service Deployment Node")
+	logger.Logging(logger.DEBUG, "[NODE] Ping From Pharos Node")
 
 	body, err := common.GetBodyFromReq(req)
 	if err != nil {
@@ -196,7 +196,7 @@ func (nodeAPIExecutor) ping(w http.ResponseWriter, req *http.Request, nodeID str
 //    method: GET, POST
 //    responses: if successful, 200 status code will be returned.
 func (nodeAPIExecutor) configuration(w http.ResponseWriter, req *http.Request, nodeID string) {
-	logger.Logging(logger.DEBUG, "[NODE] Configure Service Deployment Node")
+	logger.Logging(logger.DEBUG, "[NODE] Configure Pharos Node")
 
 	response := make(map[string]interface{})
 	var result int

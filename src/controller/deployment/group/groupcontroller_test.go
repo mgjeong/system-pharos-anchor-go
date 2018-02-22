@@ -53,8 +53,8 @@ var (
 	}
 
 	body                   = `{"description":"description"}`
-	deployUrl              = "http://" + ip + ":" + port + "/api/v1/deploy"
-	baseUrl                = "http://" + ip + ":" + port + "/api/v1/apps/" + appId
+	deployUrl              = "http://" + ip + ":" + port + "/api/v1/management/apps/deploy"
+	baseUrl                = "http://" + ip + ":" + port + "/api/v1/management/apps/" + appId
 	respCode               = []int{results.OK, results.OK}
 	partialSuccessRespCode = []int{results.OK, results.ERROR}
 	errorRespCode          = []int{results.ERROR, results.ERROR}

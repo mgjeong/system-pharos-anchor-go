@@ -34,16 +34,16 @@ import (
 )
 
 const (
-	NODES              = "nodes"       // used to indicate a list of nodes.
-	GROUPS             = "groups"      // used to indicate a list of groups.
-	MEMBERS            = "members"     // used to indicate a list of members.
-	APPS               = "apps"        // used to indicate a list of apps.
-	ID                 = "id"          // used to indicate an id.
-	RESPONSE_CODE      = "code"        // used to indicate a code.
-	ERROR_MESSAGE      = "message"     // used to indicate a message.
-	RESPONSES          = "responses"   // used to indicate a list of responses.
-	DESCRIPTION        = "description" // used to indicate a description.
-	DEFAULT_AGENT_PORT = "48098"       // used to indicate a default system-management-node port.
+	NODES             = "nodes"       // used to indicate a list of nodes.
+	GROUPS            = "groups"      // used to indicate a list of groups.
+	MEMBERS           = "members"     // used to indicate a list of members.
+	APPS              = "apps"        // used to indicate a list of apps.
+	ID                = "id"          // used to indicate an id.
+	RESPONSE_CODE     = "code"        // used to indicate a code.
+	ERROR_MESSAGE     = "message"     // used to indicate a message.
+	RESPONSES         = "responses"   // used to indicate a list of responses.
+	DESCRIPTION       = "description" // used to indicate a description.
+	DEFAULT_NODE_PORT = "48098"       // used to indicate a default system-management-node port.
 )
 
 type Executor struct{}
@@ -103,7 +103,7 @@ func (Executor) DeployApp(groupId string, body string) (int, map[string]interfac
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Deploy())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
 
 	// Request an deployment of edge services to a specific group.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
@@ -212,7 +212,7 @@ func (Executor) GetApp(groupId string, appId string) (int, map[string]interface{
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request get target application's information.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
@@ -272,7 +272,7 @@ func (Executor) UpdateAppInfo(groupId string, appId string, body string) (int, m
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request update target application's information.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
@@ -311,7 +311,7 @@ func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interfa
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId)
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request delete target application.
 	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls, nil)
@@ -367,7 +367,7 @@ func (Executor) UpdateApp(groupId string, appId string) (int, map[string]interfa
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Update())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
@@ -406,7 +406,7 @@ func (Executor) StartApp(groupId string, appId string) (int, map[string]interfac
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Start())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
@@ -445,7 +445,7 @@ func (Executor) StopApp(groupId string, appId string) (int, map[string]interface
 	}
 
 	address := getMemberAddress(members)
-	urls := makeRequestUrl(address, url.Apps(), "/", appId, url.Stop())
+	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
@@ -569,7 +569,7 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 	for i := range address {
 		full_url.Reset()
 		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_AGENT_PORT + url.Base())
+			":" + DEFAULT_NODE_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}
