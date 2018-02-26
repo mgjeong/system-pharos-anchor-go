@@ -123,6 +123,19 @@ func (mr *MockCommandMockRecorder) GetNodeByAppID(nodeId, appId interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeByAppID", reflect.TypeOf((*MockCommand)(nil).GetNodeByAppID), nodeId, appId)
 }
 
+// GetNodeByIP mocks base method
+func (m *MockCommand) GetNodeByIP(ip string) (map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "GetNodeByIP", ip)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNodeByIP indicates an expected call of GetNodeByIP
+func (mr *MockCommandMockRecorder) GetNodeByIP(ip interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeByIP", reflect.TypeOf((*MockCommand)(nil).GetNodeByIP), ip)
+}
+
 // AddAppToNode mocks base method
 func (m *MockCommand) AddAppToNode(nodeId, appId string) error {
 	ret := m.ctrl.Call(m, "AddAppToNode", nodeId, appId)

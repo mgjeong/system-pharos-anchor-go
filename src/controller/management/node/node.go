@@ -98,8 +98,17 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
 
+	// check whether device already exists.
+	node, err := nodeDbExecutor.GetNodeByIP(ip)
+	if err == nil {
+		logger.Logging(logger.DEBUG, "This device is already registered")
+		res := make(map[string]interface{})
+		res[ID] = node[ID]
+		return results.OK, res, err
+	}
+
 	// Add new node to database with given ip, port, status.
-	node, err := nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -131,13 +140,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	}
 
 	urls := makeRequestUrl(address, url.Management(), url.Unregister())
-
-	codes, _ := httpExecutor.SendHttpRequest("POST", urls, nil)
-
-	result := codes[0]
-	if !isSuccessCode(result) {
-		return results.ERROR, err
-	}
+	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Stop timer and close the channel for ping.
 	if common.timers[nodeId] != nil {
@@ -311,14 +314,14 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 	}
 
 	originProps := node["config"].(map[string]interface{})["properties"]
-	for i, originProp := range originProps.([]interface{}) {
-		originPropMap := originProp.(map[string]interface{})
-
-		for _, updatedProp := range updatedProps["properties"].([]interface{}) {
-			updatedPropMap := updatedProp.(map[string]interface{})
-
-			if strings.Compare(originPropMap["name"].(string), updatedPropMap["name"].(string)) == 0 {
-				originProps.([]interface{})[i].(map[string]interface{})["value"] = updatedPropMap["value"]
+	for _, originProp := range originProps.([]interface{}) {
+		for originKey, _ := range originProp.(map[string]interface{}) {
+			for _, updatedProp := range updatedProps["properties"].([]interface{}) {
+				for updatedKey, updatedValue := range updatedProp.(map[string]interface{}) {
+					if strings.Compare(originKey, updatedKey) == 0 {
+						originProp.(map[string]interface{})[originKey] = updatedValue
+					}
+				}
 			}
 		}
 	}

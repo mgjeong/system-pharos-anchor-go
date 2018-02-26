@@ -15,5 +15,6 @@
 #
 ###############################################################################
 #!/bin/bash
+mongod --repair
 mongod --smallfiles &
 /pharos/pharos-anchor
