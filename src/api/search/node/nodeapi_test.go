@@ -51,7 +51,7 @@ func TestSearchNodeHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *testi
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"])
+		t.Errorf("Expected results : invalid method msg, Actual err : %s.", msg["message"])
 	}
 
 	w = httptest.NewRecorder()
@@ -67,7 +67,7 @@ func TestSearchNodeHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *testi
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"].(string))
+		t.Errorf("Expected results : invalid method msg, Actual err : %s.", msg["message"])
 	}
 }
 
@@ -91,6 +91,6 @@ func TestSearchNodeHandleWithInvalidUrl_ExpectReturnNotFoundURLMsg(t *testing.T)
 	}
 
 	if !strings.Contains(msg["message"].(string), "unsupported url") {
-		t.Error("Expected results : unsupported url msg, Actual err : %s.", msg["message"])
+		t.Errorf("Expected results : unsupported url msg, Actual err : %s.", msg["message"])
 	}
 }
