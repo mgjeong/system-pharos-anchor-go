@@ -67,7 +67,7 @@ func TestSearchNodeHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *testi
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"])
+		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"].(string))
 	}
 }
 
