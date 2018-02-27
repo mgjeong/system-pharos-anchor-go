@@ -18,7 +18,9 @@
 package app
 
 import (
+	"commons/errors"
 	"commons/logger"
+	"commons/results"
 	appMgmt "controller/management/app"
 	groupMgmt "controller/management/group"
 	nodeMgmt "controller/management/node"
@@ -57,317 +59,130 @@ func (Executor) Search(query map[string]interface{}) (int, map[string]interface{
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	apps := make(map[string]interface{})
-	appsInfo := make([]map[string]interface{}, 0)
+	// Validate query parameters.
+	err := checkQueryParam(query)
+	if err != nil {
+		logger.Logging(logger.DEBUG, err.Error())
+		return results.ERROR, nil, err
+	}
 
-	if query == nil {
-		return appMgmtExecutor.GetApps()
+	// Checks for 'appId' query parameter existence.
+	appList := make([]map[string]interface{}, 0)
+	if appId, exists := query[APPID]; exists {
+		appList = filterByAppId(appId.([]string)[0])
 	} else {
-		groupId, exists := query[GROUPID]
-		if !exists {
-			nodeId, exists := query[NODEID]
-			if !exists {
-				appId, exists := query[APPID]
-				if !exists {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//empty
-						return appMgmtExecutor.GetApps()
-					} else {
-						//imageName
-						return appMgmtExecutor.GetAppsWithImageName(imageName.([]string)[0])
-					}
-				} else {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//appId
-						return appMgmtExecutor.GetApp(appId.([]string)[0])
-					} else {
-						//appId, imageName
-						result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-							appsInfo = append(appsInfo, app)
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				}
-			} else {
-				appId, exists := query[APPID]
-				if !exists {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//nodeId
-						result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range node[APPS].([]string) {
-							result, app, err := appMgmtExecutor.GetApp(id)
-							if err != nil {
-								return result, nil, err
-							}
-							appsInfo = append(appsInfo, app)
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//nodeId, imageName
-						result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range node[APPS].([]string) {
-							result, app, err := appMgmtExecutor.GetApp(id)
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				} else {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//nodeId, appId
-						result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-							result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							appsInfo = append(appsInfo, app)
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//nodeId, appId, imageName
-						result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-							result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				}
-			}
-		} else {
-			nodeId, exists := query[NODEID]
-			if !exists {
-				appId, exists := query[APPID]
-				if !exists {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//groupId
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range group[MEMBERS].([]string) {
-							result, node, err := nodeMgmtExecutor.GetNode(id)
-							if err != nil {
-								return result, nil, err
-							}
-							for _, id = range node[APPS].([]string) {
-								result, app, err := appMgmtExecutor.GetApp(id)
-								if err != nil {
-									return result, nil, err
-								}
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//groupId, imageName
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range group[MEMBERS].([]string) {
-							result, node, err := nodeMgmtExecutor.GetNode(id)
-							if err != nil {
-								return result, nil, err
-							}
-							for _, id = range node[APPS].([]string) {
-								result, app, err := appMgmtExecutor.GetApp(id)
-								if err != nil {
-									return result, nil, err
-								}
-								if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-									appsInfo = append(appsInfo, app)
-								}
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				} else {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//groupId, appId
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range group[MEMBERS].([]string) {
-							result, node, err := nodeMgmtExecutor.GetNode(id)
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-								result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-								if err != nil {
-									return result, nil, err
-								}
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//groupId, appId, imageName
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						for _, id := range group[MEMBERS].([]string) {
-							result, node, err := nodeMgmtExecutor.GetNode(id)
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-								result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-								if err != nil {
-									return result, nil, err
-								}
-								if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-									appsInfo = append(appsInfo, app)
-								}
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				}
-			} else {
-				appId, exists := query[APPID]
-				if !exists {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//groupId, nodeId
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(group[MEMBERS].([]string), nodeId.([]string)[0]) {
-							result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							for _, id := range node[APPS].([]string) {
-								result, app, err := appMgmtExecutor.GetApp(id)
-								if err != nil {
-									return result, nil, err
-								}
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//groupId, nodeId, imageName
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(group[MEMBERS].([]string), nodeId.([]string)[0]) {
-							result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							for _, id := range node[APPS].([]string) {
-								result, app, err := appMgmtExecutor.GetApp(id)
-								if err != nil {
-									return result, nil, err
-								}
-								if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-									appsInfo = append(appsInfo, app)
-								}
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				} else {
-					imageName, exists := query[IMAGENAME]
-					if !exists {
-						//groupId, nodeId, appId
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(group[MEMBERS].([]string), nodeId.([]string)[0]) {
-							result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-								result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-								if err != nil {
-									return result, nil, err
-								}
-								appsInfo = append(appsInfo, app)
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					} else {
-						//groupId, nodeId, appId, imageName
-						result, group, err := groupMgmtExecutor.GetGroup(groupId.([]string)[0])
-						if err != nil {
-							return result, nil, err
-						}
-						if searchStringFromSlice(group[MEMBERS].([]string), nodeId.([]string)[0]) {
-							result, node, err := nodeMgmtExecutor.GetNode(nodeId.([]string)[0])
-							if err != nil {
-								return result, nil, err
-							}
-							if searchStringFromSlice(node[APPS].([]string), appId.([]string)[0]) {
-								result, app, err := appMgmtExecutor.GetApp(appId.([]string)[0])
-								if err != nil {
-									return result, nil, err
-								}
-								if searchStringFromSlice(app[IMAGES].([]string), imageName.([]string)[0]) {
-									appsInfo = append(appsInfo, app)
-								}
-							}
-						}
-						apps[APPS] = removeDuplicateInfo(appsInfo)
-						return result, apps, err
-					}
-				}
+		appList = filterByAppId()
+	}
+
+	// Checks for 'imageName' query parameter existence.
+	if imageName, exists := query[IMAGENAME]; exists {
+		appList = filterByImageName(appList, imageName.([]string)[0])
+	}
+
+	// Checks for 'nodeId' query parameter existence.
+	if nodeId, exists := query[NODEID]; exists {
+		appList = filterByNodeId(appList, nodeId.([]string)[0])
+	}
+
+	// Checks for 'gourId' query parameter existence.
+	if groupId, exists := query[GROUPID]; exists {
+		appList = filterByGroupId(appList, groupId.([]string)[0])
+	}
+
+	res := make(map[string]interface{})
+	res[APPS] = appList
+	return results.OK, res, nil
+}
+
+func filterByGroupId(apps []map[string]interface{}, groupId string) []map[string]interface{} {
+	filteredApps := make([]map[string]interface{}, 0)
+
+	_, group, err := groupMgmtExecutor.GetGroup(groupId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return nil
+	}
+
+	members := group[MEMBERS].([]string)
+	for _, member := range members {
+		_, node, err := nodeMgmtExecutor.GetNode(member)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return nil
+		}
+
+		for _, app := range apps {
+			if searchStringFromSlice(node[APPS].([]string), app[ID].(string)) {
+				filteredApps = append(filteredApps, app)
+				break
 			}
 		}
 	}
+
+	return filteredApps
+}
+
+func filterByNodeId(apps []map[string]interface{}, nodeId string) []map[string]interface{} {
+	filteredApps := make([]map[string]interface{}, 0)
+
+	_, node, err := nodeMgmtExecutor.GetNode(nodeId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return nil
+	}
+
+	for _, app := range apps {
+		if searchStringFromSlice(node[APPS].([]string), app[ID].(string)) {
+			filteredApps = append(filteredApps, app)
+			break
+		}
+	}
+	return filteredApps
+}
+
+func filterByImageName(apps []map[string]interface{}, imageName string) []map[string]interface{} {
+	filteredApps := make([]map[string]interface{}, 0)
+
+	for _, app := range apps {
+		if searchStringFromSlice(app[IMAGES].([]string), imageName) {
+			filteredApps = append(filteredApps, app)
+			break
+		}
+	}
+	return filteredApps
+}
+
+func filterByAppId(appId ...string) []map[string]interface{} {
+	filteredApps := make([]map[string]interface{}, 0)
+
+	switch len(appId) {
+	case 1:
+		_, app, err := appMgmtExecutor.GetApp(appId[0])
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return nil
+		}
+		filteredApps = append(filteredApps, app)
+	case 0:
+		_, apps, err := appMgmtExecutor.GetApps()
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return nil
+		}
+		filteredApps = apps[APPS].([]map[string]interface{})
+	}
+	return filteredApps
+}
+
+func checkQueryParam(query map[string]interface{}) error {
+	supportedQueries := []string{GROUPID, NODEID, APPID, IMAGENAME}
+
+	for key, _ := range query {
+		if !searchStringFromSlice(supportedQueries, key) {
+			return errors.NotFoundURL{Message: "not supported query parameter"}
+		}
+	}
+	return nil
 }
 
 func searchStringFromSlice(slice []string, str string) bool {
@@ -377,19 +192,4 @@ func searchStringFromSlice(slice []string, str string) bool {
 		}
 	}
 	return false
-}
-
-func removeDuplicateInfo(appsInfo []map[string]interface{}) []map[string]interface{} {
-	mapAppsInfo := make(map[string]interface{})
-	arrangedAppsInfo := make([]map[string]interface{}, 0)
-
-	for _, appInfo := range appsInfo {
-		mapAppsInfo[appInfo[ID].(string)] = appInfo
-	}
-
-	for _, value := range arrangedAppsInfo {
-		arrangedAppsInfo = append(arrangedAppsInfo, value)
-	}
-
-	return arrangedAppsInfo
 }
