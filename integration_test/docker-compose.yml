@@ -1,0 +1,36 @@
+## pharos-anchor docker compose file
+
+version: '2'
+services:
+  pharos-anchor:
+    image: system-pharos-anchor-go-ubuntu
+    hostname: pharos-anchor
+    ports:
+      - "48099"
+    volumes:
+      - /data/anchor/db
+      - /var/run:/var/run
+    networks:
+      - integration-network
+
+  pharos-node:
+    image: docker.sec.samsung.net:5000/edge/system-pharos-node-go/ubuntu_x86_64:latest
+    hostname: pharos-node
+    ports:
+      - "48098"
+    volumes:
+      - /data/db
+      - /var/run:/var/run
+    networks:
+      - integration-network
+    environment:
+      - ANCHOR_ADDRESS=pharos-anchor
+      - NODE_ADDRESS=pharos-node
+    depends_on:
+      - pharos-anchor
+
+networks:
+  integration-network:
+    driver: "bridge"
+
+
