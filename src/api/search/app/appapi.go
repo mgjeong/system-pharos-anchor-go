@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	GET    string = "GET"
+	GET string = "GET"
 )
 
 type Command interface {
@@ -50,7 +50,6 @@ var appsSearchAPI searchAPIExecutor
 
 func init() {
 	appsSearchExecutor = appsSearch.Executor{}
-	appsSearchAPI = searchAPIExecutor{}
 }
 
 // Handle calls a proper function according to the url and method received from remote device.
@@ -73,7 +72,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 func (searchAPIExecutor) searchApps(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "[Search] Apps")
-	
+
 	result, resp, err := appsSearchExecutor.Search(parseQuery(req))
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
