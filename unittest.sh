@@ -4,7 +4,7 @@ export GOPATH=$PWD
 
 go get github.com/golang/mock/gomock
 
-pkg_list=("api" "api/management" "api/monitoring" "api/management/node" "api/management/group" "api/management/registry" "api/management/node/apps" "api/management/group/apps" "api/monitoring/resource" "api/search" "api/search/app" "api/search/node" "api/search/group" "commons/errors" "commons/logger" "commons/results" "controller/deployment/node" "controller/deployment/group" "controller/management/node" "controller/management/group" "controller/management/app" "controller/management/registry" "controller/resource/node" "controller/search/node" "controller/search/group" "controller/search/app" "db/mongo/app" "db/mongo/group" "db/mongo/node" "db/mongo/registry" "messenger")
+pkg_list=("api" "api/management" "api/monitoring" "api/management/node" "api/management/group" "api/management/registry" "api/management/node/apps" "api/management/group/apps" "api/monitoring/resource" "api/search" "api/search/app" "api/search/node" "api/search/group" "commons/errors" "commons/logger" "commons/url" "controller/deployment/node" "controller/deployment/group" "controller/management/node" "controller/management/group" "controller/management/app" "controller/management/registry" "controller/resource/node" "controller/search/node" "controller/search/group" "controller/search/app" "db/mongo/app" "db/mongo/group" "db/mongo/node" "db/mongo/registry" "messenger")
 
 function func_cleanup(){
     rm *.out *.test

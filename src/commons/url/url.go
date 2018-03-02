@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-// Package commons/url defines url used by system-edge-manager.
+// Package commons/url defines url used by pharos-anchor.
 package url
 
 // Base returns the base url as a type of string.
