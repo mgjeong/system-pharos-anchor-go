@@ -68,7 +68,7 @@ func TestSearchGroupsHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *tes
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"])
+		t.Errorf("Expected results : invalid method msg, Actual err : %s.", msg["message"])
 	}
 }
 
