@@ -20,9 +20,10 @@ package api
 import (
 	managementmocks "api/management/mocks"
 	monitoringmocks "api/monitoring/mocks"
+	searchmocks "api/search/mocks"
+	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
-	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -32,10 +33,10 @@ func TestCalledServeHTTPWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 
 	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
 	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/invalid", nil)
-	
+
 	// pass mockObj to a real object.
 	managementHandler = managementHandlerMockObj
 	monitoringHandler = monitoringHandlerMockObj
@@ -49,10 +50,10 @@ func TestCalledServeHTTPWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T
 
 	managementHandlerMockObj := managementmocks.NewMockCommand(ctrl)
 	monitoringHandlerMockObj := monitoringmocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/monitoring/resource", nil)
-	
+
 	// pass mockObj to a real object.
 	managementHandler = managementHandlerMockObj
 	monitoringHandler = monitoringHandlerMockObj
@@ -69,10 +70,10 @@ func TestCalledServeHTTPWithManagementRequest_ExpectCalledManagementHandle(t *te
 	gomock.InOrder(
 		managementHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/nodes", nil)
-	
+
 	// pass mockObj to a real object.
 	managementHandler = managementHandlerMockObj
 
@@ -88,12 +89,31 @@ func TestCalledServeHTTPWithMonitoringRequest_ExpectCalledMonitoringHandle(t *te
 	gomock.InOrder(
 		monitoringHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/monitoring/resource", nil)
-	
+
 	// pass mockObj to a real object.
 	monitoringHandler = monitoringHandlerMockObj
+
+	Handler.ServeHTTP(w, req)
+}
+
+func TestCalledServeHTTPWithSearchRequest_ExpectCalledSearchHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	searchHandlerMockObj := searchmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		searchHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/search", nil)
+
+	// pass mockObj to a real object.
+	searchHandler = searchHandlerMockObj
 
 	Handler.ServeHTTP(w, req)
 }
