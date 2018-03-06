@@ -52,7 +52,7 @@ func TestSearchAppsHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *testi
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"])
+		t.Errorf("Expected results : invalid method msg, Actual err : %s.", msg["message"])
 	}
 
 	w = httptest.NewRecorder()
@@ -68,7 +68,7 @@ func TestSearchAppsHandleWithInvalidMethod_ExpectReturnInvalidMethodMsg(t *testi
 	}
 
 	if !strings.Contains(msg["message"].(string), "invalid method") {
-		t.Error("Expected results : invalid method msg, Actual err : %s.", msg["message"])
+		t.Errorf("Expected results : invalid method msg, Actual err : %s.", msg["message"])
 	}
 }
 
