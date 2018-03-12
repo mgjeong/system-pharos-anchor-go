@@ -497,7 +497,18 @@ definitions:
       apps:
         type: array
         items:
-          $ref: '#/definitions/response_of_get_app'
+          $ref: '#/definitions/app_info'
+  app_info:
+    required:
+      - id
+      - state
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+      state:
+        type: string
+        example: running
   response_of_get_app:
     required:
       - id
@@ -521,7 +532,7 @@ definitions:
       services:
         type: array
         example:
-          - {"name":"container name", "ports":[], "state":{"exitcode": "0","status": "running"}}
+          - {"name":"container name", "cid":"container ID", "ports":[], "state":{"exitcode": "0","status": "running"}}
   response_of_deployment:
     required:
       - id
