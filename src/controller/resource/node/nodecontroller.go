@@ -29,11 +29,13 @@ import (
 
 const (
 	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-node port.
+	IP                 = "ip"
+	GET                = "GET"
 )
 
 type Command interface {
-	GetResourceInfo(nodeId string) (int, map[string]interface{}, error)	
-	GetPerformanceInfo(nodeId string) (int, map[string]interface{}, error)
+	GetNodeResourceInfo(nodeId string) (int, map[string]interface{}, error)
+	GetAppResourceInfo(nodeId string, appId string) (int, map[string]interface{}, error)
 }
 
 type Executor struct{}
@@ -47,10 +49,10 @@ func init() {
 	httpExecutor = messenger.NewExecutor()
 }
 
-// GetResourceInfo request an node resource (os, processor, performance) information.
+// GetNodeResourceInfo request an node resource (cpu, mem, disk, network usage) information.
 // If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (Executor) GetResourceInfo(nodeId string) (int, map[string]interface{}, error) {
+func (Executor) GetNodeResourceInfo(nodeId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -65,7 +67,7 @@ func (Executor) GetResourceInfo(nodeId string) (int, map[string]interface{}, err
 	urls := makeRequestUrl(address, url.Monitoring(), url.Resource())
 
 	// Request to return node's resource information.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
+	codes, respStr := httpExecutor.SendHttpRequest(GET, urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -74,14 +76,14 @@ func (Executor) GetResourceInfo(nodeId string) (int, map[string]interface{}, err
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
-	
+
 	return result, respMap, err
 }
 
-// GetPerformanceInfo request an node performance(cpu, disk, mem usage) information.
-// If response code represents success, returns performance information.
+// GetAppResourceInfo request an node resource (cpu, mem, net i/o, block i/o) information.
+// If response code represents success, returns resource information.
 // Otherwise, an appropriate error will be returned.
-func (Executor) GetPerformanceInfo(nodeId string) (int, map[string]interface{}, error) {
+func (Executor) GetAppResourceInfo(nodeId string, appId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -93,10 +95,10 @@ func (Executor) GetPerformanceInfo(nodeId string) (int, map[string]interface{}, 
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Monitoring(), url.Resource(), url.Performance())
+	urls := makeRequestUrl(address, url.Monitoring(), url.Apps(), "/", appId, url.Resource())
 
-	// Request to return node's performance information.
-	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
+	// Request to return node's resource information.
+	codes, respStr := httpExecutor.SendHttpRequest(GET, urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
@@ -105,7 +107,7 @@ func (Executor) GetPerformanceInfo(nodeId string) (int, map[string]interface{}, 
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
-	
+
 	return result, respMap, err
 }
 
@@ -125,7 +127,7 @@ func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
 func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		"ip": node["ip"],
+		IP: node[IP],
 	}
 	return result
 }
@@ -136,7 +138,7 @@ func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
+		full_url.WriteString(httpTag + address[i][IP].(string) +
 			":" + DEFAULT_AGENT_PORT + url.Base())
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)

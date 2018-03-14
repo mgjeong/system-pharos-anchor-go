@@ -28,14 +28,14 @@ import (
 
 const (
 	NODEID = "000000000000000000000001"
-	IP      = "127.0.0.1"
+	TEST_IP      = "127.0.0.1"
 	PORT    = "48098"
 )
 
 var (
 	node = map[string]interface{}{
 		"id":   NODEID,
-		"ip":   IP,
+		"ip":   TEST_IP,
 		"apps": []string{},
 	}
 
@@ -54,141 +54,17 @@ func init() {
 	resourceMonitor = Executor{}
 }
 
-func TestGetResourceInfo_ExpectSuccess(t *testing.T) {
+func TestGetNodeResourceInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
-	expectedRes := map[string]interface{}{
-		"os":        "os",
-		"processor": "processor",
-		"cpu":       "00%",
-		"mem":       "00%",
-		"disk":      "00%",
-	}
-	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
-	msgMockObj := msgmocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(respCode, respStr),
-	)
-	// pass mockObj to a real object.
-	nodeDbExecutor = dbExecutorMockObj
-	httpExecutor = msgMockObj
-	code, res, err := resourceMonitor.GetResourceInfo(NODEID)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
-
-	if code != results.OK {
-		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
-	}
-
-	if !reflect.DeepEqual(expectedRes, res) {
-		t.Errorf("Expected res: %s, actual res: %s", expectedRes, res)
-	}
-}
-
-func TestGetResourceInfoWithGetNodeError_ExpectErrorReturn(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(nil, errors.NotFound{}),
-	)
-	// pass mockObj to a real object.
-	nodeDbExecutor = dbExecutorMockObj
-	code, _, err := resourceMonitor.GetResourceInfo(NODEID)
-
-	if code != results.ERROR {
-		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
-	}
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
-	case errors.NotFound:
-	}
-}
-
-func TestGetResourceInfoWhenSendhttpRequestReturnErrorCode_ExpectSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
-
-	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
-	msgMockObj := msgmocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, respStr),
-	)
-	// pass mockObj to a real object.
-	nodeDbExecutor = dbExecutorMockObj
-	httpExecutor = msgMockObj
-	code, _, err := resourceMonitor.GetResourceInfo(NODEID)
-
-	if err != nil {
-		t.Errorf("Unexpected err: %s", err.Error())
-	}
-
-	if code != results.ERROR {
-		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
-	}
-}
-
-func TestGetResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_ExpectSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource"}
-
-	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
-	msgMockObj := msgmocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetNode(NODEID).Return(node, nil),
-		msgMockObj.EXPECT().SendHttpRequest("GET", expectedUrl, nil).Return(errorRespCode, invalidRespStr),
-	)
-	// pass mockObj to a real object.
-	nodeDbExecutor = dbExecutorMockObj
-	httpExecutor = msgMockObj
-	code, _, err := resourceMonitor.GetResourceInfo(NODEID)
-
-	if code != results.ERROR {
-		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
-	}
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", "InternalServerError", "nil")
-	}
-
-	switch err.(type) {
-	default:
-		t.Errorf("Expected err: %s, actual err: %s", "InternalServerError", err.Error())
-	case errors.InternalServerError:
-	}
-}
-
-func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	respStr := []string{`{"cpu":"00%","mem":"00%","disk":"00%"}`}
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
+	respStr := []string{`{"cpu":"00%","mem":"00%","disk":"00%","network":00%"}`}
+	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource"}
 	expectedRes := map[string]interface{}{
 		"cpu":  "00%",
 		"mem":  "00%",
 		"disk": "00%",
+		"network":"00%",
 	}
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -200,7 +76,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
-	code, res, err := resourceMonitor.GetPerformanceInfo(NODEID)
+	code, res, err := resourceMonitor.GetNodeResourceInfo(NODEID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -215,7 +91,7 @@ func TestGetPerformanceInfo_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestGetPerformanceInfoWithGetNodeError_ExpectErrorReturn(t *testing.T) {
+func TestGetNodeResourceInfoWithGetNodeError_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -226,7 +102,7 @@ func TestGetPerformanceInfoWithGetNodeError_ExpectErrorReturn(t *testing.T) {
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
-	code, _, err := resourceMonitor.GetPerformanceInfo(NODEID)
+	code, _, err := resourceMonitor.GetNodeResourceInfo(NODEID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -243,11 +119,11 @@ func TestGetPerformanceInfoWithGetNodeError_ExpectErrorReturn(t *testing.T) {
 	}
 }
 
-func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *testing.T) {
+func TestGetNodeResourceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
+	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -259,7 +135,7 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
-	code, _, err := resourceMonitor.GetPerformanceInfo(NODEID)
+	code, _, err := resourceMonitor.GetNodeResourceInfo(NODEID)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -270,11 +146,11 @@ func TestGetPerformanceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	}
 }
 
-func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_ExpectErrorReturn(t *testing.T) {
+func TestGetNodeResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
+	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -286,7 +162,7 @@ func TestGetPerformanceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
-	code, _, err := resourceMonitor.GetPerformanceInfo(NODEID)
+	code, _, err := resourceMonitor.GetNodeResourceInfo(NODEID)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)

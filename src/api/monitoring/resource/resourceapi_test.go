@@ -76,30 +76,11 @@ func TestCalledHandleWithGetResourceRequest_ExpectCalledGetResourceInfo(t *testi
 	resourceMockObj := resourcemocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		resourceMockObj.EXPECT().GetResourceInfo("nodeID"),
+		resourceMockObj.EXPECT().GetNodeResourceInfo("nodeID"),
 	)
 
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeID/resource", nil)
-
-	// pass mockObj to a real object.
-	resourceExecutor = resourceMockObj
-
-	Handler.Handle(w, req)
-}
-
-func TestCalledHandleWithGetResourcePerformanceRequest_ExpectCalledGetPerformanceInfo(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	resourceMockObj := resourcemocks.NewMockCommand(ctrl)
-
-	gomock.InOrder(
-		resourceMockObj.EXPECT().GetPerformanceInfo("nodeID"),
-	)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeID/resource/performance", nil)
 
 	// pass mockObj to a real object.
 	resourceExecutor = resourceMockObj
