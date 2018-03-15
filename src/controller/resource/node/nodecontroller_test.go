@@ -58,7 +58,7 @@ func TestGetNodeResourceInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	respStr := []string{`{"cpu":"00%","mem":"00%","disk":"00%","network":00%"}`}
+	respStr := []string{`{"cpu":"00%","mem":"00%","disk":"00%","network":"00%"}`}
 	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource"}
 	expectedRes := map[string]interface{}{
 		"cpu":  "00%",
@@ -123,7 +123,7 @@ func TestGetNodeResourceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
+	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -150,7 +150,7 @@ func TestGetNodeResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource/performance"}
+	expectedUrl := []string{"http://" + TEST_IP + ":" + PORT + "/api/v1/monitoring/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
