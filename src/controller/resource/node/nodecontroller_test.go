@@ -184,10 +184,10 @@ func TestGetAppResourceInfo_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	respStr := []string{`{"services":""`}
+	respStr := []string{`{"services":"test"}`}
 	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
 	expectedRes := map[string]interface{}{
-		"services":   "",
+		"services":   "test",
 	}
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -246,7 +246,7 @@ func TestGetAppResourceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/appId/resource"}
+	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -273,7 +273,7 @@ func TestGetAppResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/appIdresource"}
+	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
