@@ -37,8 +37,8 @@ type Command interface {
 }
 
 type resourceMonitoringAPI interface {
-	nodeGetResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
-	nodeGetPerformanceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
+	getNodeResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
+	getAppResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string)
 }
 
 type RequestHandler struct{}
@@ -57,11 +57,11 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	url := strings.Replace(req.URL.Path, URL.Base()+URL.Monitoring()+URL.Nodes(), "", -1)
 	split := strings.Split(url, "/")
 	switch len(split) {
-	case 3:
-		nodeID := split[1]
+	case 3: // [,{nodeId},resource]
+		nodeId := split[1]
 		if "/"+split[2] == URL.Resource() {
 			if req.Method == GET {
-				resourceAPI.nodeGetResourceInfo(w, req, nodeID)
+				resourceAPI.getNodeResourceInfo(w, req, nodeId)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
@@ -69,11 +69,12 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			common.WriteError(w, errors.NotFoundURL{})
 		}
 
-	case 4:
-		if "/"+split[3] == URL.Performance() {
-			nodeID := split[1]
+	case 5: // [,{nodeId},apps,{appId},resource]
+		if "/"+split[2] == URL.Apps() {
+			nodeId := split[1]
+			appId := split[3]
 			if req.Method == GET {
-				resourceAPI.nodeGetPerformanceInfo(w, req, nodeID)
+				resourceAPI.getAppResourceInfo(w, req, nodeId, appId)
 			} else {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
@@ -83,26 +84,26 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// nodeGetResourceInfo handles requests related to get node's resource informaion
-// identified by the given nodeID.
+// getNodeResourceInfo handles requests related to get node's resource informaion
+// identified by the given nodeId.
 //
-//    paths: '/api/v1/monitoring/nodes/{nodeID}/resource'
+//    paths: '/api/v1/monitoring/nodes/{nodeId}/resource'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (resourceAPIExecutor) nodeGetResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string) {
+func (resourceAPIExecutor) getNodeResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string) {
 	logger.Logging(logger.DEBUG, "[NODE] Get Resource Info")
-	result, resp, err := resourceExecutor.GetResourceInfo(nodeId)
+	result, resp, err := resourceExecutor.GetNodeResourceInfo(nodeId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
-// nodeGetPerformanceInfo handles requests related to get node's resource performance informaion
-// identified by the given nodeID.
+// getAppResourceInfo handles requests related to get app's resource informaion deployed on the specific node.
+// identified by the given nodeId, appId.
 //
-//    paths: '/api/v1/monitoring/nodes/{nodeID}/resource/performance'
+//    paths: '/api/v1/monitoring/nodes/{nodeId}/apps/{appId}/resource'
 //    method: GET
 //    responses: if successful, 200 status code will be returned.
-func (resourceAPIExecutor) nodeGetPerformanceInfo(w http.ResponseWriter, req *http.Request, nodeId string) {
+func (resourceAPIExecutor) getAppResourceInfo(w http.ResponseWriter, req *http.Request, nodeId string, appId string) {
 	logger.Logging(logger.DEBUG, "[NODE] Get Performance Info")
-	result, resp, err := resourceExecutor.GetPerformanceInfo(nodeId)
+	result, resp, err := resourceExecutor.GetAppResourceInfo(nodeId, appId)
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
