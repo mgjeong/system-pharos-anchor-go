@@ -69,18 +69,37 @@ func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithGetResourceRequest_ExpectCalledGetResourceInfo(t *testing.T) {
+func TestCalledHandleWithGetNodeResourceRequest_ExpectCalledGetResourceInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	resourceMockObj := resourcemocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		resourceMockObj.EXPECT().GetNodeResourceInfo("nodeID"),
+		resourceMockObj.EXPECT().GetNodeResourceInfo("nodeId"),
 	)
 
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeID/resource", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeId/resource", nil)
+
+	// pass mockObj to a real object.
+	resourceExecutor = resourceMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithGetAppResourceRequest_ExpectCalledGetResourceInfo(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceMockObj := resourcemocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		resourceMockObj.EXPECT().GetAppResourceInfo("nodeId", "appId"),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeId/apps/appId/resource", nil)
 
 	// pass mockObj to a real object.
 	resourceExecutor = resourceMockObj

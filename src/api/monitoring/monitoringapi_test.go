@@ -19,9 +19,9 @@ package monitoring
 
 import (
 	resourcemocks "api/monitoring/resource/mocks"
+	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
-	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -36,13 +36,13 @@ func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	defer ctrl.Finish()
 
 	resourceHandlerMockObj := resourcemocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/invalid", nil)
-	
+
 	// pass mockObj to a real object.
 	resourceMonitoringHandler = resourceHandlerMockObj
-	
+
 	Handler.Handle(w, req)
 }
 
@@ -51,17 +51,17 @@ func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	defer ctrl.Finish()
 
 	resourceHandlerMockObj := resourcemocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/nodes/nodeID/resource", nil)
-	
+	req, _ := http.NewRequest("GET", "/nodes/nodeId/resource", nil)
+
 	// pass mockObj to a real object.
 	resourceMonitoringHandler = resourceHandlerMockObj
 
 	Handler.Handle(w, req)
 }
 
-func TestCalledHandleWithNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
+func TestCalledHandleWithGetNodeResourceNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -70,10 +70,29 @@ func TestCalledHandleWithNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
 	gomock.InOrder(
 		resourceHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeID/resource", nil)
-	
+	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeId/resource", nil)
+
+	// pass mockObj to a real object.
+	resourceMonitoringHandler = resourceHandlerMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestCalledHandleWithGetAppResourceNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	resourceHandlerMockObj := resourcemocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		resourceHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/monitoring/nodes/nodeId/apps/appId/resource", nil)
+
 	// pass mockObj to a real object.
 	resourceMonitoringHandler = resourceHandlerMockObj
 
