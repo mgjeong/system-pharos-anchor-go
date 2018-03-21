@@ -48,7 +48,7 @@ type registryManagementAPI interface {
 }
 
 type RequestHandler struct{}
-type registryAPIExecutor struct{
+type registryAPIExecutor struct {
 	registryManagementAPI
 }
 
@@ -87,7 +87,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				common.WriteError(w, errors.InvalidMethod{req.Method})
 			}
 		} else {
-			if req.Method == DELETE{
+			if req.Method == DELETE {
 				registryID := split[1]
 				registryAPI.deleteDockerRegistry(w, req, registryID)
 			} else {

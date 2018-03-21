@@ -18,12 +18,12 @@
 package management
 
 import (
-	nodemocks "api/management/node/mocks"
 	groupmocks "api/management/group/mocks"
+	nodemocks "api/management/node/mocks"
 	registrymocks "api/management/registry/mocks"
+	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
-	"github.com/golang/mock/gomock"
 	"testing"
 )
 
@@ -40,10 +40,10 @@ func TestCalledHandleWithInvalidURL_UnExpectCalledAnyHandle(t *testing.T) {
 	nodeHandlerMockObj := nodemocks.NewMockCommand(ctrl)
 	groupHandlerMockObj := groupmocks.NewMockCommand(ctrl)
 	registryHandlerMockObj := registrymocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/invalid", nil)
-	
+
 	// pass mockObj to a real object.
 	nodeManagementHandler = nodeHandlerMockObj
 	groupManagementHandler = groupHandlerMockObj
@@ -59,10 +59,10 @@ func TestCalledHandleWithExcludedBaseURL_UnExpectCalledAnyHandle(t *testing.T) {
 	nodeHandlerMockObj := nodemocks.NewMockCommand(ctrl)
 	groupHandlerMockObj := groupmocks.NewMockCommand(ctrl)
 	registryHandlerMockObj := registrymocks.NewMockCommand(ctrl)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/nodes/resource", nil)
-	
+
 	// pass mockObj to a real object.
 	nodeManagementHandler = nodeHandlerMockObj
 	groupManagementHandler = groupHandlerMockObj
@@ -80,10 +80,10 @@ func TestCalledHandleWithNodeRequest_ExpectCalledNodeHandle(t *testing.T) {
 	gomock.InOrder(
 		nodeHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/nodes", nil)
-	
+
 	// pass mockObj to a real object.
 	nodeManagementHandler = nodeHandlerMockObj
 
@@ -99,10 +99,10 @@ func TestCalledHandleWithGroupRequest_ExpectCalledGroupHandle(t *testing.T) {
 	gomock.InOrder(
 		groupHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/groups", nil)
-	
+
 	// pass mockObj to a real object.
 	groupManagementHandler = groupHandlerMockObj
 
@@ -118,10 +118,10 @@ func TestCalledHandleWithRegistryRequest_ExpectCalledRegistryHandle(t *testing.T
 	gomock.InOrder(
 		registryHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
 	)
-	
+
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/api/v1/management/registries", nil)
-	
+
 	// pass mockObj to a real object.
 	registryManagementHandler = registryHandlerMockObj
 

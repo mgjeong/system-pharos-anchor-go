@@ -28,9 +28,8 @@ import (
 )
 
 const (
-	GET    string = "GET"
+	GET string = "GET"
 )
-
 
 type Command interface {
 	Handle(w http.ResponseWriter, req *http.Request)

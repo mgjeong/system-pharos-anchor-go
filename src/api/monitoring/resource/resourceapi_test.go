@@ -26,11 +26,11 @@ import (
 )
 
 const (
-	testBodyString  = `{"test":"body"}`
+	testBodyString = `{"test":"body"}`
 )
 
 var testBody = map[string]interface{}{
-	"test":   "body",
+	"test": "body",
 }
 
 var Handler Command
