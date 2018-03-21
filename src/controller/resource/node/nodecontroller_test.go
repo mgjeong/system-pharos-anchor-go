@@ -28,7 +28,7 @@ import (
 
 const (
 	nodeId = "000000000000000000000001"
-	appId = "000000000000000000001"
+	appId  = "000000000000000000001"
 	testIp = "127.0.0.1"
 	port   = "48098"
 )
@@ -185,9 +185,9 @@ func TestGetAppResourceInfo_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	respStr := []string{`{"services":"test"}`}
-	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
+	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/" + appId + "/resource"}
 	expectedRes := map[string]interface{}{
-		"services":   "test",
+		"services": "test",
 	}
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -246,7 +246,7 @@ func TestGetAppResourceInfoWhenSendHttpRequestReturnErrorCode_ExpectSuccess(t *t
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
+	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/" + appId + "/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
@@ -273,7 +273,7 @@ func TestGetAppResourceInfoWhenSendhttpRequestReturnErrorCodeAndInvalidResponse_
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/"+appId+"/resource"}
+	expectedUrl := []string{"http://" + testIp + ":" + port + "/api/v1/monitoring/apps/" + appId + "/resource"}
 
 	dbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)

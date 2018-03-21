@@ -267,7 +267,7 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 // specified by appId parameter.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) UpdateApp(nodeId string, appId string , query map[string]interface{}) (int, map[string]interface{}, error) {
+func (Executor) UpdateApp(nodeId string, appId string, query map[string]interface{}) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 

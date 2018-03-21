@@ -19,8 +19,8 @@ package management
 
 import (
 	"api/common"
-	"api/management/node"
 	"api/management/group"
+	"api/management/node"
 	"api/management/registry"
 	"commons/errors"
 	"commons/logger"
@@ -45,7 +45,6 @@ func init() {
 	registryManagementHandler = registry.RequestHandler{}
 }
 
-
 func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	logger.Logging(logger.DEBUG, "receive msg", req.Method, req.URL.Path)
 	defer logger.Logging(logger.DEBUG, "OUT")
@@ -62,7 +61,7 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 	case strings.Contains(url, URL.Nodes()):
 		logger.Logging(logger.DEBUG, "Request Nodes APIs")
 		nodeManagementHandler.Handle(w, req)
-		
+
 	case strings.Contains(url, URL.Groups()):
 		logger.Logging(logger.DEBUG, "Request Groups APIs")
 		groupManagementHandler.Handle(w, req)
@@ -72,4 +71,3 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 		registryManagementHandler.Handle(w, req)
 	}
 }
-
