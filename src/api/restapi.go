@@ -23,6 +23,7 @@ import (
 	"api/common"
 	"api/management"
 	"api/monitoring"
+	"api/notification"
 	"api/search"
 	"commons/errors"
 	"commons/logger"
@@ -35,11 +36,13 @@ import (
 var managementHandler management.Command
 var monitoringHandler monitoring.Command
 var searchHandler search.Command
+var notificationHandler notification.Command
 
 func init() {
 	managementHandler = management.RequestHandler{}
 	monitoringHandler = monitoring.RequestHandler{}
 	searchHandler = search.RequestHandler{}
+	notificationHandler = notification.RequestHandler{}
 }
 
 // RunWebServer starts web server service with given address and port number.
@@ -75,5 +78,9 @@ func (RequestHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	case strings.Contains(url, URL.Search()):
 		logger.Logging(logger.DEBUG, "Request Search APIs")
 		searchHandler.Handle(w, req)
+
+	case strings.Contains(url, URL.Notification()):
+		logger.Logging(logger.DEBUG, "Request Notification APIs")
+		notificationHandler.Handle(w, req)
 	}
 }

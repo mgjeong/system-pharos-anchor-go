@@ -86,3 +86,6 @@ func Device() string { return "/device" }
 
 //Returning Configuration url as string.
 func Configuration() string { return "/configuration" }
+
+//Returning Notification url as string.
+func Notification() string { return "/notification" }
