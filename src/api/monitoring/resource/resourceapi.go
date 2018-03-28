@@ -22,7 +22,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	URL "commons/url"
-	resource "controller/resource/node"
+	resource "controller/monitoring/resource/node"
 	"net/http"
 	"strings"
 )

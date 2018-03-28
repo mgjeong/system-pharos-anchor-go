@@ -46,6 +46,8 @@ type nodeManagementAPI interface {
 	ping(w http.ResponseWriter, req *http.Request, nodeID string)
 	unregister(w http.ResponseWriter, req *http.Request, nodeID string)
 	configuration(w http.ResponseWriter, req *http.Request, nodeID string)
+	reboot(w http.ResponseWriter, req *http.Request)
+	restore(w http.ResponseWriter, req *http.Request)
 }
 
 type RequestHandler struct{}
@@ -70,6 +72,12 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 
 	if strings.Contains(url, URL.Apps()) {
 		deploymentHandler.Handle(w, req)
+	} else if strings.Contains(url, URL.Reboot()) {
+		nodeId := split[1]
+		nodeAPI.reboot(w, req, nodeId)
+	} else if strings.Contains(url, URL.Restore()) {
+		nodeId := split[1]
+		nodeAPI.restore(w, req, nodeId)
 	} else {
 		switch len(split) {
 		case 1:
@@ -105,9 +113,39 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 				common.WriteError(w, errors.NotFoundURL{})
 			}
 		}
+	}
+}
 
+// nodes handles requests which is used to reboot a device with node.
+//
+//    paths: '/api/v1/management/nodes/{nodeID}/reboot'
+//    method: POST
+//    responses: if successful, 200 status code will be returned.
+func (nodeAPIExecutor) reboot(w http.ResponseWriter, req *http.Request, nodeId string) {
+	logger.Logging(logger.DEBUG, "[NODE] Reboot Pharos Nodes")
+	result, err := managementExecutor.Reboot(nodeId)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
 	}
 
+	common.MakeResponse(w, result, nil, err)
+}
+
+// nodes handles requests which is used to restore a device to initial state.
+//
+//    paths: '/api/v1/management/nodes/{nodeID}/restore'
+//    method: POST
+//    responses: if successful, 200 status code will be returned.
+func (nodeAPIExecutor) restore(w http.ResponseWriter, req *http.Request, nodeId string) {
+	logger.Logging(logger.DEBUG, "[NODE] Restore Pharos Nodes")
+	result, err := managementExecutor.Restore(nodeId)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	common.MakeResponse(w, result, nil, err)
 }
 
 // nodes handles requests which is used to get information of node identified by the given nodeID.
