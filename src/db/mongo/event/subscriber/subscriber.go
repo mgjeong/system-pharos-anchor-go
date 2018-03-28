@@ -18,14 +18,17 @@
 package subscriber
 
 import (
-	//"commons/errors"
+	"commons/errors"
 	"commons/logger"
 	. "db/mongo/wrapper"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type Command interface {
 	// AddSubscriber insert new Subscriber.
-	AddSubscriber(id string, URL string, Status []string, eventId []string) (map[string]interface{}, error)
+	AddSubscriber(id string, eventType string, URL string, Status []string, eventId []string) (map[string]interface{}, error)
+	GetSubscriber(id string) (map[string]interface{}, error)
+	DeleteSubscriber(id string) error
 }
 
 const (
@@ -36,6 +39,7 @@ const (
 
 type Subscriber struct {
 	ID      string `bson:"_id,omitempty"`
+	Type    string
 	URL     string
 	Status  []string
 	EventId []string
@@ -79,13 +83,14 @@ func getCollection(mgoSession Session, dbname string, collectionName string) Col
 func (subscriber Subscriber) convertToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"id":      subscriber.ID,
+		"type":    subscriber.Type,
 		"url":     subscriber.URL,
 		"status":  subscriber.Status,
 		"eventId": subscriber.EventId,
 	}
 }
 
-func (Executor) AddSubscriber(id string, url string, status []string,
+func (Executor) AddSubscriber(id string, eventType string, url string, status []string,
 	eventId []string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
@@ -98,6 +103,7 @@ func (Executor) AddSubscriber(id string, url string, status []string,
 
 	subscriber := Subscriber{
 		ID:      id,
+		Type:    eventType,
 		URL:     url,
 		Status:  status,
 		EventId: eventId,
@@ -111,4 +117,49 @@ func (Executor) AddSubscriber(id string, url string, status []string,
 
 	result := subscriber.convertToMap()
 	return result, err
+}
+
+func (Executor) GetSubscriber(id string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	subscriber := Subscriber{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Find(query).One(&subscriber)
+	if err != nil {
+		return nil, ConvertMongoError(err, id)
+	}
+
+	result := subscriber.convertToMap()
+	return result, err
+}
+
+func (Executor) DeleteSubscriber(id string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	if len(id) == 0 {
+		err := errors.InvalidParam{"Invalid param error : subscriberId is empty."}
+		return err
+	}
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+	
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Remove(bson.M{"_id": id})
+	if err != nil {
+		errMsg := "Failed to remove a subscriber by " + id
+		return ConvertMongoError(err, errMsg)
+	}
+
+	return err
 }

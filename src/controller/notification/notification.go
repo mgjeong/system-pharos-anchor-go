@@ -47,26 +47,29 @@ const (
 	IMAGE_NAME        = "imageName"
 	APP               = "app"
 	NODE              = "node"
+	NODES             = "nodes"
+	SUBS              = "subscriber"
 	EVENT_ID          = "eventId"
 	RESPONSES         = "response"
 	DEFAULT_NODE_PORT = "48098"
 	RESPONSE_CODE     = "code"
 	ERROR_MESSAGE     = "message"
+	TYPE              = "type"
 )
 
 // Executor implements the Command interface.
 type Executor struct{}
 
 var subsDbExecutor subsDB.Command
-var appEventhDbExecutor appEventDB.Command
-var nodeEventhDbExecutor nodeEventDB.Command
+var appEventDbExecutor appEventDB.Command
+var nodeEventDbExecutor nodeEventDB.Command
 var nodeSearchExecutor nodeSearch.Command
 var httpExecutor messenger.Command
 
 func init() {
 	subsDbExecutor = subsDB.Executor{}
-	appEventhDbExecutor = appEventDB.Executor{}
-	nodeEventhDbExecutor = nodeEventDB.Executor{}
+	appEventDbExecutor = appEventDB.Executor{}
+	nodeEventDbExecutor = nodeEventDB.Executor{}
 	nodeSearchExecutor = nodeSearch.Executor{}
 	httpExecutor = messenger.NewExecutor()
 }
@@ -119,14 +122,68 @@ func (Executor) UnRegister(eventId string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	//TODO: delete logic
-	return 0, nil
+	subs, err := subsDbExecutor.GetSubscriber(eventId)
+	if err != nil {
+		return results.ERROR, err
+	}
+
+	switch subs[TYPE] {
+	case APP:
+		for _, appEventId := range subs[EVENT_ID].([]string) {
+			err = appEventDbExecutor.UnRegisterEvent(appEventId, subs[ID].(string))
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, err
+			}
+			appEvent, err := appEventDbExecutor.GetEvent(appEventId)
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, err
+			}
+
+			if len(appEvent[SUBS].([]string)) == 0 {
+				requestUnRegistAppEvent(appEvent[NODES].([]string), appEventId)
+				err = appEventDbExecutor.DeleteEvent(appEventId)
+				if err != nil {
+					logger.Logging(logger.ERROR, err.Error())
+					return results.ERROR, err
+				}
+			}
+		}
+	case NODE:
+		for _, nodeEventId := range subs[EVENT_ID].([]string) {
+			err = nodeEventDbExecutor.UnRegisterEvent(nodeEventId, subs[ID].(string))
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, err
+			}
+			nodeEvent, err := nodeEventDbExecutor.GetEvent(nodeEventId)
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return results.ERROR, err
+			}
+
+			if len(nodeEvent[SUBS].([]string)) == 0 {
+				err = nodeEventDbExecutor.DeleteEvent(nodeEventId)
+				if err != nil {
+					logger.Logging(logger.ERROR, err.Error())
+					return results.ERROR, err
+				}
+			}
+		}
+	}
+	err = subsDbExecutor.DeleteSubscriber(eventId)
+	if err != nil {
+		return results.ERROR, err
+	}
+
+	return results.OK, nil
 }
 
 func registAppEvent(url string, event map[string]interface{},
 	query map[string][]string) (int, map[string]interface{}, error) {
 
-	err, nodes := getTargetNodes(query)
+	nodes, err := getTargetNodes(query)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
@@ -149,7 +206,8 @@ func registAppEvent(url string, event map[string]interface{},
 	respMap, err := convertRespToMap(respStr)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
-		//TODO: delete request
+		//TODO: if delete request failure, how we can recovery.
+		requestUnRegistAppEvent(urls, eventId[0])
 		return results.ERROR, nil, err
 	}
 
@@ -165,18 +223,18 @@ func registAppEvent(url string, event map[string]interface{},
 		resp[RESPONSES] = makeSeparateResponses(nodes["nodes"].([]map[string]interface{}),
 			codes, respMap)
 
-		_, err := subsDbExecutor.AddSubscriber(subsId, url, eventStatus, eventId)
+		_, err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
 	} else {
-		_, err := subsDbExecutor.AddSubscriber(subsId, url, eventStatus, eventId)
+		_, err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
 	}
 	resp[ID] = subsId
-	err = appEventhDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(respMap, codes))
+	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(respMap, codes))
 	if err != nil {
 		return results.ERROR, nil, err
 	}
@@ -187,25 +245,25 @@ func registAppEvent(url string, event map[string]interface{},
 func registNodeEvent(url string, event map[string]interface{},
 	query map[string][]string) (int, map[string]interface{}, error) {
 
-	err, nodes := getTargetNodes(query)
+	nodes, err := getTargetNodes(query)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
 
 	nodeIdList := make([]string, 0)
-	for _, node := range nodes["nodes"].([]interface{}) {
-		nodeIdList = append(nodeIdList, node.(map[string]interface{})["id"].(string))
+	for _, node := range nodes["nodes"].([]map[string]interface{}) {
+		nodeIdList = append(nodeIdList, node["id"].(string))
 	}
 
 	eventStatus := parseEventStatus(event)
 	subsId := generateSubsId(generateEventId(query), eventStatus)
-	subscriber, err := subsDbExecutor.AddSubscriber(subsId, url, eventStatus, nodeIdList)
+	subscriber, err := subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
 
 	for _, nodeId := range nodeIdList {
-		err = nodeEventhDbExecutor.AddEvent(nodeId, subscriber["id"].(string))
+		err = nodeEventDbExecutor.AddEvent(nodeId, subscriber["id"].(string))
 		if err != nil {
 			return results.ERROR, nil, err
 		}
@@ -216,17 +274,25 @@ func registNodeEvent(url string, event map[string]interface{},
 	return results.OK, resp, err
 }
 
-func getTargetNodes(query map[string][]string) (error, map[string]interface{}) {
+func requestUnRegistAppEvent(urls []string, eventId string) {
+	reqBody := makeRequestBody(nil, eventId)
+	body, _ := convertMapToJson(reqBody)
+
+	// Request unregist event target nodes.
+	httpExecutor.SendHttpRequest("DELETE", urls, nil, []byte(body))
+}
+
+func getTargetNodes(query map[string][]string) (map[string]interface{}, error) {
 	_, nodes, err := nodeSearchExecutor.SearchNodes(query)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	if nodes == nil {
 		logger.Logging(logger.DEBUG, "No matched nodes with query")
-		return errors.InvalidParam{"invalid query"}, nil
+		return nil, errors.InvalidParam{"invalid query"}
 	}
 
-	return nil, nodes
+	return nodes, err
 }
 
 func getSucceedNodesId(respMap []map[string]interface{}, codes []int) []string {
@@ -298,11 +364,13 @@ func generateEventId(query map[string][]string) string {
 func makeRequestBody(query map[string][]string, eventId string) map[string]interface{} {
 	reqBody := make(map[string]interface{})
 
-	if _, ok := query[IMAGE_NAME]; ok {
-		reqBody[IMAGE_NAME] = query[IMAGE_NAME][0]
-	}
-	if _, ok := query[APP_ID]; ok {
-		reqBody[APP_ID] = query[APP_ID][0]
+	if query != nil {
+		if _, ok := query[IMAGE_NAME]; ok {
+			reqBody[IMAGE_NAME] = query[IMAGE_NAME][0]
+		}
+		if _, ok := query[APP_ID]; ok {
+			reqBody[APP_ID] = query[APP_ID][0]
+		}
 	}
 	reqBody[EVENT_ID] = eventId
 

@@ -25,7 +25,10 @@ import (
 )
 
 type Command interface {
-	AddEvent(nodeId string, subscriberId string) error
+	AddEvent(id string, subscriberId string) error
+	GetEvent(id string) (map[string]interface{}, error)
+	DeleteEvent(id string) error
+	UnRegisterEvent(id string, subscriberId string) error
 }
 
 const (
@@ -131,5 +134,81 @@ func (Executor) AddEvent(eventId string, subscriberId string) error {
 		}
 		return nil
 	}
+	return err
+}
+
+func (Executor) GetEvent(id string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	nodeEvent := NodeEvent{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, NODE_EVENT_COLLECTION).Find(query).One(&nodeEvent)
+	if err != nil {
+		return nil, ConvertMongoError(err, id)
+	}
+
+	result := nodeEvent.convertToMap()
+	return result, err
+}
+
+func (Executor) DeleteEvent(id string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	if len(id) == 0 {
+		err := errors.InvalidParam{"Invalid param error : nodeEventId is empty."}
+		return err
+	}
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+
+	err = getCollection(session, DB_NAME, NODE_EVENT_COLLECTION).Remove(bson.M{"_id": id})
+	if err != nil {
+		errMsg := "Failed to remove a nodeEvent by " + id
+		return ConvertMongoError(err, errMsg)
+	}
+
+	return err
+}
+
+func (Executor) UnRegisterEvent(id string, subscriberId string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+
+	nodeEvent := NodeEvent{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, NODE_EVENT_COLLECTION).Find(query).One(&nodeEvent)
+	if err != nil {
+		return ConvertMongoError(err, id)
+	}
+
+	for i, subs := range nodeEvent.Subscriber {
+		if subs == subscriberId {
+			nodeEvent.Subscriber = append(nodeEvent.Subscriber[:i], nodeEvent.Subscriber[i+1:]...)
+			break
+		}
+	}
+	err = getCollection(session, DB_NAME, NODE_EVENT_COLLECTION).Update(query, nodeEvent)
+	if err != nil {
+		return ConvertMongoError(err, id)
+	}
+
 	return err
 }

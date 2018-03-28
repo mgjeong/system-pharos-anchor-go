@@ -25,7 +25,10 @@ import (
 )
 
 type Command interface {
-	AddEvent(appEventId string, subscriberId string, nodeId []string) error
+	AddEvent(id string, subscriberId string, nodeId []string) error
+	GetEvent(id string) (map[string]interface{}, error)
+	DeleteEvent(id string) error
+	UnRegisterEvent(id string, subscriberId string) error
 }
 
 const (
@@ -84,12 +87,12 @@ func (event AppEvent) convertToMap() map[string]interface{} {
 	}
 }
 
-func (Executor) AddEvent(appEventId string, subscriberId string, nodeId []string) error {
+func (Executor) AddEvent(id string, subscriberId string, nodeId []string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	if len(appEventId) == 0 {
-		err := errors.InvalidParam{"Invalid param error : appEventId is empty."}
+	if len(id) == 0 {
+		err := errors.InvalidParam{"Invalid param error : id is empty."}
 		return err
 	}
 
@@ -100,7 +103,7 @@ func (Executor) AddEvent(appEventId string, subscriberId string, nodeId []string
 	defer close(session)
 
 	appEvent := AppEvent{}
-	query := bson.M{"_id": appEventId}
+	query := bson.M{"_id": id}
 
 	// Check whether the corresponding EventId (that is, the Event having the same Option)
 	// exists in AppEventDB, add it to the Subscriber list if it exists,
@@ -115,7 +118,7 @@ func (Executor) AddEvent(appEventId string, subscriberId string, nodeId []string
 			subscriber := make([]string, 0)
 			subscriber = append(subscriber, subscriberId)
 			appEvent = AppEvent{
-				ID:         appEventId,
+				ID:         id,
 				Subscriber: subscriber,
 				Nodes:      nodeId,
 			}
@@ -135,4 +138,79 @@ func (Executor) AddEvent(appEventId string, subscriberId string, nodeId []string
 		return nil
 	}
 	return err
+}
+
+func (Executor) GetEvent(id string) (map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	appEvent := AppEvent{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Find(query).One(&appEvent)
+	if err != nil {
+		return nil, ConvertMongoError(err, id)
+	}
+
+	result := appEvent.convertToMap()
+	return result, err
+}
+
+func (Executor) DeleteEvent(id string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	if len(id) == 0 {
+		err := errors.InvalidParam{"Invalid param error : appEventId is empty."}
+		return err
+	}
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+	
+	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Remove(bson.M{"_id": id})
+	if err != nil {
+		errMsg := "Failed to remove a appEvent by " + id
+		return ConvertMongoError(err, errMsg)
+	}
+
+	return err
+}
+
+func (Executor) UnRegisterEvent(id string, subscriberId string) error {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return err
+	}
+	defer close(session)
+
+	appEvent := AppEvent{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Find(query).One(&appEvent)
+	if err != nil {
+		return ConvertMongoError(err, id)
+	}
+
+	for i := 0; i < len(appEvent.Subscriber); i++ {
+		if appEvent.Subscriber[i] == subscriberId {
+			appEvent.Subscriber = append(appEvent.Subscriber[:i], appEvent.Subscriber[i+1:]...)
+		}
+	}
+	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Update(query, appEvent)
+	if err != nil {
+		return ConvertMongoError(err, id)
+	}
+	
+	return nil
 }
