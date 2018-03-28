@@ -89,3 +89,6 @@ func Configuration() string { return "/configuration" }
 
 //Returning Notification url as string.
 func Notification() string { return "/notification" }
+
+//Returning Watch url as string.
+func Watch() string { return "/watch" }

@@ -86,7 +86,7 @@ func (notificationAPIExecutor) registerNotificationEvent(w http.ResponseWriter, 
 		return
 	}
 
-	result, resp, err := notiExecutor.Register(body, parseQuery(req))
+	result, resp, err := notiExecutor.Register(body, req.URL.Query())
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 
@@ -95,19 +95,4 @@ func (notificationAPIExecutor) unRegisterNotificationEvent(w http.ResponseWriter
 
 	result, err := notiExecutor.UnRegister(eventId)
 	common.MakeResponse(w, result, nil, err)
-}
-
-func parseQuery(req *http.Request) map[string]interface{} {
-	query := make(map[string]interface{})
-
-	keys := req.URL.Query()
-	if len(keys) == 0 {
-		return nil
-	}
-
-	for key, value := range req.URL.Query() {
-		query[key] = value
-	}
-
-	return query
 }
