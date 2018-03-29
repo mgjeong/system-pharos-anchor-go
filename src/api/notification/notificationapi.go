@@ -40,6 +40,7 @@ type Command interface {
 type notificationEventAPI interface {
 	registerNotificationEvent(w http.ResponseWriter, req *http.Request)
 	unRegisterNotificationEvent(w http.ResponseWriter, req *http.Request, eventId string)
+	receiveNotificationEvnet(w http.ResponseWriter, req *http.Request)
 }
 
 type RequestHandler struct{}
@@ -69,10 +70,14 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			common.WriteError(w, errors.InvalidMethod{req.Method})
 		}
 	case 2:
-		eventId := split[1]
 		if req.Method == DELETE {
+			eventId := split[1]
 			notificationAPI.unRegisterNotificationEvent(w, req, eventId)
-		} else {
+		} else if req.Method == POST {
+			if split[1] == URL.Events(){
+				notificationAPI.receiveNotificationEvnet(w, req)
+			}
+		}else {
 			common.WriteError(w, errors.InvalidMethod{req.Method})
 		}
 	}
@@ -91,8 +96,19 @@ func (notificationAPIExecutor) registerNotificationEvent(w http.ResponseWriter, 
 }
 
 func (notificationAPIExecutor) unRegisterNotificationEvent(w http.ResponseWriter, req *http.Request, eventId string) {
-	logger.Logging(logger.DEBUG, "[Notification] registration")
+	logger.Logging(logger.DEBUG, "[Notification] un-registration")
 
 	result, err := notiExecutor.UnRegister(eventId)
 	common.MakeResponse(w, result, nil, err)
+}
+
+func (notificationAPIExecutor) receiveNotificationEvnet(w http.ResponseWriter, req *http.Request) {
+	logger.Logging(logger.DEBUG, "[Notification] receive")
+	body, err := common.GetBodyFromReq(req)
+	if err != nil {
+		common.MakeResponse(w, results.ERROR, nil, err)
+		return
+	}
+
+	notiExecutor.NotificationHandler("app", body)
 }

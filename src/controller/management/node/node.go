@@ -25,6 +25,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	noti "controller/notification"
 	nodeDB "db/mongo/node"
 	"encoding/json"
 	"messenger"
@@ -46,11 +47,15 @@ type Command interface {
 }
 
 const (
+	NODE                        = "node"         // used to indicate a node.
 	NODES                       = "nodes"        // used to indicate a list of nodes.
 	ID                          = "id"           // used to indicate an node id.
 	APPS                        = "apps"         // used to indicate a list of apps.
+	EVENT                       = "event"        // used to indicate an event.
+	EVENT_ID                    = "eventId"      // used to indicate an event id.
 	HOST                        = "host"         // used to indicate an node address.
 	PORT                        = "port"         // used to indicate an node port.
+	STATUS                      = "status"       // used to update node status.
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
 	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
@@ -65,10 +70,12 @@ type Executor struct{}
 
 var nodeDbExecutor nodeDB.Command
 var httpExecutor messenger.Command
+var notiExecutor noti.Command
 
 func init() {
 	nodeDbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
+	notiExecutor = noti.Executor{}
 }
 
 // RegisterNode inserts a new node with ip which is passed in call to function.

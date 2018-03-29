@@ -31,12 +31,14 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"messenger"
+	"strings"
 )
 
 // Command is an interface of notification operations.
 type Command interface {
 	Register(body string, query map[string][]string) (int, map[string]interface{}, error)
 	UnRegister(eventId string) (int, error)
+	NotificationHandler(eventType string, body string)
 }
 
 const (
@@ -49,12 +51,14 @@ const (
 	NODE              = "node"
 	NODES             = "nodes"
 	SUBS              = "subscriber"
+	EVENT             = "event"
 	EVENT_ID          = "eventId"
 	RESPONSES         = "response"
 	DEFAULT_NODE_PORT = "48098"
 	RESPONSE_CODE     = "code"
 	ERROR_MESSAGE     = "message"
 	TYPE              = "type"
+	STATUS            = "status"
 )
 
 // Executor implements the Command interface.
@@ -178,6 +182,90 @@ func (Executor) UnRegister(eventId string) (int, error) {
 	}
 
 	return results.OK, nil
+}
+
+func (Executor) NotificationHandler(eventType string, body string) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	bodyMap, err := convertJsonToMap(body)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return
+	}
+
+	// Check whether 'EventId' is included.
+	eventId, exists := bodyMap[EVENT_ID].(string)
+	if !exists {
+		logger.Logging(logger.ERROR, "eventId field is required")
+		return
+	}
+
+	// Check whether 'Event' is included.
+	event, exists := bodyMap[EVENT].(map[string]interface{})
+	if !exists {
+		logger.Logging(logger.ERROR, "event field is required")
+		return
+	}
+
+	switch eventType {
+	case APP:
+		appEvent, err := appEventDbExecutor.GetEvent(eventId)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return
+		}
+
+		for _, subscriberId := range appEvent[SUBS].([]string) {
+			subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return
+			}
+
+			for _, status := range subs[STATUS].([]string) {
+				if strings.Compare(status, event[STATUS].(string)) == 0 {
+					urls := make([]string, 0)
+					urls = append(urls, subs["url"].(string))
+					reqBody := make(map[string]interface{})
+					reqBody[EVENT] = event
+					body, err := convertMapToJson(reqBody)
+					if err != nil {
+						return
+					}
+					httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+				}
+			}
+		}
+	case NODE:
+		nodeEvent, err := nodeEventDbExecutor.GetEvent(eventId)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return
+		}
+
+		for _, subscriberId := range nodeEvent[SUBS].([]string) {
+			subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+			if err != nil {
+				logger.Logging(logger.ERROR, err.Error())
+				return
+			}
+
+			for _, status := range subs[STATUS].([]string) {
+				if strings.Compare(status, event[STATUS].(string)) == 0 {
+					urls := make([]string, 0)
+					urls = append(urls, subs["url"].(string))
+					reqBody := make(map[string]interface{})
+					reqBody[EVENT] = event
+					body, err := convertMapToJson(reqBody)
+					if err != nil {
+						return
+					}
+					httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+				}
+			}
+		}
+	}
 }
 
 func registAppEvent(url string, event map[string]interface{},

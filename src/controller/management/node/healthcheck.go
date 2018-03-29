@@ -73,6 +73,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
+			sendNotification(nodeId, STATUS_CONNECTED)
 		}
 	}
 
@@ -93,6 +94,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
+			sendNotification(nodeId, STATUS_DISCONNECTED)
 
 		case <-quit:
 			timer.Stop()
@@ -104,4 +106,26 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 	}()
 
 	return results.OK, err
+}
+
+func sendNotification(nodeId string, status string) {
+	event := make(map[string]interface{})
+	event[ID] = nodeId
+	event[STATUS] = status
+
+	notification := make(map[string]interface{})
+	notification[EVENT_ID] = nodeId
+	notification[EVENT] = event
+	notiExecutor.NotificationHandler(NODE, convertMapToJson(notification))
+}
+
+// convertMapToJson converts map data into a JSON.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func convertMapToJson(reqBody map[string]interface{}) (string, error) {
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return string(""), errors.InvalidJSON{"Marshalling Failed"}
+	}
+	return string(jsonBody), err
 }
