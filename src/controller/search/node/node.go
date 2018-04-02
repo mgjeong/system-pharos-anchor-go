@@ -20,9 +20,9 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	app "controller/management/app"
-	group "controller/management/group"
-	node "controller/management/node"
+	appDB "db/mongo/app"
+	nodeDB "db/mongo/node"
+	groupDB "db/mongo/group"
 )
 
 type Command interface {
@@ -41,14 +41,14 @@ const (
 
 type Executor struct{}
 
-var nodeExecutor node.Command
-var groupExecutor group.Command
-var appExecutor app.Command
+var appDbExecutor appDB.Command
+var nodeDbExecutor nodeDB.Command
+var groupDbExecutor groupDB.Command
 
 func init() {
-	nodeExecutor = node.Executor{}
-	groupExecutor = group.Executor{}
-	appExecutor = app.Executor{}
+	appDbExecutor = appDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
 }
 
 func (Executor) SearchNodes(query map[string][]string) (int, map[string]interface{}, error) {
@@ -60,13 +60,11 @@ func (Executor) SearchNodes(query map[string][]string) (int, map[string]interfac
 		return results.ERROR, nil, errors.InvalidParam{"Url contains invalid query"}
 	}
 
-	_, nodeList, err := nodeExecutor.GetNodes()
+	nodes, err := nodeDbExecutor.GetNodes()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
-
-	nodes := nodeList[NODES].([]map[string]interface{})
 
 	if nodeIds, ok := query[NODE_ID]; ok {
 		for _, node := range nodes {
@@ -106,13 +104,12 @@ func (Executor) SearchNodes(query map[string][]string) (int, map[string]interfac
 func filterByGroupId(nodes []map[string]interface{}, groupId string) ([]map[string]interface{}, error) {
 	filteredNodes := make([]map[string]interface{}, 0)
 
-	_, groupList, err := groupExecutor.GetGroups()
+	groups, err := groupDbExecutor.GetGroups()
 	if err != nil {
 		logger.Logging(logger.DEBUG, err.Error())
 		return nil, err
 	}
 
-	groups := groupList[GROUPS].([]map[string]interface{})
 	for _, group := range groups {
 		if group["id"] == groupId {
 			members := group["members"]
@@ -145,7 +142,7 @@ func filterByImageName(nodes []map[string]interface{}, imageName string) ([]map[
 	for _, node := range nodes {
 		nodeApps := node["apps"].([]string)
 		for _, nodeApp := range nodeApps {
-			_, app, err := appExecutor.GetApp(nodeApp)
+			app, err := appDbExecutor.GetApp(nodeApp)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return nil, err
