@@ -297,13 +297,12 @@ func registAppEvent(url string, event map[string]interface{},
 	respMap, err := convertRespToMap(respStr)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
-		//TODO: if delete request failure, how we can recovery.
 		requestUnRegistAppEvent(urls, eventId[0])
 		return results.ERROR, nil, err
 	}
 
 	eventStatus := parseEventStatus(event)
-	subsId := generateSubsId(eventId[0], eventStatus)
+	subsId := generateSubsId(eventId[0], url, eventStatus)
 	resp := make(map[string]interface{})
 
 	result := decideResultCode(codes)
@@ -314,21 +313,23 @@ func registAppEvent(url string, event map[string]interface{},
 		resp[RESPONSES] = makeSeparateResponses(nodes["nodes"].([]map[string]interface{}),
 			codes, respMap)
 
-		_, err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
+		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
 	} else {
-		_, err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
+		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
 	}
-	resp[ID] = subsId
-	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(respMap, codes))
+
+	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(nodes["nodes"].([]map[string]interface{}), codes))
 	if err != nil {
 		return results.ERROR, nil, err
 	}
+
+	resp[ID] = subsId
 
 	return result, resp, err
 }
@@ -347,14 +348,14 @@ func registNodeEvent(url string, event map[string]interface{},
 	}
 
 	eventStatus := parseEventStatus(event)
-	subsId := generateSubsId(generateEventId(query), eventStatus)
-	subscriber, err := subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList)
+	subsId := generateSubsId(generateEventId(query), url, eventStatus)
+	err = subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
 
 	for _, nodeId := range nodeIdList {
-		err = nodeEventDbExecutor.AddEvent(nodeId, subscriber["id"].(string))
+		err = nodeEventDbExecutor.AddEvent(nodeId, subsId)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
@@ -386,9 +387,9 @@ func getTargetNodes(query map[string][]string) (map[string]interface{}, error) {
 	return nodes, err
 }
 
-func getSucceedNodesId(respMap []map[string]interface{}, codes []int) []string {
+func getSucceedNodesId(nodes []map[string]interface{}, codes []int) []string {
 	nodeId := make([]string, 0)
-	for i, node := range respMap {
+	for i, node := range nodes {
 		if isSuccessCode(codes[i]) {
 			nodeId = append(nodeId, node[ID].(string))
 		}
@@ -418,9 +419,10 @@ func parseEventType(event map[string]interface{}) string {
 	return event["type"].(string)
 }
 
-func generateSubsId(eventId string, eventStatus []string) string {
+func generateSubsId(eventId string, url string, eventStatus []string) string {
 	var source string
 	source += eventId
+	source += url
 	for _, status := range eventStatus {
 		source += status
 	}

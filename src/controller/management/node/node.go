@@ -52,14 +52,14 @@ const (
 	ID                          = "id"           // used to indicate an node id.
 	APPS                        = "apps"         // used to indicate a list of apps.
 	EVENT                       = "event"        // used to indicate an event.
-	EVENT_ID                    = "eventId"      // used to indicate an event id.
+	EVENT_ID                    = "eventid"      // used to indicate an event id.
 	HOST                        = "host"         // used to indicate an node address.
 	PORT                        = "port"         // used to indicate an node port.
 	STATUS                      = "status"       // used to update node status.
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
 	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
-	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
+	MAXIMUM_NETWORK_LATENCY_SEC = 3             // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
 	DEFAULT_NODE_PORT           = "48098"        // used to indicate a default pharos node port.
 	PROPERTIES                  = "properties"

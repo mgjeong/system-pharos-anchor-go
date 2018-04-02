@@ -21,6 +21,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -53,7 +54,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, errors.InvalidJSON{"interval field is required"}
 	}
 
-	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
+	//interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
@@ -73,12 +74,12 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
-			//sendNotification(nodeId, STATUS_CONNECTED)
+			sendNotification(nodeId, STATUS_CONNECTED)
 		}
 	}
 
 	// Start timer with received interval time.
-	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
+	timeDurationMin := time.Duration(MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
 		quit := make(chan bool)
@@ -94,7 +95,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 			}
-			//sendNotification(nodeId, STATUS_DISCONNECTED)
+			sendNotification(nodeId, STATUS_DISCONNECTED)
 
 		case <-quit:
 			timer.Stop()
@@ -108,26 +109,31 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 	return results.OK, err
 }
 
-//func sendNotification(nodeId string, status string) {
-//	eventIds := make([]string, 0)
-//  eventIds = append(eventIds, nodeId)
-//	event := make(map[string]interface{})
-//	event[ID] = eventIds
-//	event[STATUS] = status
-//
-//	notification := make(map[string]interface{})
-//	notification[EVENT_ID] = nodeId
-//	notification[EVENT] = event
-//	notiExecutor.NotificationHandler(NODE, convertMapToJson(notification))
-//}
-//
-//// convertMapToJson converts map data into a JSON.
-//// If successful, this function returns an error as nil.
-//// otherwise, an appropriate error will be returned.
-//func convertMapToJson(reqBody map[string]interface{}) (string, error) {
-//	jsonBody, err := json.Marshal(reqBody)
-//	if err != nil {
-//		return string(""), errors.InvalidJSON{"Marshalling Failed"}
-//	}
-//	return string(jsonBody), err
-//}
+func sendNotification(nodeId string, status string) {
+	eventIds := make([]string, 0)
+	eventIds = append(eventIds, nodeId)
+	event := make(map[string]interface{})
+	event[ID] = nodeId
+	event[STATUS] = status
+
+	notification := make(map[string]interface{})
+	notification[EVENT_ID] = eventIds
+	notification[EVENT] = event
+
+	notiStr, err := convertMapToJson(notification)
+	if err != nil {
+		return
+	}
+	notiExecutor.NotificationHandler(NODE, notiStr)
+}
+
+// convertMapToJson converts map data into a JSON.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func convertMapToJson(reqBody map[string]interface{}) (string, error) {
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return string(""), errors.InvalidJSON{"Marshalling Failed"}
+	}
+	return string(jsonBody), err
+}

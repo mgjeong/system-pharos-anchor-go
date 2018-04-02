@@ -26,7 +26,7 @@ import (
 
 type Command interface {
 	// AddSubscriber insert new Subscriber.
-	AddSubscriber(id string, eventType string, URL string, Status []string, eventId []string) (map[string]interface{}, error)
+	AddSubscriber(id string, eventType string, URL string, Status []string, eventId []string) error
 	GetSubscriber(id string) (map[string]interface{}, error)
 	DeleteSubscriber(id string) error
 }
@@ -91,32 +91,42 @@ func (subscriber Subscriber) convertToMap() map[string]interface{} {
 }
 
 func (Executor) AddSubscriber(id string, eventType string, url string, status []string,
-	eventId []string) (map[string]interface{}, error) {
+	eventId []string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	session, err := connect(DB_URL)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer close(session)
 
-	subscriber := Subscriber{
-		ID:      id,
-		Type:    eventType,
-		URL:     url,
-		Status:  status,
-		EventId: eventId,
-	}
-
-	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Insert(subscriber)
-
+	subscriber := Subscriber{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Find(query).One(&subscriber)
 	if err != nil {
-		return nil, ConvertMongoError(err)
+		err = ConvertMongoError(err)
+		switch err.(type) {
+		default:
+			return err
+		case errors.NotFound:
+			subscriber = Subscriber{
+				ID:      id,
+				Type:    eventType,
+				URL:     url,
+				Status:  status,
+				EventId: eventId,
+			}
+
+			err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Insert(subscriber)
+			if err != nil {
+				return ConvertMongoError(err)
+			}
+			return nil
+		}
 	}
 
-	result := subscriber.convertToMap()
-	return result, err
+	return nil
 }
 
 func (Executor) GetSubscriber(id string) (map[string]interface{}, error) {
@@ -154,7 +164,7 @@ func (Executor) DeleteSubscriber(id string) error {
 		return err
 	}
 	defer close(session)
-	
+
 	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Remove(bson.M{"_id": id})
 	if err != nil {
 		errMsg := "Failed to remove a subscriber by " + id

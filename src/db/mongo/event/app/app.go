@@ -175,7 +175,7 @@ func (Executor) DeleteEvent(id string) error {
 		return err
 	}
 	defer close(session)
-	
+
 	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Remove(bson.M{"_id": id})
 	if err != nil {
 		errMsg := "Failed to remove a appEvent by " + id
@@ -211,6 +211,6 @@ func (Executor) UnRegisterEvent(id string, subscriberId string) error {
 	if err != nil {
 		return ConvertMongoError(err, id)
 	}
-	
+
 	return nil
 }

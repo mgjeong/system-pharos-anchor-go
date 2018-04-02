@@ -22,6 +22,7 @@ import (
 	"commons/logger"
 	. "db/mongo/wrapper"
 	"gopkg.in/mgo.v2/bson"
+	"strings"
 )
 
 type Command interface {
@@ -127,6 +128,11 @@ func (Executor) AddEvent(eventId string, subscriberId string) error {
 			return nil
 		}
 	} else {
+		for _, subsId := range nodeEvent.Subscriber {
+			if strings.Compare(subsId, subscriberId) == 0 {
+				return nil
+			}
+		}
 		nodeEvent.Subscriber = append(nodeEvent.Subscriber, subscriberId)
 		err = getCollection(session, DB_NAME, NODE_EVENT_COLLECTION).Update(query, nodeEvent)
 		if err != nil {
