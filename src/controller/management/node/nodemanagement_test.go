@@ -622,6 +622,120 @@ func TestCalledGetNodeConfigurationWhenDBReturnsError_ExpectErrorReturn(t *testi
 	}
 }
 
+func TestRestore_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/restore"}
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, respStr),
+	)
+
+	httpExecutor = msgMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.Restore(nodeId)
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestRestoreWhenGetNodeFailed_ExpectReturnError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+	)
+
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.Restore(nodeId)
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
+func TestReboot_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/reboot"}
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil).Return(respCode, respStr),
+	)
+
+	httpExecutor = msgMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.Reboot(nodeId)
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+}
+
+func TestRebootWhenGetNodeFailed_ExpectReturnError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(nil, notFoundError),
+	)
+
+	nodeDbExecutor = dbExecutorMockObj
+
+	code, err := manager.Reboot(nodeId)
+
+	if code != results.ERROR {
+		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
+	}
+
+	if err == nil {
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
+	}
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
+	case errors.NotFound:
+	}
+}
+
 func TestCalledSetNodeConfiguration_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

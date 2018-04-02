@@ -81,10 +81,10 @@ func Performance() string { return "/performance" }
 // Base returns the search url as a type of string.
 func Search() string { return "/search" }
 
-//Returning Device url as string.
+// Returning Device url as string.
 func Device() string { return "/device" }
 
-//Returning Configuration url as string.
+// Returning Configuration url as string.
 func Configuration() string { return "/configuration" }
 
 //Returning Notification url as string.
@@ -92,3 +92,10 @@ func Notification() string { return "/notification" }
 
 //Returning Watch url as string.
 func Watch() string { return "/watch" }
+
+// Returning Reboot url as string.
+func Reboot() string { return "/reboot" }
+
+// Returning Restore url as string.
+func Restore() string { return "/restore" }
+

@@ -18,7 +18,7 @@
 package resource
 
 import (
-	resourcemocks "controller/resource/node/mocks"
+	resourcemocks "controller/monitoring/resource/node/mocks"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"

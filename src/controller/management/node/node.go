@@ -44,6 +44,8 @@ type Command interface {
 	PingNode(nodeId string, body string) (int, error)
 	GetNodeConfiguration(nodeId string) (int, map[string]interface{}, error)
 	SetNodeConfiguration(nodeId string, body string) (int, error)
+	Reboot(nodeId string) (int, error)
+	Restore(nodeId string) (int, error)
 }
 
 const (
@@ -270,6 +272,58 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	}
 
 	return err
+}
+
+// Reboot reboots the device with nodeId.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func (Executor) Reboot(nodeId string) (int, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get node specified by nodeId parameter.
+	node, err := nodeDbExecutor.GetNode(nodeId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	address, err := getNodeAddress(node)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Reboot())
+	httpExecutor.SendHttpRequest("POST", urls, nil)
+
+	return results.OK, err
+}
+
+// Restore restore the device with nodeId to initial state.
+// If successful, this function returns an error as nil.
+// otherwise, an appropriate error will be returned.
+func (Executor) Restore(nodeId string) (int, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	// Get matched nodes with query stored in the database.
+	node, err := nodeDbExecutor.GetNode(nodeId)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	address, err := getNodeAddress(node)
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return results.ERROR, err
+	}
+
+	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Restore())
+	httpExecutor.SendHttpRequest("POST", urls, nil)
+
+	return results.OK, err
 }
 
 func (Executor) GetNodeConfiguration(nodeId string) (int, map[string]interface{}, error) {
