@@ -19,9 +19,9 @@ package app
 import (
 	"commons/errors"
 	"commons/results"
-	appmocks "controller/management/app/mocks"
-	groupmocks "controller/management/group/mocks"
-	nodemocks "controller/management/node/mocks"
+	appDbmocks "db/mongo/app/mocks"
+	nodeDbmocks "db/mongo/node/mocks"
+	groupDbmocks "db/mongo/group/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -127,20 +127,20 @@ func TestCalledSearchAppsWithAllQuery_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
+	appExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
+	nodeExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
+	groupExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		appExecutorMockObj.EXPECT().GetApp(appId1).Return(results.OK, app1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
-		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(results.OK, group1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
+		appExecutorMockObj.EXPECT().GetApp(appId1).Return(app1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
+		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(group1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
 	)
 	// pass mockObj to a real object
-	appMgmtExecutor = appExecutorMockObj
-	nodeMgmtExecutor = nodeExecutorMockObj
-	groupMgmtExecutor = groupExecutorMockObj
+	appDbExecutor = appExecutorMockObj
+	nodeDbExecutor = nodeExecutorMockObj
+	groupDbExecutor = groupExecutorMockObj
 
 	code, res, err := executor.Search(allQuery)
 
@@ -165,20 +165,24 @@ func TestCalledSearchAppsWithoutAppId_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
+	appExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
+	nodeExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
+	groupExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
+	
+	apps := make([]map[string]interface{}, 2)
+	apps[0] = app1
+	apps[1] = app2
 
 	gomock.InOrder(
-		appExecutorMockObj.EXPECT().GetApps().Return(results.OK, apps, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
-		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(results.OK, group1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
+		appExecutorMockObj.EXPECT().GetApps().Return(apps, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
+		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(group1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
 	)
 	// pass mockObj to a real object
-	appMgmtExecutor = appExecutorMockObj
-	nodeMgmtExecutor = nodeExecutorMockObj
-	groupMgmtExecutor = groupExecutorMockObj
+	appDbExecutor = appExecutorMockObj
+	nodeDbExecutor = nodeExecutorMockObj
+	groupDbExecutor = groupExecutorMockObj
 
 	code, res, err := executor.Search(queryWithoutAppId)
 
@@ -203,16 +207,16 @@ func TestCalledSearchAppsWithoutGroupId_ExpectErrorReturn(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
+	appExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
+	nodeExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		appExecutorMockObj.EXPECT().GetApp(appId1).Return(results.OK, app1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
+		appExecutorMockObj.EXPECT().GetApp(appId1).Return(app1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
 	)
 	// pass mockObj to a real object
-	appMgmtExecutor = appExecutorMockObj
-	nodeMgmtExecutor = nodeExecutorMockObj
+	appDbExecutor = appExecutorMockObj
+	nodeDbExecutor = nodeExecutorMockObj
 
 	code, res, err := executor.Search(queryWithoutGroupId)
 

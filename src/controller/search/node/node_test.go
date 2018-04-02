@@ -3,10 +3,9 @@ package node
 import (
 	"commons/errors"
 	"commons/results"
-
-	appmocks "controller/management/app/mocks"
-	groupmocks "controller/management/group/mocks"
-	nodemocks "controller/management/node/mocks"
+	appDbmocks "db/mongo/app/mocks"
+	nodeDbmocks "db/mongo/node/mocks"
+	groupDbmocks "db/mongo/group/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -105,25 +104,20 @@ func TestSearchNodesWithAllQuery_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
-
-	nodeList := make(map[string]interface{}, 0)
-	nodeList[NODES] = nodes
-	groupList := make(map[string]interface{}, 0)
-	groupList[GROUPS] = groups
+	appDbExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodeExecutorMockObj.EXPECT().GetNodes().Return(results.OK, nodeList, nil),
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.OK, groupList, nil),
-		appExecutorMockObj.EXPECT().GetApp(appId1).Return(results.OK, app1, nil),
+		nodeDbExecutorMockObj.EXPECT().GetNodes().Return(nodes, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
+		appDbExecutorMockObj.EXPECT().GetApp(appId1).Return(app1, nil),
 	)
 
 	// pass mockObj to a real object.
-	appExecutor = appExecutorMockObj
-	groupExecutor = groupExecutorMockObj
-	nodeExecutor = nodeExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 
 	code, res, err := searchExecutor.SearchNodes(allQuery)
 
@@ -148,14 +142,14 @@ func TestSearchNodesWithAllQueryWhenGetNodesFailed_ExpectRetrunError(t *testing.
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodeExecutorMockObj.EXPECT().GetNodes().Return(results.ERROR, nil, errors.DBOperationError{}),
+		nodeDbExecutorMockObj.EXPECT().GetNodes().Return(nil, errors.DBOperationError{}),
 	)
 
 	// pass mockObj to a real object.
-	nodeExecutor = nodeExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 
 	code, _, err := searchExecutor.SearchNodes(allQuery)
 
@@ -173,20 +167,17 @@ func TestSearchNodesWithAllQueryWhenGetGroupsFailed_ExpectRetrunError(t *testing
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
-
-	nodeList := make(map[string]interface{}, 0)
-	nodeList[NODES] = nodes
+	nodeDbExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodeExecutorMockObj.EXPECT().GetNodes().Return(results.ERROR, nodeList, nil),
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.ERROR, nil, errors.DBOperationError{}),
+		nodeDbExecutorMockObj.EXPECT().GetNodes().Return(nodes, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(nil, errors.DBOperationError{}),
 	)
 
 	// pass mockObj to a real object.
-	nodeExecutor = nodeExecutorMockObj
-	groupExecutor = groupExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := searchExecutor.SearchNodes(allQuery)
 
@@ -204,25 +195,20 @@ func TestSearchNodesWithAllQueryWhenGetAppFailed_ExpectRetrunError(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	nodeExecutorMockObj := nodemocks.NewMockCommand(ctrl)
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
-
-	nodeList := make(map[string]interface{}, 0)
-	nodeList[NODES] = nodes
-	groupList := make(map[string]interface{}, 0)
-	groupList[GROUPS] = groups
+	nodeDbExecutorMockObj := nodeDbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodeExecutorMockObj.EXPECT().GetNodes().Return(results.OK, nodeList, nil),
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.OK, groupList, nil),
-		appExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(results.OK, nil, errors.DBOperationError{}),
+		nodeDbExecutorMockObj.EXPECT().GetNodes().Return(nodes, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
+		appDbExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(nil, errors.DBOperationError{}),
 	)
 
 	// pass mockObj to a real object.
-	nodeExecutor = nodeExecutorMockObj
-	groupExecutor = groupExecutorMockObj
-	appExecutor = appExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 
 	code, _, err := searchExecutor.SearchNodes(allQuery)
 
@@ -240,17 +226,14 @@ func TestFilterByGroupId_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
-
-	groupList := make(map[string]interface{}, 0)
-	groupList[GROUPS] = groups
-
+	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
+	
 	gomock.InOrder(
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.OK, groupList, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
 	)
 
 	// pass mockObj to a real object.
-	groupExecutor = groupExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	nodes := make([]map[string]interface{}, 3)
 	nodes[0] = node1
@@ -276,14 +259,14 @@ func TestFilterByGroupIdWhenGetGroupsFailed_ExpectReturnError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.ERROR, nil, errors.DBOperationError{}),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(nil, errors.DBOperationError{}),
 	)
 
 	// pass mockObj to a real object.
-	groupExecutor = groupExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	_, err := filterByGroupId(nodes, groupId1)
 
@@ -315,16 +298,16 @@ func TestFilterByImageName_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		appExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(results.OK, app1, nil),
-		appExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(results.OK, app2, nil),
-		appExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(results.OK, app2, nil),
+		appDbExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(app1, nil),
+		appDbExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(app2, nil),
+		appDbExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(app2, nil),
 	)
 
 	// pass mockObj to a real object.
-	appExecutor = appExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 
 	nodes := make([]map[string]interface{}, 3)
 	nodes[0] = node1
@@ -351,14 +334,14 @@ func TestFilterByImageNameWhenGetAppFailed_ExpectReturnError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	appExecutorMockObj := appmocks.NewMockCommand(ctrl)
+	appDbExecutorMockObj := appDbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		appExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(results.ERROR, nil, errors.DBOperationError{}),
+		appDbExecutorMockObj.EXPECT().GetApp(gomock.Any()).Return(nil, errors.DBOperationError{}),
 	)
 
 	// pass mockObj to a real object.
-	appExecutor = appExecutorMockObj
+	appDbExecutor = appDbExecutorMockObj
 
 	nodes := make([]map[string]interface{}, 3)
 	nodes[0] = node1
