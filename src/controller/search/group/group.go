@@ -21,9 +21,9 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	appmanager "controller/management/app"
-	groupmanager "controller/management/group"
-	nodemanager "controller/management/node"
+	appDB "db/mongo/app"
+	groupDB "db/mongo/group"
+	nodeDB "db/mongo/node"
 )
 
 type Command interface {
@@ -39,14 +39,14 @@ const (
 
 type Executor struct{}
 
-var appmanagementExecutor appmanager.Command
-var nodemanagementExecutor nodemanager.Command
-var groupmanagementExecutor groupmanager.Command
+var appDBExecutor appDB.Command
+var nodeDBExecutor nodeDB.Command
+var groupDBExecutor groupDB.Command
 
 func init() {
-	appmanagementExecutor = appmanager.Executor{}
-	nodemanagementExecutor = nodemanager.Executor{}
-	groupmanagementExecutor = groupmanager.Executor{}
+	appDBExecutor = appDB.Executor{}
+	nodeDBExecutor = nodeDB.Executor{}
+	groupDBExecutor = groupDB.Executor{}
 }
 
 func (Executor) SearchGroups(query map[string]interface{}) (int, map[string]interface{}, error) {
@@ -94,14 +94,14 @@ func filterByImageName(groups []map[string]interface{}, imageName string) []map[
 	for _, group := range groups {
 		members := group["members"].([]string)
 		for _, member := range members {
-			_, node, err := nodemanagementExecutor.GetNode(member)
+			node, err := nodeDBExecutor.GetNode(member)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return nil
 			}
 
 			for _, appId := range node["apps"].([]string) {
-				_, app, err := appmanagementExecutor.GetApp(appId)
+				app, err := appDBExecutor.GetApp(appId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
 					return nil
@@ -123,7 +123,7 @@ func filterByAppId(groups []map[string]interface{}, appId string) []map[string]i
 	for _, group := range groups {
 		members := group["members"].([]string)
 		for _, member := range members {
-			_, node, err := nodemanagementExecutor.GetNode(member)
+			node, err := nodeDBExecutor.GetNode(member)
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return nil
@@ -154,19 +154,19 @@ func filterByGroupId(groupId ...string) []map[string]interface{} {
 
 	switch len(groupId) {
 	case 1:
-		_, group, err := groupmanagementExecutor.GetGroup(groupId[0])
+		group, err := groupDBExecutor.GetGroup(groupId[0])
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return nil
 		}
 		filteredGroups = append(filteredGroups, group)
 	case 0:
-		_, groups, err := groupmanagementExecutor.GetGroups()
+		groups, err := groupDBExecutor.GetGroups()
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return nil
 		}
-		filteredGroups = groups["groups"].([]map[string]interface{})
+		filteredGroups = groups
 	}
 	return filteredGroups
 }

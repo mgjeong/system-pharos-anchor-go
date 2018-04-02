@@ -19,9 +19,9 @@ package group
 import (
 	"commons/errors"
 	"commons/results"
-	appmocks "controller/management/app/mocks"
-	groupmocks "controller/management/group/mocks"
-	nodemocks "controller/management/node/mocks"
+	appmocks "db/mongo/app/mocks"
+	groupmocks "db/mongo/group/mocks"
+	nodemocks "db/mongo/node/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -124,15 +124,15 @@ func TestCalledSearchGroupsWithAllQuery_ExpectErrorReturn(t *testing.T) {
 	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(results.OK, group1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
-		appExecutorMockObj.EXPECT().GetApp(appId1).Return(results.OK, app1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
+		groupExecutorMockObj.EXPECT().GetGroup(groupId1).Return(group1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
+		appExecutorMockObj.EXPECT().GetApp(appId1).Return(app1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
 	)
 	// pass mockObj to a real object
-	appmanagementExecutor = appExecutorMockObj
-	nodemanagementExecutor = nodeExecutorMockObj
-	groupmanagementExecutor = groupExecutorMockObj
+	appDBExecutor = appExecutorMockObj
+	nodeDBExecutor = nodeExecutorMockObj
+	groupDBExecutor = groupExecutorMockObj
 
 	code, res, err := executor.SearchGroups(allQuery)
 
@@ -162,17 +162,17 @@ func TestCalledSearchGroupsWithoutGroupId_ExpectErrorReturn(t *testing.T) {
 	groupExecutorMockObj := groupmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		groupExecutorMockObj.EXPECT().GetGroups().Return(results.OK, groups, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
-		appExecutorMockObj.EXPECT().GetApp(appId1).Return(results.OK, app1, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId2).Return(results.OK, node2, nil),
-		appExecutorMockObj.EXPECT().GetApp(appId2).Return(results.OK, app2, nil),
-		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(results.OK, node1, nil),
+		groupExecutorMockObj.EXPECT().GetGroups().Return(groups["groups"], nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
+		appExecutorMockObj.EXPECT().GetApp(appId1).Return(app1, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId2).Return(node2, nil),
+		appExecutorMockObj.EXPECT().GetApp(appId2).Return(app2, nil),
+		nodeExecutorMockObj.EXPECT().GetNode(nodeId1).Return(node1, nil),
 	)
 	// pass mockObj to a real object
-	appmanagementExecutor = appExecutorMockObj
-	nodemanagementExecutor = nodeExecutorMockObj
-	groupmanagementExecutor = groupExecutorMockObj
+	appDBExecutor = appExecutorMockObj
+	nodeDBExecutor = nodeExecutorMockObj
+	groupDBExecutor = groupExecutorMockObj
 
 	code, res, err := executor.SearchGroups(queryWithoutGroupId)
 
