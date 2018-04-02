@@ -45,14 +45,14 @@ const (
 	ID                = "id"
 	GROUP_ID          = "groupId"
 	NODE_ID           = "nodeId"
-	APP_ID            = "appId"
-	IMAGE_NAME        = "imageName"
+	APP_ID            = "appid"
+	IMAGE_NAME        = "imagename"
 	APP               = "app"
 	NODE              = "node"
 	NODES             = "nodes"
 	SUBS              = "subscriber"
 	EVENT             = "event"
-	EVENT_ID          = "eventId"
+	EVENT_ID          = "eventid"
 	RESPONSES         = "response"
 	DEFAULT_NODE_PORT = "48098"
 	RESPONSE_CODE     = "code"
@@ -193,16 +193,15 @@ func (Executor) NotificationHandler(eventType string, body string) {
 		logger.Logging(logger.ERROR, err.Error())
 		return
 	}
-
 	// Check whether 'EventId' is included.
-	eventId, exists := bodyMap[EVENT_ID].(string)
+	eventIds, exists := bodyMap[EVENT_ID]
 	if !exists {
-		logger.Logging(logger.ERROR, "eventId field is required")
+		logger.Logging(logger.ERROR, "eventid field is required")
 		return
 	}
 
 	// Check whether 'Event' is included.
-	event, exists := bodyMap[EVENT].(map[string]interface{})
+	event, exists := bodyMap[EVENT]
 	if !exists {
 		logger.Logging(logger.ERROR, "event field is required")
 		return
@@ -210,58 +209,62 @@ func (Executor) NotificationHandler(eventType string, body string) {
 
 	switch eventType {
 	case APP:
-		appEvent, err := appEventDbExecutor.GetEvent(eventId)
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return
-		}
-
-		for _, subscriberId := range appEvent[SUBS].([]string) {
-			subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+		for _, eventId := range eventIds.([]interface{}) {
+			appEvent, err := appEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return
 			}
+			for _, subscriberId := range appEvent[SUBS].([]string) {
+				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+				if err != nil {
+					logger.Logging(logger.ERROR, err.Error())
+					return
+				}
 
-			for _, status := range subs[STATUS].([]string) {
-				if strings.Compare(status, event[STATUS].(string)) == 0 {
-					urls := make([]string, 0)
-					urls = append(urls, subs["url"].(string))
-					reqBody := make(map[string]interface{})
-					reqBody[EVENT] = event
-					body, err := convertMapToJson(reqBody)
-					if err != nil {
-						return
+				for _, status := range subs[STATUS].([]string) {
+					if strings.Compare(status, event.(map[string]interface{})[STATUS].(string)) == 0 {
+						urls := make([]string, 0)
+						urls = append(urls, subs["url"].(string))
+						reqBody := make(map[string]interface{})
+						reqBody[EVENT] = event
+						body, err := convertMapToJson(reqBody)
+						if err != nil {
+							logger.Logging(logger.ERROR, err.Error())
+							return
+						}
+						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 					}
-					httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 				}
 			}
 		}
 	case NODE:
-		nodeEvent, err := nodeEventDbExecutor.GetEvent(eventId)
-		if err != nil {
-			logger.Logging(logger.ERROR, err.Error())
-			return
-		}
-
-		for _, subscriberId := range nodeEvent[SUBS].([]string) {
-			subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+		for _, eventId := range eventIds.([]interface{}) {
+			nodeEvent, err := nodeEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
 				return
 			}
 
-			for _, status := range subs[STATUS].([]string) {
-				if strings.Compare(status, event[STATUS].(string)) == 0 {
-					urls := make([]string, 0)
-					urls = append(urls, subs["url"].(string))
-					reqBody := make(map[string]interface{})
-					reqBody[EVENT] = event
-					body, err := convertMapToJson(reqBody)
-					if err != nil {
-						return
+			for _, subscriberId := range nodeEvent[SUBS].([]string) {
+				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
+				if err != nil {
+					logger.Logging(logger.ERROR, err.Error())
+					return
+				}
+
+				for _, status := range subs[STATUS].([]string) {
+					if strings.Compare(status, event.(map[string]interface{})[STATUS].(string)) == 0 {
+						urls := make([]string, 0)
+						urls = append(urls, subs["url"].(string))
+						reqBody := make(map[string]interface{})
+						reqBody[EVENT] = event
+						body, err := convertMapToJson(reqBody)
+						if err != nil {
+							return
+						}
+						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 					}
-					httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 				}
 			}
 		}

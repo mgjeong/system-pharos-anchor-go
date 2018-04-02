@@ -74,10 +74,10 @@ func (RequestHandler) Handle(w http.ResponseWriter, req *http.Request) {
 			eventId := split[1]
 			notificationAPI.unRegisterNotificationEvent(w, req, eventId)
 		} else if req.Method == POST {
-			if split[1] == URL.Events(){
+			if "/"+split[1] == URL.Events() {
 				notificationAPI.receiveNotificationEvnet(w, req)
 			}
-		}else {
+		} else {
 			common.WriteError(w, errors.InvalidMethod{req.Method})
 		}
 	}
