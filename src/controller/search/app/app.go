@@ -21,9 +21,9 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	appMgmt "controller/management/app"
-	groupMgmt "controller/management/group"
-	nodeMgmt "controller/management/node"
+	appDB "db/mongo/app"
+	nodeDB "db/mongo/node"
+	groupDB "db/mongo/group"
 )
 
 const (
@@ -45,14 +45,14 @@ type Command interface {
 // Executor implements the Command interface.
 type Executor struct{}
 
-var appMgmtExecutor appMgmt.Command
-var nodeMgmtExecutor nodeMgmt.Command
-var groupMgmtExecutor groupMgmt.Command
+var appDbExecutor appDB.Command
+var nodeDbExecutor nodeDB.Command
+var groupDbExecutor groupDB.Command
 
 func init() {
-	appMgmtExecutor = appMgmt.Executor{}
-	nodeMgmtExecutor = nodeMgmt.Executor{}
-	groupMgmtExecutor = groupMgmt.Executor{}
+	appDbExecutor = appDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
 }
 
 func (Executor) Search(query map[string]interface{}) (int, map[string]interface{}, error) {
@@ -97,7 +97,7 @@ func (Executor) Search(query map[string]interface{}) (int, map[string]interface{
 func filterByGroupId(apps []map[string]interface{}, groupId string) []map[string]interface{} {
 	filteredApps := make([]map[string]interface{}, 0)
 
-	_, group, err := groupMgmtExecutor.GetGroup(groupId)
+	group, err := groupDbExecutor.GetGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return nil
@@ -105,7 +105,7 @@ func filterByGroupId(apps []map[string]interface{}, groupId string) []map[string
 
 	members := group[MEMBERS].([]string)
 	for _, member := range members {
-		_, node, err := nodeMgmtExecutor.GetNode(member)
+		node, err := nodeDbExecutor.GetNode(member)
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return nil
@@ -125,7 +125,7 @@ func filterByGroupId(apps []map[string]interface{}, groupId string) []map[string
 func filterByNodeId(apps []map[string]interface{}, nodeId string) []map[string]interface{} {
 	filteredApps := make([]map[string]interface{}, 0)
 
-	_, node, err := nodeMgmtExecutor.GetNode(nodeId)
+	node, err := nodeDbExecutor.GetNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return nil
@@ -157,19 +157,19 @@ func filterByAppId(appId ...string) []map[string]interface{} {
 
 	switch len(appId) {
 	case 1:
-		_, app, err := appMgmtExecutor.GetApp(appId[0])
+		app, err := appDbExecutor.GetApp(appId[0])
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return nil
 		}
 		filteredApps = append(filteredApps, app)
 	case 0:
-		_, apps, err := appMgmtExecutor.GetApps()
+		apps, err := appDbExecutor.GetApps()
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return nil
 		}
-		filteredApps = apps[APPS].([]map[string]interface{})
+		filteredApps = apps
 	}
 	return filteredApps
 }
