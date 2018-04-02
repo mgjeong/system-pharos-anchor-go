@@ -206,3 +206,41 @@ func TestCalledHandleWithConfigurationNodeRequest_ExpectCalledSetNodeConfigurati
 
 	Handler.Handle(w, req)
 }
+
+func TestRebootRequest_ExpectRebootCalled(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	nodemanageMockObj := nodemanagermocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		nodemanageMockObj.EXPECT().Reboot("nodeID"),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/reboot", nil)
+
+	// pass mockObj to a real object.
+	managementExecutor = nodemanageMockObj
+
+	Handler.Handle(w, req)
+}
+
+func TestRestoreRequest_ExpectRestoreCalled(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	nodemanageMockObj := nodemanagermocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		nodemanageMockObj.EXPECT().Restore("nodeID"),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("POST", "/api/v1/management/nodes/nodeID/restore", nil)
+
+	// pass mockObj to a real object.
+	managementExecutor = nodemanageMockObj
+
+	Handler.Handle(w, req)
+}
