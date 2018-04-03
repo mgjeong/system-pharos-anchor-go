@@ -54,7 +54,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, errors.InvalidJSON{"interval field is required"}
 	}
 
-	//interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
+	interval, err := strconv.Atoi(bodyMap[INTERVAL].(string))
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
@@ -79,7 +79,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 	}
 
 	// Start timer with received interval time.
-	timeDurationMin := time.Duration(MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
+	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
 		quit := make(chan bool)
