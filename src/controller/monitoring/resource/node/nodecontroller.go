@@ -17,20 +17,18 @@
 package node
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	"commons/util"
 	nodeDB "db/mongo/node"
-	"encoding/json"
 	"messenger"
 )
 
 const (
-	DEFAULT_AGENT_PORT = "48098" // used to indicate a default system-management-node port.
-	IP                 = "ip"
-	GET                = "GET"
+	IP  = "ip"
+	GET = "GET"
 )
 
 type Command interface {
@@ -64,7 +62,7 @@ func (Executor) GetNodeResourceInfo(nodeId string) (int, map[string]interface{},
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Monitoring(), url.Resource())
+	urls := util.MakeRequestUrl(address, url.Monitoring(), url.Resource())
 
 	// Request to return node's resource information.
 	codes, respStr := httpExecutor.SendHttpRequest(GET, urls, nil)
@@ -95,7 +93,7 @@ func (Executor) GetAppResourceInfo(nodeId string, appId string) (int, map[string
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Monitoring(), url.Apps(), "/", appId, url.Resource())
+	urls := util.MakeRequestUrl(address, url.Monitoring(), url.Apps(), "/", appId, url.Resource())
 
 	// Request to return node's resource information.
 	codes, respStr := httpExecutor.SendHttpRequest(GET, urls, nil)
@@ -111,18 +109,6 @@ func (Executor) GetAppResourceInfo(nodeId string, appId string) (int, map[string
 	return result, respMap, err
 }
 
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
-}
-
 // getNodeAddress returns an address as an array.
 func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
@@ -132,27 +118,11 @@ func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	return result
 }
 
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i][IP].(string) +
-			":" + DEFAULT_AGENT_PORT + url.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
-}
-
 // convertRespToMap converts a response in the form of JSON data into a map.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func convertRespToMap(respStr []string) (map[string]interface{}, error) {
-	resp, err := convertJsonToMap(respStr[0])
+	resp, err := util.ConvertJsonToMap(respStr[0])
 	if err != nil {
 		logger.Logging(logger.ERROR, "Failed to convert response from string to map")
 		return nil, errors.InternalServerError{"Json Converting Failed"}

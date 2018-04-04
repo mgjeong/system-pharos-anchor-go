@@ -20,19 +20,14 @@
 package node
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	"commons/util"
 	appDB "db/mongo/app"
 	nodeDB "db/mongo/node"
-	"encoding/json"
 	"messenger"
-)
-
-const (
-	DEFAULT_NODE_PORT = "48098" // used to indicate a default pharos node port.
 )
 
 type Executor struct{}
@@ -92,7 +87,7 @@ func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
 
 	// Request an deployment of edge services to a specific node.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
@@ -106,7 +101,7 @@ func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface
 
 	// if response code represents success, insert the installed appId into nodeDbExecutor.
 	result := codes[0]
-	if isSuccessCode(result) {
+	if util.IsSuccessCode(result) {
 		err = appDbExecutor.AddApp(respMap["id"].(string), []byte(respMap["description"].(string)))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
@@ -138,7 +133,7 @@ func (Executor) GetApps(nodeId string) (int, map[string]interface{}, error) {
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps())
 
 	// Request list of applications that is deployed to node.
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
@@ -169,7 +164,7 @@ func (Executor) GetApp(nodeId string, appId string) (int, map[string]interface{}
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request get target application's information
 	codes, respStr := httpExecutor.SendHttpRequest("GET", urls, nil)
@@ -200,7 +195,7 @@ func (Executor) UpdateAppInfo(nodeId string, appId string, body string) (int, ma
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request update target application's information.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
@@ -231,14 +226,14 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId)
 
 	// Request delete target application
 	codes, respStr := httpExecutor.SendHttpRequest("DELETE", urls, nil)
 
 	// Convert the received response from string to map.
 	result := codes[0]
-	if !isSuccessCode(result) {
+	if !util.IsSuccessCode(result) {
 		respMap, err := convertRespToMap(respStr)
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
@@ -279,7 +274,7 @@ func (Executor) UpdateApp(nodeId string, appId string, query map[string]interfac
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Update())
 
 	// Request checking and updating all of images which is included target.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, query)
@@ -310,7 +305,7 @@ func (Executor) StartApp(nodeId string, appId string) (int, map[string]interface
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Start())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Start())
 
 	// Request start target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
@@ -341,7 +336,7 @@ func (Executor) StopApp(nodeId string, appId string) (int, map[string]interface{
 	}
 
 	address := getNodeAddress(node)
-	urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Stop())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId, url.Stop())
 
 	// Request stop target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil)
@@ -357,18 +352,6 @@ func (Executor) StopApp(nodeId string, appId string) (int, map[string]interface{
 	return result, respMap, err
 }
 
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
-}
-
 // getNodeAddress returns an address as an array.
 func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
@@ -382,35 +365,10 @@ func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
 func convertRespToMap(respStr []string) (map[string]interface{}, error) {
-	resp, err := convertJsonToMap(respStr[0])
+	resp, err := util.ConvertJsonToMap(respStr[0])
 	if err != nil {
 		logger.Logging(logger.ERROR, "Failed to convert response from string to map")
 		return nil, errors.InternalServerError{"Json Converting Failed"}
 	}
 	return resp, err
-}
-
-// isSuccessCode returns true in case of success and false otherwise.
-func isSuccessCode(code int) bool {
-	if code >= 200 && code <= 299 {
-		return true
-	}
-	return false
-}
-
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODE_PORT + url.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
 }

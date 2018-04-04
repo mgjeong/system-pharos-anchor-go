@@ -4,8 +4,8 @@ import (
 	"commons/errors"
 	"commons/results"
 	appDbmocks "db/mongo/app/mocks"
-	nodeDbmocks "db/mongo/node/mocks"
 	groupDbmocks "db/mongo/group/mocks"
+	nodeDbmocks "db/mongo/node/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -227,7 +227,7 @@ func TestFilterByGroupId_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	groupDbExecutorMockObj := groupDbmocks.NewMockCommand(ctrl)
-	
+
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
 	)
@@ -383,36 +383,6 @@ func TestDoesContainInvalidQuery_ExpectReturnFalse(t *testing.T) {
 
 	ret := doesContainInvalidQuery(arr)
 
-	if ret != false {
-		t.Errorf("Expected err: %s, actual err: %s", "false", "true")
-	}
-}
-
-func TestDoesContain_ExpectReturnTrue(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	arr := make([]string, 3)
-	arr[0] = "one"
-	arr[1] = "two"
-	arr[2] = "three"
-
-	ret := doesContain(arr, "one")
-	if ret != true {
-		t.Errorf("Expected err: %s, actual err: %s", "true", "false")
-	}
-}
-
-func TestDoesContain_ExpectReturnFalse(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	arr := make([]string, 3)
-	arr[0] = "one"
-	arr[1] = "two"
-	arr[2] = "three"
-
-	ret := doesContain(arr, "four")
 	if ret != false {
 		t.Errorf("Expected err: %s, actual err: %s", "false", "true")
 	}

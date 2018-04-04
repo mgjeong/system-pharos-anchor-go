@@ -21,9 +21,10 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/util"
 	appDB "db/mongo/app"
-	nodeDB "db/mongo/node"
 	groupDB "db/mongo/group"
+	nodeDB "db/mongo/node"
 )
 
 const (
@@ -112,7 +113,7 @@ func filterByGroupId(apps []map[string]interface{}, groupId string) []map[string
 		}
 
 		for _, app := range apps {
-			if searchStringFromSlice(node[APPS].([]string), app[ID].(string)) {
+			if util.IsContainedStringInList(node[APPS].([]string), app[ID].(string)) {
 				filteredApps = append(filteredApps, app)
 				break
 			}
@@ -132,7 +133,7 @@ func filterByNodeId(apps []map[string]interface{}, nodeId string) []map[string]i
 	}
 
 	for _, app := range apps {
-		if searchStringFromSlice(node[APPS].([]string), app[ID].(string)) {
+		if util.IsContainedStringInList(node[APPS].([]string), app[ID].(string)) {
 			filteredApps = append(filteredApps, app)
 			break
 		}
@@ -144,7 +145,7 @@ func filterByImageName(apps []map[string]interface{}, imageName string) []map[st
 	filteredApps := make([]map[string]interface{}, 0)
 
 	for _, app := range apps {
-		if searchStringFromSlice(app[IMAGES].([]string), imageName) {
+		if util.IsContainedStringInList(app[IMAGES].([]string), imageName) {
 			filteredApps = append(filteredApps, app)
 			break
 		}
@@ -178,18 +179,9 @@ func checkQueryParam(query map[string]interface{}) error {
 	supportedQueries := []string{GROUPID, NODEID, APPID, IMAGENAME}
 
 	for key, _ := range query {
-		if !searchStringFromSlice(supportedQueries, key) {
+		if !util.IsContainedStringInList(supportedQueries, key) {
 			return errors.NotFoundURL{Message: "not supported query parameter"}
 		}
 	}
 	return nil
-}
-
-func searchStringFromSlice(slice []string, str string) bool {
-	for _, value := range slice {
-		if value == str {
-			return true
-		}
-	}
-	return false
 }

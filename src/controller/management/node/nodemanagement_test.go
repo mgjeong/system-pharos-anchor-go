@@ -19,6 +19,7 @@ package node
 import (
 	"commons/errors"
 	"commons/results"
+	"commons/util"
 	dbmocks "db/mongo/node/mocks"
 	"encoding/json"
 	"github.com/golang/mock/gomock"
@@ -745,7 +746,7 @@ func TestCalledSetNodeConfiguration_ExpectSuccess(t *testing.T) {
 
 	jsonBody, _ := json.Marshal(configuration)
 	jsonNodeData, _ := json.Marshal(node)
-	nodeDataMap, _ := convertJsonToMap(string(jsonNodeData))
+	nodeDataMap, _ := util.ConvertJsonToMap(string(jsonNodeData))
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}
 
 	gomock.InOrder(
@@ -809,7 +810,7 @@ func TestCalledSetNodeConfigurationWhenFailedToUpdateConfiguration_ExpectErrorRe
 
 	jsonBody, _ := json.Marshal(configuration)
 	jsonNodeData, _ := json.Marshal(node)
-	nodeDataMap, _ := convertJsonToMap(string(jsonNodeData))
+	nodeDataMap, _ := util.ConvertJsonToMap(string(jsonNodeData))
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}
 
 	gomock.InOrder(
