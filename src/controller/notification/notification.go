@@ -106,14 +106,14 @@ func (Executor) Register(body string,
 	default:
 		return results.ERROR, nil, err
 	case APP:
-		result, resp, err := registAppEvent(url, event.(map[string]interface{}), query)
+		result, resp, err := registerAppEvent(url, event.(map[string]interface{}), query)
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
 		}
 		return result, resp, err
 	case NODE:
-		result, resp, err := registNodeEvent(url, event.(map[string]interface{}), query)
+		result, resp, err := registerNodeEvent(url, event.(map[string]interface{}), query)
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -146,7 +146,7 @@ func (Executor) UnRegister(eventId string) (int, error) {
 			}
 
 			if len(appEvent[SUBS].([]string)) == 0 {
-				requestUnRegistAppEvent(appEvent[NODES].([]string), appEventId)
+				requestUnRegisterAppEvent(appEvent[NODES].([]string), appEventId)
 				err = appEventDbExecutor.DeleteEvent(appEventId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
@@ -271,7 +271,7 @@ func (Executor) NotificationHandler(eventType string, body string) {
 	}
 }
 
-func registAppEvent(url string, event map[string]interface{},
+func registerAppEvent(url string, event map[string]interface{},
 	query map[string][]string) (int, map[string]interface{}, error) {
 
 	nodes, err := getTargetNodes(query)
@@ -290,14 +290,14 @@ func registAppEvent(url string, event map[string]interface{},
 		return results.ERROR, nil, err
 	}
 
-	// Request regist event target application.
+	// Request register event target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
-		requestUnRegistAppEvent(urls, eventId[0])
+		requestUnRegisterAppEvent(urls, eventId[0])
 		return results.ERROR, nil, err
 	}
 
@@ -334,7 +334,7 @@ func registAppEvent(url string, event map[string]interface{},
 	return result, resp, err
 }
 
-func registNodeEvent(url string, event map[string]interface{},
+func registerNodeEvent(url string, event map[string]interface{},
 	query map[string][]string) (int, map[string]interface{}, error) {
 
 	nodes, err := getTargetNodes(query)
@@ -366,11 +366,11 @@ func registNodeEvent(url string, event map[string]interface{},
 	return results.OK, resp, err
 }
 
-func requestUnRegistAppEvent(urls []string, eventId string) {
+func requestUnRegisterAppEvent(urls []string, eventId string) {
 	reqBody := makeRequestBody(nil, eventId)
 	body, _ := convertMapToJson(reqBody)
 
-	// Request unregist event target nodes.
+	// Request unregister event target nodes.
 	httpExecutor.SendHttpRequest("DELETE", urls, nil, []byte(body))
 }
 
