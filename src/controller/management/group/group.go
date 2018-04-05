@@ -22,8 +22,8 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/util"
 	groupDB "db/mongo/group"
-	"encoding/json"
 )
 
 type Command interface {
@@ -66,7 +66,7 @@ func (Executor) CreateGroup(body string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -130,7 +130,7 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -160,7 +160,7 @@ func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interfa
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -197,16 +197,4 @@ func (Executor) DeleteGroup(groupId string) (int, map[string]interface{}, error)
 	}
 
 	return results.OK, nil, err
-}
-
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
 }

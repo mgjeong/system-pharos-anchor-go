@@ -20,13 +20,12 @@
 package node
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	"commons/util"
 	nodeDB "db/mongo/node"
-	"encoding/json"
 	"messenger"
 	"strings"
 	"time"
@@ -58,7 +57,6 @@ const (
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
 	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
-	DEFAULT_NODE_PORT           = "48098"        // used to indicate a default pharos node port.
 	PROPERTIES                  = "properties"
 )
 
@@ -82,7 +80,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 
 	// If body is not empty, try to get node id from body.
 	// This code will be used to update the information of node without changing id.
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -141,7 +139,7 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Unregister())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Unregister())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Stop timer and close the channel for ping.
@@ -287,7 +285,7 @@ func (Executor) Reboot(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Reboot())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Reboot())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	return results.OK, err
@@ -313,7 +311,7 @@ func (Executor) Restore(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Restore())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Restore())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	return results.OK, err
@@ -351,17 +349,17 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Configuration())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Configuration())
 
 	codes, _ := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	result := codes[0]
-	if !isSuccessCode(result) {
+	if !util.IsSuccessCode(result) {
 		return results.ERROR, err
 	}
 
 	// Update configuration information.
-	updatedProps, err := convertJsonToMap(body)
+	updatedProps, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -387,43 +385,6 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 	}
 
 	return results.OK, nil
-}
-
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
-}
-
-// isSuccessCode returns true in case of success and false otherwise.
-func isSuccessCode(code int) bool {
-	if code >= 200 && code <= 299 {
-		return true
-	}
-	return false
-}
-
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODE_PORT + url.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
 }
 
 // getNodeAddress returns an address as an array.
