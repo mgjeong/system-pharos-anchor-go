@@ -18,15 +18,14 @@
 package registry
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	"commons/util"
 	appmanager "controller/management/app"
 	nodemanager "controller/management/node"
 	"db/mongo/registry"
-	"encoding/json"
 	"messenger"
 )
 
@@ -39,19 +38,18 @@ type Command interface {
 }
 
 const (
-	ID                 = "id"
-	IP                 = "ip"
-	POST               = "POST"
-	APPS               = "apps"
-	NODES              = "nodes" // used to indicate a list of nodes.
-	HOST               = "host"
-	REPOSITORY         = "repository"
-	TARGETINFO         = "target"
-	REQUESTINFO        = "request"
-	REGISTRIES         = "registries"
-	REGISTRY           = "registry"
-	EVENTS             = "events"
-	DEFAULT_NODES_PORT = "48098" // used to indicate a default system-management-node port.
+	ID          = "id"
+	IP          = "ip"
+	POST        = "POST"
+	APPS        = "apps"
+	NODES       = "nodes" // used to indicate a list of nodes.
+	HOST        = "host"
+	REPOSITORY  = "repository"
+	TARGETINFO  = "target"
+	REQUESTINFO = "request"
+	REGISTRIES  = "registries"
+	REGISTRY    = "registry"
+	EVENTS      = "events"
 )
 
 type Executor struct{}
@@ -72,7 +70,7 @@ func (Executor) AddDockerRegistry(body string) (int, map[string]interface{}, err
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	reqBody, err := convertJsonToMap(body)
+	reqBody, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -131,7 +129,7 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	convertedBody, err := convertJsonToMap(body)
+	convertedBody, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -161,26 +159,11 @@ func (Executor) DockerRegistryEventHandler(body string) (int, error) {
 				return results.ERROR, err
 			}
 			address := getMemberAddress(nodes[NODES].([]map[string]interface{}))
-			urls := makeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
+			urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), "/", appId.(string), url.Events())
 			_, _ = httpExecutor.SendHttpRequest(POST, urls, nil, []byte(body))
 		}
 	}
 	return results.OK, nil
-}
-
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	logger.Logging(logger.DEBUG, "IN")
-	defer logger.Logging(logger.DEBUG, "OUT")
-
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
 }
 
 // getNodeAddress returns an member's address as an array.
@@ -192,23 +175,6 @@ func getMemberAddress(members []map[string]interface{}) []map[string]interface{}
 		}
 	}
 	return result
-}
-
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODES_PORT + url.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
 }
 
 // parseEventInfo parse data which is matched image-info on DB from event-notification.

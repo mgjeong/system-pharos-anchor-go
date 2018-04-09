@@ -22,6 +22,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"encoding/json"
+	"commons/util"
 	"strconv"
 	"time"
 )
@@ -42,7 +43,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, err
 	}
 
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
