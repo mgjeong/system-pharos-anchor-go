@@ -450,7 +450,7 @@ definitions:
     example: ["8.00%", "3.03%", "7.07%", "16.16%", "9.90%", "18.00%", "11.22%", "4.12%"]
   mem:
     description: Information about memory usage of edge device where Pharos Node exists
-    example: {"free":"0KB", "total":"0KB", "used":"0KB", "usedpercnet":"0%"}
+    example: {"free":"0KB", "total":"0KB", "used":"0KB", "usedpercent":"0%"}
   disk:
     description: Information about disk usage of edge device where Pharos Node exists
     example: [{"free":"0G", "path":"/root", "total":"0G", "used":"0G", "usedpercent":"0%"}]
