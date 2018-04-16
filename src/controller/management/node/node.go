@@ -24,8 +24,8 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/url"
-	noti "controller/notification"
 	"commons/util"
+	noti "controller/notification"
 	nodeDB "db/mongo/node"
 	"messenger"
 	"strings"
@@ -60,7 +60,7 @@ const (
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
 	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
-	MAXIMUM_NETWORK_LATENCY_SEC = 3             // the term used to indicate any kind of delay that happens in data communication over a network.
+	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
 	PROPERTIES                  = "properties"
 )
@@ -150,11 +150,13 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Stop timer and close the channel for ping.
+	common.Lock()
 	if common.timers[nodeId] != nil {
 		common.timers[nodeId] <- true
 		close(common.timers[nodeId])
 	}
 	delete(common.timers, nodeId)
+	common.Unlock()
 
 	// Delete node specified by nodeId parameter.
 	err = nodeDbExecutor.DeleteNode(nodeId)

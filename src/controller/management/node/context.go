@@ -17,9 +17,14 @@
 
 package node
 
+import (
+	"sync"
+)
+
 var common context
 
 type context struct {
+	sync.Mutex
 	timers map[string]chan bool
 }
 
