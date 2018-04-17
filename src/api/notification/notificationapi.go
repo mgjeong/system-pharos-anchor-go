@@ -110,5 +110,6 @@ func (notificationAPIExecutor) receiveNotificationEvnet(w http.ResponseWriter, r
 		return
 	}
 
-	notiExecutor.NotificationHandler("app", body)
+	result, err := notiExecutor.NotificationHandler("app", body)
+	common.MakeResponse(w, result, nil, err)
 }

@@ -23,7 +23,6 @@ package mocks
 
 import (
 	gomock "github.com/golang/mock/gomock"
-	http "net/http"
 	reflect "reflect"
 )
 
@@ -50,65 +49,42 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 	return m.recorder
 }
 
-// Handle mocks base method
-func (m *MockCommand) Handle(w http.ResponseWriter, req *http.Request) {
-	m.ctrl.Call(m, "Handle", w, req)
+// Register mocks base method
+func (m *MockCommand) Register(body string, query map[string][]string) (int, map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "Register", body, query)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(map[string]interface{})
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
-// Handle indicates an expected call of Handle
-func (mr *MockCommandMockRecorder) Handle(w, req interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Handle", reflect.TypeOf((*MockCommand)(nil).Handle), w, req)
+// Register indicates an expected call of Register
+func (mr *MockCommandMockRecorder) Register(body, query interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Register", reflect.TypeOf((*MockCommand)(nil).Register), body, query)
 }
 
-// MocknotificationEventAPI is a mock of notificationEventAPI interface
-type MocknotificationEventAPI struct {
-	ctrl     *gomock.Controller
-	recorder *MocknotificationEventAPIMockRecorder
+// UnRegister mocks base method
+func (m *MockCommand) UnRegister(eventId string) (int, error) {
+	ret := m.ctrl.Call(m, "UnRegister", eventId)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// MocknotificationEventAPIMockRecorder is the mock recorder for MocknotificationEventAPI
-type MocknotificationEventAPIMockRecorder struct {
-	mock *MocknotificationEventAPI
+// UnRegister indicates an expected call of UnRegister
+func (mr *MockCommandMockRecorder) UnRegister(eventId interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnRegister", reflect.TypeOf((*MockCommand)(nil).UnRegister), eventId)
 }
 
-// NewMocknotificationEventAPI creates a new mock instance
-func NewMocknotificationEventAPI(ctrl *gomock.Controller) *MocknotificationEventAPI {
-	mock := &MocknotificationEventAPI{ctrl: ctrl}
-	mock.recorder = &MocknotificationEventAPIMockRecorder{mock}
-	return mock
+// NotificationHandler mocks base method
+func (m *MockCommand) NotificationHandler(eventType, body string) (int, error) {
+	ret := m.ctrl.Call(m, "NotificationHandler", eventType, body)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
-func (m *MocknotificationEventAPI) EXPECT() *MocknotificationEventAPIMockRecorder {
-	return m.recorder
-}
-
-// registerNotificationEvent mocks base method
-func (m *MocknotificationEventAPI) registerNotificationEvent(w http.ResponseWriter, req *http.Request) {
-	m.ctrl.Call(m, "registerNotificationEvent", w, req)
-}
-
-// registerNotificationEvent indicates an expected call of registerNotificationEvent
-func (mr *MocknotificationEventAPIMockRecorder) registerNotificationEvent(w, req interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "registerNotificationEvent", reflect.TypeOf((*MocknotificationEventAPI)(nil).registerNotificationEvent), w, req)
-}
-
-// unRegisterNotificationEvent mocks base method
-func (m *MocknotificationEventAPI) unRegisterNotificationEvent(w http.ResponseWriter, req *http.Request, eventId string) {
-	m.ctrl.Call(m, "unRegisterNotificationEvent", w, req, eventId)
-}
-
-// unRegisterNotificationEvent indicates an expected call of unRegisterNotificationEvent
-func (mr *MocknotificationEventAPIMockRecorder) unRegisterNotificationEvent(w, req, eventId interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "unRegisterNotificationEvent", reflect.TypeOf((*MocknotificationEventAPI)(nil).unRegisterNotificationEvent), w, req, eventId)
-}
-
-// receiveNotificationEvnet mocks base method
-func (m *MocknotificationEventAPI) receiveNotificationEvnet(w http.ResponseWriter, req *http.Request) {
-	m.ctrl.Call(m, "receiveNotificationEvnet", w, req)
-}
-
-// receiveNotificationEvnet indicates an expected call of receiveNotificationEvnet
-func (mr *MocknotificationEventAPIMockRecorder) receiveNotificationEvnet(w, req interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "receiveNotificationEvnet", reflect.TypeOf((*MocknotificationEventAPI)(nil).receiveNotificationEvnet), w, req)
+// NotificationHandler indicates an expected call of NotificationHandler
+func (mr *MockCommandMockRecorder) NotificationHandler(eventType, body interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NotificationHandler", reflect.TypeOf((*MockCommand)(nil).NotificationHandler), eventType, body)
 }

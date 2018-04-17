@@ -38,7 +38,7 @@ import (
 type Command interface {
 	Register(body string, query map[string][]string) (int, map[string]interface{}, error)
 	UnRegister(eventId string) (int, error)
-	NotificationHandler(eventType string, body string)
+	NotificationHandler(eventType string, body string) (int, error)
 }
 
 const (
@@ -184,27 +184,27 @@ func (Executor) UnRegister(eventId string) (int, error) {
 	return results.OK, nil
 }
 
-func (Executor) NotificationHandler(eventType string, body string) {
+func (Executor) NotificationHandler(eventType string, body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	bodyMap, err := convertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
-		return
+		return results.ERROR, err
 	}
 	// Check whether 'EventId' is included.
 	eventIds, exists := bodyMap[EVENT_ID]
 	if !exists {
 		logger.Logging(logger.ERROR, "eventid field is required")
-		return
+		return results.ERROR, nil
 	}
 
 	// Check whether 'Event' is included.
 	event, exists := bodyMap[EVENT]
 	if !exists {
 		logger.Logging(logger.ERROR, "event field is required")
-		return
+		return results.ERROR, nil
 	}
 
 	switch eventType {
@@ -213,13 +213,13 @@ func (Executor) NotificationHandler(eventType string, body string) {
 			appEvent, err := appEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
-				return
+				return results.ERROR, err
 			}
 			for _, subscriberId := range appEvent[SUBS].([]string) {
 				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
-					return
+					return results.ERROR, err
 				}
 
 				for _, status := range subs[STATUS].([]string) {
@@ -231,9 +231,10 @@ func (Executor) NotificationHandler(eventType string, body string) {
 						body, err := convertMapToJson(reqBody)
 						if err != nil {
 							logger.Logging(logger.ERROR, err.Error())
-							return
+							return results.ERROR, err
 						}
 						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+						return results.OK, nil
 					}
 				}
 			}
@@ -243,14 +244,14 @@ func (Executor) NotificationHandler(eventType string, body string) {
 			nodeEvent, err := nodeEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
-				return
+				return results.ERROR, err
 			}
 
 			for _, subscriberId := range nodeEvent[SUBS].([]string) {
 				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
-					return
+					return results.ERROR, err
 				}
 
 				for _, status := range subs[STATUS].([]string) {
@@ -261,14 +262,16 @@ func (Executor) NotificationHandler(eventType string, body string) {
 						reqBody[EVENT] = event
 						body, err := convertMapToJson(reqBody)
 						if err != nil {
-							return
+							return results.ERROR, err
 						}
 						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+						return results.OK, nil
 					}
 				}
 			}
 		}
 	}
+	return results.ERROR, nil
 }
 
 func registerAppEvent(url string, event map[string]interface{},
