@@ -21,8 +21,8 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
-	"encoding/json"
 	"commons/util"
+	"encoding/json"
 	"strconv"
 	"time"
 )
@@ -61,6 +61,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
 	}
 
+	common.Lock()
 	_, exists = common.timers[nodeId]
 	if !exists {
 		logger.Logging(logger.DEBUG, "first ping request is received from node")
@@ -78,13 +79,16 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			sendNotification(nodeId, STATUS_CONNECTED)
 		}
 	}
+	common.Unlock()
 
 	// Start timer with received interval time.
 	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
 		quit := make(chan bool)
+		common.Lock()
 		common.timers[nodeId] = quit
+		common.Unlock()
 
 		select {
 		// Block until timer finishes.
@@ -103,8 +107,10 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			return
 		}
 
+		common.Lock()
 		common.timers[nodeId] = nil
 		close(quit)
+		common.Unlock()
 	}()
 
 	return results.OK, err
