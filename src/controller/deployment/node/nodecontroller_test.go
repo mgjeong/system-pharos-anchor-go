@@ -20,6 +20,8 @@ import (
 	"commons/errors"
 	"commons/results"
 	appdbmocks "db/mongo/app/mocks"
+	appeventdbmocks "db/mongo/event/app/mocks"
+	subsdbmocks "db/mongo/event/subscriber/mocks"
 	dbmocks "db/mongo/node/mocks"
 	"github.com/golang/mock/gomock"
 	msgmocks "messenger/mocks"
@@ -61,6 +63,121 @@ func init() {
 	executor = Executor{}
 }
 
+func TestCalledDeployAppWithEventQuery_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	testEventUrl := []string{"http://0.0.0.0:0000"}
+	testQuery := map[string]interface{}{
+		EVENT: testEventUrl,
+	}
+	respStr := []string{`{"id":"000000000000000000000000", "description":"description"}`}
+	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/apps/deploy"}
+	expectedRes := map[string]interface{}{
+		"id":          "000000000000000000000000",
+		"description": "description",
+	}
+
+	subsDbMockObj := subsdbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	appDbMockObj := appdbmocks.NewMockCommand(ctrl)
+	appEventDbMockObj := appeventdbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(nil),
+		appEventDbMockObj.EXPECT().AddEvent(gomock.Any(), gomock.Any(), []string{nodeId}).Return(nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, gomock.Any(), []byte(body)).Return(respCode, respStr),
+		subsDbMockObj.EXPECT().DeleteSubscriber(gomock.Any()),
+		appEventDbMockObj.EXPECT().DeleteEvent(gomock.Any()),
+		appDbMockObj.EXPECT().AddApp(appId, []byte("description")).Return(nil),
+		dbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+	)
+	// pass mockObj to a real object.
+	subsDbExecutor = subsDbMockObj
+	appEventDbExecutor = appEventDbMockObj
+	appDbExecutor = appDbMockObj
+	nodeDbExecutor = dbExecutorMockObj
+	httpExecutor = msgMockObj
+
+	code, res, err := executor.DeployApp(nodeId, body, testQuery)
+
+	if err != nil {
+		t.Errorf("Unexpected err: %s", err.Error())
+	}
+
+	if code != results.OK {
+		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
+	}
+
+	if !reflect.DeepEqual(expectedRes, res) {
+		t.Errorf("Expected res: %s, actual res: %s", expectedRes, res)
+	}
+}
+
+func TestCalledDeployAppWithEventQueryWhenAddSubscriberFailed_ExpectReturnError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	testEventUrl := []string{"http://0.0.0.0:0000"}
+	testQuery := map[string]interface{}{
+		EVENT: testEventUrl,
+	}
+
+	subsDbMockObj := subsdbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(errors.Unknown{}),
+	)
+	// pass mockObj to a real object.
+	subsDbExecutor = subsDbMockObj
+	nodeDbExecutor = dbExecutorMockObj
+
+	_, _, err := executor.DeployApp(nodeId, body, testQuery)
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "Unknwon", err.Error())
+	case errors.Unknown:
+	}
+}
+
+func TestCalledDeployAppWithEventQueryWhenAddEventFailed_ExpectReturnError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	testEventUrl := []string{"http://0.0.0.0:0000"}
+	testQuery := map[string]interface{}{
+		EVENT: testEventUrl,
+	}
+
+	subsDbMockObj := subsdbmocks.NewMockCommand(ctrl)
+	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
+	appEventDbMockObj := appeventdbmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(nil),
+		appEventDbMockObj.EXPECT().AddEvent(gomock.Any(), gomock.Any(), []string{nodeId}).Return(errors.Unknown{}),
+		subsDbMockObj.EXPECT().DeleteSubscriber(gomock.Any()).Return(nil),
+	)
+	// pass mockObj to a real object.
+	subsDbExecutor = subsDbMockObj
+	nodeDbExecutor = dbExecutorMockObj
+	appEventDbExecutor = appEventDbMockObj
+
+	_, _, err := executor.DeployApp(nodeId, body, testQuery)
+
+	switch err.(type) {
+	default:
+		t.Errorf("Expected err: %s, actual err: %s", "Unknwon", err.Error())
+	case errors.Unknown:
+	}
+}
+
 func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -87,7 +204,7 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, res, err := executor.DeployApp(nodeId, body)
+	code, res, err := executor.DeployApp(nodeId, body, nil)
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -114,7 +231,7 @@ func TestCalledDeployAppWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) 
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
 
-	code, _, err := executor.DeployApp(nodeId, body)
+	code, _, err := executor.DeployApp(nodeId, body, nil)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -148,7 +265,7 @@ func TestCalledDeployAppWhenMessengerReturnsInvalidResponse_ExpectErrorReturn(t 
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeployApp(nodeId, body)
+	code, _, err := executor.DeployApp(nodeId, body, nil)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -187,7 +304,7 @@ func TestCalledDeployAppWhenFailedToAddAppIdToDB_ExpectErrorReturn(t *testing.T)
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
 
-	code, _, err := executor.DeployApp(nodeId, body)
+	code, _, err := executor.DeployApp(nodeId, body, nil)
 
 	if code != results.ERROR {
 		t.Errorf("Expected code: %d, actual code: %d", results.ERROR, code)
@@ -929,5 +1046,17 @@ func TestCalledDeleteAppWhenFailedToDeleteAppIdFromDB_ExpectErrorReturn(t *testi
 	default:
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", err.Error())
 	case errors.NotFound:
+	}
+}
+
+func TestGenerateRandStringBytes(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	testStrLen := 50
+	ret := generateRandStringBytes(testStrLen)
+
+	if len(ret) != testStrLen {
+		t.Errorf("Expected length of string : %d, actual length of string : %d", testStrLen, len(ret))
 	}
 }

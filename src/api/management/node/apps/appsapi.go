@@ -145,7 +145,7 @@ func (appsAPIExecutor) nodeDeployApp(w http.ResponseWriter, req *http.Request, n
 		return
 	}
 
-	result, resp, err := deploymentExecutor.DeployApp(nodeID, body)
+	result, resp, err := deploymentExecutor.DeployApp(nodeID, body, parseQuery(req))
 	common.MakeResponse(w, result, common.ChangeToJson(resp), err)
 }
 

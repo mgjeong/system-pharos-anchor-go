@@ -26,27 +26,47 @@ import (
 	"commons/url"
 	"commons/util"
 	appDB "db/mongo/app"
+	appEventDB "db/mongo/event/app"
+	subsDB "db/mongo/event/subscriber"
 	nodeDB "db/mongo/node"
+	"math/rand"
 	"messenger"
+	"time"
+)
+
+const (
+	LETTERBYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	EVENTID     = "eventId"
+	EVENT       = "event"
+	PULLED      = "pulled"
+	CREATED     = "created"
+	STARTED     = "started"
+	APP         = "app"
 )
 
 type Executor struct{}
 
 var appDbExecutor appDB.Command
 var nodeDbExecutor nodeDB.Command
+var appEventDbExecutor appEventDB.Command
+var subsDbExecutor subsDB.Command
 var httpExecutor messenger.Command
 
 func init() {
+	rand.Seed(time.Now().UnixNano())
+
 	appDbExecutor = appDB.Executor{}
 	nodeDbExecutor = nodeDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
+	appEventDbExecutor = appEventDB.Executor{}
+	subsDbExecutor = subsDB.Executor{}
 }
 
 // Command is an interface of node deployment operations.
 type Command interface {
 	// DeployApp request an deployment of edge services to an node specified by
 	// nodeId parameter.
-	DeployApp(nodeId string, body string) (int, map[string]interface{}, error)
+	DeployApp(nodeId string, body string, query map[string]interface{}) (int, map[string]interface{}, error)
 
 	// GetApps request a list of applications that is deployed to an node specified
 	// by nodeId parameter.
@@ -75,7 +95,7 @@ type Command interface {
 // DeployApp request an deployment of edge services to an node specified by nodeId parameter.
 // If response code represents success, add an app id to a list of installed app and returns it.
 // Otherwise, an appropriate error will be returned.
-func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface{}, error) {
+func (Executor) DeployApp(nodeId string, body string, query map[string]interface{}) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -89,8 +109,44 @@ func (Executor) DeployApp(nodeId string, body string) (int, map[string]interface
 	address := getNodeAddress(node)
 	urls := util.MakeRequestUrl(address, url.Management(), url.Apps(), url.Deploy())
 
-	// Request an deployment of edge services to a specific node.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+	codes := make([]int, 0)
+	respStr := make([]string, 0)
+	if eventUrl, exists := query[EVENT]; exists {
+		eventId := generateRandStringBytes(39)
+		subsId := generateRandStringBytes(39)
+
+		err = subsDbExecutor.AddSubscriber(subsId, APP, eventUrl.([]string)[0], []string{PULLED, CREATED, STARTED}, []string{eventId})
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, nil, err
+		}
+		err = appEventDbExecutor.AddEvent(eventId, subsId, []string{nodeId})
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			subsDbExecutor.DeleteSubscriber(subsId)
+			return results.ERROR, nil, err
+		}
+
+		eventIDQuery := make(map[string]interface{})
+		eventIDQuery[EVENTID] = []string{eventId}
+
+		// Request an deployment of edge services to a specific node.
+		codes, respStr = httpExecutor.SendHttpRequest("POST", urls, eventIDQuery, []byte(body))
+
+		err = subsDbExecutor.DeleteSubscriber(subsId)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, nil, err
+		}
+		err = appEventDbExecutor.DeleteEvent(eventId)
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, nil, err
+		}
+	} else {
+		// Request an deployment of edge services to a specific node.
+		codes, respStr = httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+	}
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -371,4 +427,12 @@ func convertRespToMap(respStr []string) (map[string]interface{}, error) {
 		return nil, errors.InternalServerError{"Json Converting Failed"}
 	}
 	return resp, err
+}
+
+func generateRandStringBytes(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = LETTERBYTES[rand.Intn(len(LETTERBYTES))]
+	}
+	return string(b)
 }
