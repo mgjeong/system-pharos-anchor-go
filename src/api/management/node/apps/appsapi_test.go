@@ -86,7 +86,7 @@ func TestCalledHandleWithDeployRequest_ExpectCalledDeployApp(t *testing.T) {
 	deploymentMockObj := deploymentmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		deploymentMockObj.EXPECT().DeployApp("nodeID", testBodyString),
+		deploymentMockObj.EXPECT().DeployApp("nodeID", testBodyString, nil),
 	)
 
 	w := httptest.NewRecorder()
