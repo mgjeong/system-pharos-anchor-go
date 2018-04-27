@@ -26,7 +26,7 @@ import (
 )
 
 type Command interface {
-	SearchNodes(map[string][]string) (int, map[string]interface{}, error)
+	SearchNodes(query map[string][]string) (int, map[string]interface{}, error)
 }
 
 const (
