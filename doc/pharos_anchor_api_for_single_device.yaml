@@ -443,19 +443,19 @@ definitions:
   node:
     required:
       - id
-      - host
-      - port
+      - ip
+      - status
       - apps
     properties:
       id:
         type: string
         example: node_id_sample
-      host:
+      ip:
         type: string
         example: 192.168.0.1
-      port:
+      status:
         type: string
-        example: 8080
+        example: connected
       apps:
         example:
           - app_id_sample1
