@@ -18,8 +18,11 @@ package main
 
 import (
 	"api"
+	"commons/logger"
 )
 
 func main() {
+	logger.Logging(logger.DEBUG, "Start Pharos Anchor")
 	api.RunWebServer("0.0.0.0", 48099)
+	logger.Logging(logger.DEBUG, "Stop Pharos Anchor")
 }
