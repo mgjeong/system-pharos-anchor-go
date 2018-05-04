@@ -25,7 +25,7 @@ import (
 
 type Command interface {
 	// AddNode insert new Node.
-	AddNode(ip string, status string, config map[string]interface{}) (map[string]interface{}, error)
+	AddNode(ip string, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error)
 
 	// UpdateNodeAddress updates ip,port of node from db related to node.
 	UpdateNodeAddress(nodeId string, host string, port string) error
@@ -119,7 +119,7 @@ func (node Node) convertToMap() map[string]interface{} {
 // AddNode inserts new node to 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) AddNode(ip string, status string, config map[string]interface{}) (map[string]interface{}, error) {
+func (Executor) AddNode(ip string, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -132,6 +132,7 @@ func (Executor) AddNode(ip string, status string, config map[string]interface{})
 	node := Node{
 		ID:     bson.NewObjectId(),
 		IP:     ip,
+		Apps:   apps,
 		Status: status,
 		Config: config,
 	}

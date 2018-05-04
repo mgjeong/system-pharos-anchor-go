@@ -49,6 +49,7 @@ var (
 	registrationBody = map[string]interface{}{
 		"ip":     ip,
 		"config": configuration,
+		"apps":   []string{},
 	}
 	node = map[string]interface{}{
 		"id":     nodeId,
@@ -85,7 +86,7 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
-		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(node, nil),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any(), []string{}).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = dbExecutorMockObj
@@ -160,7 +161,7 @@ func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *te
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
-		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any()).Return(nil, notFoundError),
+		dbExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any(), []string{}).Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.
