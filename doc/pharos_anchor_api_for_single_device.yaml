@@ -9,6 +9,8 @@ info:
 schemes:
   - http
 tags:
+  - name: Health
+    description: Health check of Pharos Anchor
   - name: Application Deployment
     description: Distribution & Control Apps
   - name: Pharos Node Management
@@ -18,6 +20,18 @@ tags:
   - name: Configuration
     description: Properties and configurations of Pharos Node
 paths:
+  '/api/v1/ping':
+    post:
+      tags:
+        - Health
+      description: Check whether Pharos Anchor is up and responding to requests.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation.
   '/api/v1/management/nodes/register':
     post:
       tags:
