@@ -24,12 +24,38 @@ import (
 	"commons/logger"
 	"commons/url"
 	"encoding/json"
+	"os"
 	"strings"
 )
 
 const (
-	DEFAULT_NODE_PORT = "48098" // used to indicate a default pharos node port.
+	DEFAULT_NODE_PORT                      = "48098"
+	UNSECURED_NODE_PORT_WITH_REVERSE_PROXY = "80"
+	SECURED_NODE_PORT_WITH_REVERSE_PROXY   = "443"
+	NODE_URL_PREFIX                        = "/pharos-node"
 )
+
+var (
+	nodePort string
+	baseUrl  string
+)
+
+func init() {
+	baseUrl = url.Base()
+	nodePort = DEFAULT_NODE_PORT
+
+	secured := os.Getenv("SECURED")
+	reverseProxy := os.Getenv("REVERSE_PROXY")
+
+	if reverseProxy == "true" {
+		baseUrl = NODE_URL_PREFIX + url.Base()
+		nodePort = UNSECURED_NODE_PORT_WITH_REVERSE_PROXY
+
+		if secured == "true" {
+			nodePort = SECURED_NODE_PORT_WITH_REVERSE_PROXY
+		}
+	}
+}
 
 // convertJsonToMap converts JSON data into a map.
 // If successful, this function returns an error as nil.
@@ -84,8 +110,7 @@ func MakeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODE_PORT + url.Base())
+		full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + nodePort + baseUrl)
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}
