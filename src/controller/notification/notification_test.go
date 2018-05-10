@@ -115,12 +115,12 @@ var (
 		NODES: []string{"nodeid"},
 	}
 	nodeEvent = map[string]interface{}{
-		ID:    eventId,
-		SUBS:  []string{nodesubsId},
+		ID:   eventId,
+		SUBS: []string{nodesubsId},
 	}
 	lastNodeEvent = map[string]interface{}{
-		ID:    eventId,
-		SUBS:  []string{},
+		ID:   eventId,
+		SUBS: []string{},
 	}
 )
 
@@ -289,7 +289,7 @@ func TestCalledUnRegisterLastAppEvent_ExpectSuccess(t *testing.T) {
 	subsDbMockObj := subsDBmocks.NewMockCommand(ctrl)
 	appEventDbMockObj := appEventDBmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
-	
+
 	reqBody := makeRequestBody(nil, eventId)
 	body, _ := convertMapToJson(reqBody)
 
@@ -369,4 +369,42 @@ func TestCalledUnRegisterLastNodeEvent_ExpectSuccess(t *testing.T) {
 	if code != results.OK {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
+}
+
+func TestCalledNotificationHandlerWithNodeEvent_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	subsDbMockObj := subsDBmocks.NewMockCommand(ctrl)
+	nodeEventDbMockObj := nodeEventDBmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+
+	reqBody := makeRequestBody(nil, eventId)
+	body, _ := convertMapToJson(reqBody)
+
+	gomock.InOrder(
+		nodeEventDbMockObj.EXPECT().GetEvent(eventId).Return(nodeEvent, nil),
+		subsDbMockObj.EXPECT().GetSubscriber(nodesubsId).Return(appSubs, nil),
+		msgMockObj.EXPECT().SendHttpRequest("DELETE", lastAppEvent[NODES].([]string), nil, []byte(body)),
+		subsDbMockObj.EXPECT().DeleteSubscriber(eventId).Return(nil),
+	)
+
+	// pass mockObj to a real object.
+	subsDbExecutor = subsDbMockObj
+	nodeEventDbExecutor = nodeEventDbMockObj
+	httpExecutor = msgMockObj
+
+	eventIds := make([]string, 0)
+	eventIds = append(eventIds, nodeId)
+	event := make(map[string]interface{})
+	event[ID] = nodeId
+	event[STATUS] = status
+
+	notification := make(map[string]interface{})
+	notification[EVENT_ID] = eventIds
+	notification[EVENT] = event
+
+	notiStr, err := convertMapToJson(notification)
+
+	executor.NotificationHandler(NODE, notiStr)
 }
