@@ -41,20 +41,43 @@ var (
 )
 
 func init() {
-	baseUrl = url.Base()
-	nodePort = DEFAULT_NODE_PORT
+	secured := getEnv("SECURED")
+	reverseProxy := getEnv("REVERSE_PROXY")
 
-	secured := os.Getenv("SECURED")
-	reverseProxy := os.Getenv("REVERSE_PROXY")
-
-	if reverseProxy == "true" {
+	err := "Invalid environment variable"
+	switch reverseProxy {
+	case "true":
 		baseUrl = NODE_URL_PREFIX + url.Base()
-		nodePort = UNSECURED_NODE_PORT_WITH_REVERSE_PROXY
 
-		if secured == "true" {
+		switch secured {
+		case "true":
 			nodePort = SECURED_NODE_PORT_WITH_REVERSE_PROXY
+		case "false":
+			nodePort = UNSECURED_NODE_PORT_WITH_REVERSE_PROXY
+		default:
+			panic(err)
 		}
+	case "false":
+		baseUrl = url.Base()
+
+		switch secured {
+		case "false":
+			nodePort = DEFAULT_NODE_PORT
+		case "true":
+			fallthrough
+		default:
+			panic(err)
+		}
+	default:
+		panic(err)
 	}
+}
+
+func getEnv(key string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return "false"
 }
 
 // convertJsonToMap converts JSON data into a map.
