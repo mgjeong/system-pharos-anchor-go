@@ -18,11 +18,11 @@
 package notification
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	URL "commons/url"
+	"commons/util"
 	nodeSearch "controller/search/node"
 	"crypto/sha1"
 	appEventDB "db/mongo/event/app"
@@ -42,23 +42,22 @@ type Command interface {
 }
 
 const (
-	ID                = "id"
-	GROUP_ID          = "groupId"
-	NODE_ID           = "nodeId"
-	APP_ID            = "appid"
-	IMAGE_NAME        = "imagename"
-	APP               = "app"
-	NODE              = "node"
-	NODES             = "nodes"
-	SUBS              = "subscriber"
-	EVENT             = "event"
-	EVENT_ID          = "eventid"
-	RESPONSES         = "response"
-	DEFAULT_NODE_PORT = "48098"
-	RESPONSE_CODE     = "code"
-	ERROR_MESSAGE     = "message"
-	TYPE              = "type"
-	STATUS            = "status"
+	ID            = "id"
+	GROUP_ID      = "groupId"
+	NODE_ID       = "nodeId"
+	APP_ID        = "appid"
+	IMAGE_NAME    = "imagename"
+	APP           = "app"
+	NODE          = "node"
+	NODES         = "nodes"
+	SUBS          = "subscriber"
+	EVENT         = "event"
+	EVENT_ID      = "eventid"
+	RESPONSES     = "response"
+	RESPONSE_CODE = "code"
+	ERROR_MESSAGE = "message"
+	TYPE          = "type"
+	STATUS        = "status"
 )
 
 // Executor implements the Command interface.
@@ -283,7 +282,7 @@ func registerAppEvent(url string, event map[string]interface{},
 	eventId = append(eventId, generateEventId(query))
 
 	address := getNodesAddress(nodes["nodes"].([]map[string]interface{}))
-	urls := makeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
+	urls := util.MakeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
 	reqBody := makeRequestBody(query, eventId[0])
 	body, err := convertMapToJson(reqBody)
 	if err != nil {
@@ -390,7 +389,7 @@ func getTargetNodes(query map[string][]string) (map[string]interface{}, error) {
 func getSucceedNodesId(nodes []map[string]interface{}, codes []int) []string {
 	nodeId := make([]string, 0)
 	for i, node := range nodes {
-		if isSuccessCode(codes[i]) {
+		if util.IsSuccessCode(codes[i]) {
 			nodeId = append(nodeId, node[ID].(string))
 		}
 	}
@@ -526,7 +525,7 @@ func convertRespToMap(respStr []string) ([]map[string]interface{}, error) {
 func decideResultCode(codes []int) int {
 	successCounts := 0
 	for _, code := range codes {
-		if isSuccessCode(code) {
+		if util.IsSuccessCode(code) {
 			successCounts++
 		}
 	}
@@ -543,31 +542,6 @@ func decideResultCode(codes []int) int {
 	return result
 }
 
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODE_PORT + URL.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
-}
-
-// isSuccessCode returns true in case of success and false otherwise.
-func isSuccessCode(code int) bool {
-	if code >= 200 && code <= 299 {
-		return true
-	}
-	return false
-}
-
 // makeSeparateResponses used to make a separate response.
 func makeSeparateResponses(nodes []map[string]interface{}, codes []int,
 	respMap []map[string]interface{}) []map[string]interface{} {
@@ -579,7 +553,7 @@ func makeSeparateResponses(nodes []map[string]interface{}, codes []int,
 		respValue[i][ID] = node[ID].(string)
 		respValue[i][RESPONSE_CODE] = codes[i]
 
-		if !isSuccessCode(codes[i]) {
+		if !util.IsSuccessCode(codes[i]) {
 			respValue[i][ERROR_MESSAGE] = respMap[i][ERROR_MESSAGE]
 		}
 	}
