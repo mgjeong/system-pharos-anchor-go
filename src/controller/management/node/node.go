@@ -106,13 +106,11 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Check whether 'apps' is included.
-	apps, exists := bodyMap["apps"]
-	if !exists {
-		return results.ERROR, nil, errors.InvalidJSON{"apps field is required"}
-	}
 	appIds := make([]string, 0)
-	for _, app := range apps.([]interface{}) {
-		appIds = append(appIds, app.(string))
+	if apps, exists := bodyMap["apps"]; exists {
+		for _, app := range apps.([]interface{}) {
+			appIds = append(appIds, app.(string))
+		}
 	}
 
 	// check whether device already exists.
