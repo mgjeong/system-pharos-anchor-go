@@ -26,6 +26,8 @@ import (
 	"commons/url"
 	"commons/util"
 	noti "controller/notification"
+	groupSearch "controller/search/group"
+	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
 	"messenger"
 	"strings"
@@ -69,13 +71,17 @@ const (
 type Executor struct{}
 
 var nodeDbExecutor nodeDB.Command
+var groupDbExecutor groupDB.Command
 var httpExecutor messenger.Command
 var notiExecutor noti.Command
+var groupSearchExecutor groupSearch.Command
 
 func init() {
 	nodeDbExecutor = nodeDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 	notiExecutor = noti.Executor{}
+	groupSearchExecutor = groupSearch.Executor{}
 }
 
 // RegisterNode inserts a new node with ip which is passed in call to function.
@@ -163,6 +169,15 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
+	}
+
+	// Remove the node from a list of group members.
+	query := make(map[string]interface{})
+	query["nodeId"] = []string{nodeId}
+
+	_, groups, _ := groupSearchExecutor.SearchGroups(query)
+	for _, group := range groups["groups"].([]map[string]interface{}) {
+		groupDbExecutor.LeaveGroup(group["id"].(string), nodeId)
 	}
 
 	return results.OK, err
