@@ -51,10 +51,10 @@ const (
 )
 
 type App struct {
-	ID       string `bson:"_id,omitempty"`
-	Images   []string
-	Services []string
-	RefCnt   int
+	ID       string   `bson:"_id,omitempty"`
+	Images   []string `bson:"images"`
+	Services []string `bson:"services"`
+	RefCnt   int      `bson:"refcnt"`
 }
 
 type Executor struct {
@@ -152,7 +152,7 @@ func (Executor) AddApp(appId string, description []byte) error {
 
 	// Increase the reference count.
 	query = bson.M{"_id": appId}
-	update := bson.M{"$set": bson.M{"refCnt": app.RefCnt + 1}}
+	update := bson.M{"$set": bson.M{"refcnt": app.RefCnt + 1}}
 	err = getCollection(session, DB_NAME, APP_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, "Failed to increase reference count")
@@ -258,7 +258,7 @@ func (Executor) DeleteApp(appId string) error {
 
 	// Decrease the reference count.
 	query = bson.M{"_id": appId}
-	update := bson.M{"$set": bson.M{"refCnt": refCnt}}
+	update := bson.M{"$set": bson.M{"refcnt": refCnt}}
 	err = getCollection(session, DB_NAME, APP_COLLECTION).Update(query, update)
 	if err != nil {
 		return ConvertMongoError(err, "Failed to decrease reference count")
