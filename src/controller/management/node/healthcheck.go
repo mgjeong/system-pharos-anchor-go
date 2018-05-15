@@ -66,16 +66,15 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 	if !exists {
 		logger.Logging(logger.DEBUG, "first ping request is received from node")
 	} else {
+		// Status is updated with 'connected'.
+		executor.UpdateNodeStatus(nodeId, STATUS_CONNECTED)
+
 		if common.timers[nodeId] != nil {
 			// If ping request is received in interval time, send signal to stop timer.
 			common.timers[nodeId] <- true
 			logger.Logging(logger.DEBUG, "ping request is received in interval time")
 		} else {
 			logger.Logging(logger.DEBUG, "ping request is received after interval time-out")
-			err = executor.UpdateNodeStatus(nodeId, STATUS_CONNECTED)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-			}
 			sendNotification(nodeId, STATUS_CONNECTED)
 		}
 	}
