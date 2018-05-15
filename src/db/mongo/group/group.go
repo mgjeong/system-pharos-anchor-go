@@ -304,17 +304,16 @@ func (client Executor) GetGroupMembersByAppID(groupId string, appId string) ([]m
 		return nil, err
 	}
 
-	result := make([]map[string]interface{}, len(group["members"].([]string)))
-	for i, nodeId := range group["members"].([]string) {
+	result := make([]map[string]interface{}, 0)
+	for _, nodeId := range group["members"].([]string) {
 		var node map[string]interface{}
 		node, err := nodeExecutor.GetNodeByAppID(nodeId, appId)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			result = append(result, node)
 		}
-		result[i] = node
 	}
 
-	return result, err
+	return result, nil
 }
 
 // DeleteGroup deletes single document specified by groupId parameter.
