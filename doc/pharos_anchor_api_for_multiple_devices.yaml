@@ -467,7 +467,7 @@ definitions:
       services:
         type: array
         example:
-          - {"name":"container name", "ports":[], "state":{"exitcode": "0","status": "running"}}
+          - {"cid": "container id", "name":"container name", "ports":[], "state":{"exitcode": "0","status": "running"}}
   apps:
     required:
       - id
@@ -482,9 +482,9 @@ definitions:
           - node_id_sample2
   response_of_get_app:
     required:
-      - members
+      - responses
     properties:
-      members:
+      responses:
         type: array
         items:
           $ref: '#/definitions/app'
