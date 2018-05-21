@@ -24,6 +24,7 @@ import (
 	"commons/results"
 	"commons/util"
 	groupDB "db/mongo/group"
+	nodeDB "db/mongo/node"
 )
 
 type Command interface {
@@ -54,10 +55,12 @@ const (
 
 type Executor struct{}
 
-var dbExecutor groupDB.Command
+var groupDbExecutor groupDB.Command
+var nodeDbExecutor nodeDB.Command
 
 func init() {
-	dbExecutor = groupDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
+	nodeDbExecutor = nodeDB.Executor{}
 }
 
 // CreateGroup inserts a new group to databases.
@@ -79,7 +82,7 @@ func (Executor) CreateGroup(body string) (int, map[string]interface{}, error) {
 	}
 
 	name := bodyMap[GROUP_NAME].(string)
-	group, err := dbExecutor.CreateGroup(name)
+	group, err := groupDbExecutor.CreateGroup(name)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -95,7 +98,7 @@ func (Executor) GetGroup(groupId string) (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	group, err := dbExecutor.GetGroup(groupId)
+	group, err := groupDbExecutor.GetGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -111,7 +114,7 @@ func (Executor) GetGroups() (int, map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	groups, err := dbExecutor.GetGroups()
+	groups, err := groupDbExecutor.GetGroups()
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -142,8 +145,17 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 		return results.ERROR, nil, errors.InvalidJSON{"nodes field is required"}
 	}
 
+	// Validate nodeIds in request body.
 	for _, nodeId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbExecutor.JoinGroup(groupId, nodeId.(string))
+		_, err := nodeDbExecutor.GetNode(nodeId.(string))
+		if err != nil {
+			logger.Logging(logger.ERROR, err.Error())
+			return results.ERROR, nil, err
+		}
+	}
+
+	for _, nodeId := range bodyMap[AGENTS].([]interface{}) {
+		err = groupDbExecutor.JoinGroup(groupId, nodeId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -173,7 +185,7 @@ func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interfa
 	}
 
 	for _, nodeId := range bodyMap[AGENTS].([]interface{}) {
-		err = dbExecutor.LeaveGroup(groupId, nodeId.(string))
+		err = groupDbExecutor.LeaveGroup(groupId, nodeId.(string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err
@@ -190,7 +202,7 @@ func (Executor) DeleteGroup(groupId string) (int, map[string]interface{}, error)
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
-	err := dbExecutor.DeleteGroup(groupId)
+	err := groupDbExecutor.DeleteGroup(groupId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
