@@ -5,7 +5,7 @@ info:
     Pharos Anchor provides service deployment and device management functionalities to an edge device with a container-based edge S/W platform.
     This description explains how to use Pharos Anchor Agent APIs to deploy, update,
     start, stop, delete service and manage edge devices.
-  version: v1-20180110
+  version: v1-20180523
 schemes:
   - http
 tags:
@@ -19,6 +19,8 @@ tags:
     description: Resource information collector
   - name: Configuration
     description: Properties and configurations of Pharos Node
+  - name: Notification
+    description: Pharos Node and Service status event monitoring
 paths:
   '/api/v1/ping':
     post:
@@ -430,6 +432,46 @@ paths:
       responses:
         '200':
           description: Configuration update succeeds
+  '/api/v1/notification':
+    post:
+      tags:
+        - Notification
+      description: 'Subscribe pharos node & service status event'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: notification
+          in: body
+          description: >-
+            Subscriber information.
+          required: true
+          schema:
+            $ref: '#/definitions/notification'
+      responses:
+        '200':
+          description: Subscriber registration succeeds
+          schema:
+            $ref: '#/definitions/response_of_notification'
+  '/api/v1/notification/{subscriber_id}':
+    delete:
+      tags:
+        - Notification
+      description: 'Unregister the subscriber specified by {subscriber_id}'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: subscriber_id
+          in: path
+          description: ID of the subscriber assigned by '/api/v1/notification' api
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Subscriber unregistration succeeds
 definitions:
   service_name:
     required:
@@ -499,6 +541,19 @@ definitions:
         example:
           - {"devicename":"EdgeDevice"}
           - {"pinginterval":"10"}
+  notification:
+    required:
+      - url
+      - event
+    properties:
+      url:
+        type: string
+        description: Event push api of subscriber
+        example: "http://192.168.0.1:8088/event"
+      event:
+        type: string
+        description: Event type(node or app) and status
+        example: {"type":"node", "status":["connected", "disconnected"]}
   request_of_node_register:
     required:
       - ip
@@ -608,3 +663,10 @@ definitions:
           - {"os":"linux", "readOnly":true}
           - {"platform":{"family":"debian","platform":"ubuntu","version":"14.04"}, "readOnly":true}
           - {"processor":[{"cpu":"0", "modelname":"Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz"}], "readOnly":true}
+  response_of_notification:
+    required:
+      - id
+    properties:
+      id:
+        type: string
+        example: "82424138b60bf19f5cbece5c8ca68a8567bcae0b"
