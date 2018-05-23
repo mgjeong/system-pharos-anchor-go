@@ -20,6 +20,7 @@ import (
 	"commons/errors"
 	"commons/results"
 	groupdbmocks "db/mongo/group/mocks"
+	nodedbmocks "db/mongo/node/mocks"
 	"github.com/golang/mock/gomock"
 	"reflect"
 	"testing"
@@ -72,13 +73,13 @@ func TestCalledCreateGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().CreateGroup(groupName).Return(group, nil),
+		groupDbExecutorMockObj.EXPECT().CreateGroup(groupName).Return(group, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	body := `{"name":"testGroup"}`
 	code, res, err := manager.CreateGroup(body)
@@ -100,13 +101,13 @@ func TestCalledCreateGroupWhenFailedToInsertGroupToDB_ExpectErrorReturn(t *testi
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().CreateGroup(groupName).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().CreateGroup(groupName).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	body := `{"name":"testGroup"}`
 	code, _, err := manager.CreateGroup(body)
@@ -130,13 +131,13 @@ func TestCalledGetGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetGroup(groupId).Return(group, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroup(groupId).Return(group, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, res, err := manager.GetGroup(groupId)
 
@@ -157,13 +158,13 @@ func TestCalledGetGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T) 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetGroup(groupId).Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroup(groupId).Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := manager.GetGroup(groupId)
 
@@ -188,13 +189,13 @@ func TestCalledGetGroups_ExpectSuccess(t *testing.T) {
 
 	groups := []map[string]interface{}{group}
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(groups, nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, res, err := manager.GetGroups()
 
@@ -215,13 +216,13 @@ func TestCalledGetGroupsWhenFailedToGetGroupsFromDB_ExpectErrorReturn(t *testing
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().GetGroups().Return(nil, notFoundError),
+		groupDbExecutorMockObj.EXPECT().GetGroups().Return(nil, notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := manager.GetGroups()
 
@@ -244,13 +245,16 @@ func TestCalledJoinGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(nil),
+		nodeDbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		groupDbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 
 	nodes := `{"nodes":["000000000000000000000001"]}`
 	code, _, err := manager.JoinGroup(groupId, nodes)
@@ -290,13 +294,16 @@ func TestCalledJoinGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T)
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(notFoundError),
+		nodeDbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
+		groupDbExecutorMockObj.EXPECT().JoinGroup(groupId, nodeId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
+	nodeDbExecutor = nodeDbExecutorMockObj
 
 	nodes := `{"nodes":["000000000000000000000001"]}`
 	code, _, err := manager.JoinGroup(groupId, nodes)
@@ -320,13 +327,13 @@ func TestCalledLeaveGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(nil),
+		groupDbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	nodes := `{"nodes":["000000000000000000000001"]}`
 	code, _, err := manager.LeaveGroup(groupId, nodes)
@@ -366,13 +373,13 @@ func TestCalledLeaveGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.T
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(notFoundError),
+		groupDbExecutorMockObj.EXPECT().LeaveGroup(groupId, nodeId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	nodes := `{"nodes":["000000000000000000000001"]}`
 	code, _, err := manager.LeaveGroup(groupId, nodes)
@@ -396,13 +403,13 @@ func TestCalledDeleteGroup_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().DeleteGroup(groupId).Return(nil),
+		groupDbExecutorMockObj.EXPECT().DeleteGroup(groupId).Return(nil),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := manager.DeleteGroup(groupId)
 
@@ -419,13 +426,13 @@ func TestCalledDeleteGroupWhenDBHasNotMatchedGroup_ExpectErrorReturn(t *testing.
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	dbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
+	groupDbExecutorMockObj := groupdbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		dbExecutorMockObj.EXPECT().DeleteGroup(groupId).Return(notFoundError),
+		groupDbExecutorMockObj.EXPECT().DeleteGroup(groupId).Return(notFoundError),
 	)
 	// pass mockObj to a real object.
-	dbExecutor = dbExecutorMockObj
+	groupDbExecutor = groupDbExecutorMockObj
 
 	code, _, err := manager.DeleteGroup(groupId)
 

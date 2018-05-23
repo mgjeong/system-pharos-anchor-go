@@ -153,7 +153,7 @@ func TestCalledAddNode_ExpectSuccess(t *testing.T) {
 	mgoDial = connectionMockObj
 	executor := Executor{}
 
-	_, err := executor.AddNode(ip, status, configuration)
+	_, err := executor.AddNode(ip, status, configuration, []string{})
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -181,7 +181,7 @@ func TestCalledAddNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.AddNode(ip, status, configuration)
+	_, err := executor.AddNode(ip, status, configuration, []string{})
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")

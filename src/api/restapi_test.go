@@ -21,6 +21,7 @@ import (
 	managementmocks "api/management/mocks"
 	monitoringmocks "api/monitoring/mocks"
 	searchmocks "api/search/mocks"
+	healthmocks "api/health/mocks"
 	"github.com/golang/mock/gomock"
 	"net/http"
 	"net/http/httptest"
@@ -114,6 +115,25 @@ func TestCalledServeHTTPWithSearchRequest_ExpectCalledSearchHandle(t *testing.T)
 
 	// pass mockObj to a real object.
 	searchHandler = searchHandlerMockObj
+
+	Handler.ServeHTTP(w, req)
+}
+
+func TestCalledServeHTTPWithPingRequest_ExpectCalledPingHandle(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	healthHandlerMockObj := healthmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		healthHandlerMockObj.EXPECT().Handle(gomock.Any(), gomock.Any()),
+	)
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/api/v1/ping", nil)
+
+	// pass mockObj to a real object.
+	healthHandler = healthHandlerMockObj
 
 	Handler.ServeHTTP(w, req)
 }

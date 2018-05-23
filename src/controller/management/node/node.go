@@ -20,14 +20,15 @@
 package node
 
 import (
-	"bytes"
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
 	"commons/url"
+	"commons/util"
 	noti "controller/notification"
+	groupSearch "controller/search/group"
+	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
-	"encoding/json"
 	"messenger"
 	"strings"
 	"time"
@@ -61,9 +62,8 @@ const (
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
 	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
-	MAXIMUM_NETWORK_LATENCY_SEC = 3             // the term used to indicate any kind of delay that happens in data communication over a network.
+	MAXIMUM_NETWORK_LATENCY_SEC = 3              // the term used to indicate any kind of delay that happens in data communication over a network.
 	TIME_UNIT                   = time.Minute    // the minute is a unit of time for healthcheck.
-	DEFAULT_NODE_PORT           = "48098"        // used to indicate a default pharos node port.
 	PROPERTIES                  = "properties"
 )
 
@@ -71,13 +71,17 @@ const (
 type Executor struct{}
 
 var nodeDbExecutor nodeDB.Command
+var groupDbExecutor groupDB.Command
 var httpExecutor messenger.Command
 var notiExecutor noti.Command
+var groupSearchExecutor groupSearch.Command
 
 func init() {
 	nodeDbExecutor = nodeDB.Executor{}
+	groupDbExecutor = groupDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
 	notiExecutor = noti.Executor{}
+	groupSearchExecutor = groupSearch.Executor{}
 }
 
 // RegisterNode inserts a new node with ip which is passed in call to function.
@@ -89,7 +93,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 
 	// If body is not empty, try to get node id from body.
 	// This code will be used to update the information of node without changing id.
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -107,6 +111,14 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
 
+	// Check whether 'apps' is included.
+	appIds := make([]string, 0)
+	if apps, exists := bodyMap["apps"]; exists {
+		for _, app := range apps.([]interface{}) {
+			appIds = append(appIds, app.(string))
+		}
+	}
+
 	// check whether device already exists.
 	node, err := nodeDbExecutor.GetNodeByIP(ip)
 	if err == nil {
@@ -117,7 +129,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Add new node to database with given ip, port, status.
-	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}))
+	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}), appIds)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -148,21 +160,32 @@ func (Executor) UnRegisterNode(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Unregister())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Unregister())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	// Stop timer and close the channel for ping.
+	common.Lock()
 	if common.timers[nodeId] != nil {
 		common.timers[nodeId] <- true
 		close(common.timers[nodeId])
 	}
 	delete(common.timers, nodeId)
+	common.Unlock()
 
 	// Delete node specified by nodeId parameter.
 	err = nodeDbExecutor.DeleteNode(nodeId)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
+	}
+
+	// Remove the node from a list of group members.
+	query := make(map[string]interface{})
+	query["nodeId"] = []string{nodeId}
+
+	_, groups, _ := groupSearchExecutor.SearchGroups(query)
+	for _, group := range groups["groups"].([]map[string]interface{}) {
+		groupDbExecutor.LeaveGroup(group["id"].(string), nodeId)
 	}
 
 	return results.OK, err
@@ -294,7 +317,7 @@ func (Executor) Reboot(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Reboot())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Reboot())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	return results.OK, err
@@ -320,7 +343,7 @@ func (Executor) Restore(nodeId string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Restore())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Restore())
 	httpExecutor.SendHttpRequest("POST", urls, nil)
 
 	return results.OK, err
@@ -358,17 +381,17 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 		return results.ERROR, err
 	}
 
-	urls := makeRequestUrl(address, url.Management(), url.Device(), url.Configuration())
+	urls := util.MakeRequestUrl(address, url.Management(), url.Device(), url.Configuration())
 
 	codes, _ := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
 	result := codes[0]
-	if !isSuccessCode(result) {
+	if !util.IsSuccessCode(result) {
 		return results.ERROR, err
 	}
 
 	// Update configuration information.
-	updatedProps, err := convertJsonToMap(body)
+	updatedProps, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -394,43 +417,6 @@ func (Executor) SetNodeConfiguration(nodeId string, body string) (int, error) {
 	}
 
 	return results.OK, nil
-}
-
-// convertJsonToMap converts JSON data into a map.
-// If successful, this function returns an error as nil.
-// otherwise, an appropriate error will be returned.
-func convertJsonToMap(jsonStr string) (map[string]interface{}, error) {
-	result := make(map[string]interface{})
-	err := json.Unmarshal([]byte(jsonStr), &result)
-	if err != nil {
-		return nil, errors.InvalidJSON{"Unmarshalling Failed"}
-	}
-	return result, err
-}
-
-// isSuccessCode returns true in case of success and false otherwise.
-func isSuccessCode(code int) bool {
-	if code >= 200 && code <= 299 {
-		return true
-	}
-	return false
-}
-
-// makeRequestUrl make a list of urls that can be used to send a http request.
-func makeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls []string) {
-	var httpTag string = "http://"
-	var full_url bytes.Buffer
-
-	for i := range address {
-		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) +
-			":" + DEFAULT_NODE_PORT + url.Base())
-		for _, api_part := range api_parts {
-			full_url.WriteString(api_part)
-		}
-		urls = append(urls, full_url.String())
-	}
-	return urls
 }
 
 // getNodeAddress returns an address as an array.

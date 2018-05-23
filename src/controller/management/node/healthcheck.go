@@ -21,6 +21,7 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/util"
 	"encoding/json"
 	"strconv"
 	"time"
@@ -42,7 +43,7 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, err
 	}
 
-	bodyMap, err := convertJsonToMap(body)
+	bodyMap, err := util.ConvertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, err
@@ -60,30 +61,33 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 		return results.ERROR, errors.InvalidJSON{"invalid value type(interval must be integer)"}
 	}
 
+	common.Lock()
 	_, exists = common.timers[nodeId]
 	if !exists {
 		logger.Logging(logger.DEBUG, "first ping request is received from node")
 	} else {
+		// Status is updated with 'connected'.
+		executor.UpdateNodeStatus(nodeId, STATUS_CONNECTED)
+
 		if common.timers[nodeId] != nil {
 			// If ping request is received in interval time, send signal to stop timer.
 			common.timers[nodeId] <- true
 			logger.Logging(logger.DEBUG, "ping request is received in interval time")
 		} else {
 			logger.Logging(logger.DEBUG, "ping request is received after interval time-out")
-			err = executor.UpdateNodeStatus(nodeId, STATUS_CONNECTED)
-			if err != nil {
-				logger.Logging(logger.ERROR, err.Error())
-			}
 			sendNotification(nodeId, STATUS_CONNECTED)
 		}
 	}
+	common.Unlock()
 
 	// Start timer with received interval time.
 	timeDurationMin := time.Duration(interval+MAXIMUM_NETWORK_LATENCY_SEC) * TIME_UNIT
 	timer := time.NewTimer(timeDurationMin)
 	go func() {
 		quit := make(chan bool)
+		common.Lock()
 		common.timers[nodeId] = quit
+		common.Unlock()
 
 		select {
 		// Block until timer finishes.
@@ -102,8 +106,10 @@ func (executor Executor) PingNode(nodeId string, body string) (int, error) {
 			return
 		}
 
+		common.Lock()
 		common.timers[nodeId] = nil
 		close(quit)
+		common.Unlock()
 	}()
 
 	return results.OK, err

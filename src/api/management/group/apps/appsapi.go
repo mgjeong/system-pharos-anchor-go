@@ -15,7 +15,7 @@
  *
  *******************************************************************************/
 
-// Package api/management/group provides functionality to handle request related to group.
+// Package api/management/group/apps provides functionality to handle request related to apps.
 package apps
 
 import (

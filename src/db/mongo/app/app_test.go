@@ -161,7 +161,7 @@ func TestCalledAddAppWhenAlreadyExistsInDB_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": appId}
-	update := bson.M{"$set": bson.M{"refCnt": 2}}
+	update := bson.M{"$set": bson.M{"refcnt": 2}}
 	arg := App{ID: appId, Images: []string{}, Services: []string{}, RefCnt: 1}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -416,7 +416,7 @@ func TestCalledDeleteAppWhenReferenceCountIsNotZero_ExpectSuccess(t *testing.T) 
 	defer mockCtrl.Finish()
 
 	query := bson.M{"_id": appId}
-	update := bson.M{"$set": bson.M{"refCnt": 1}}
+	update := bson.M{"$set": bson.M{"refcnt": 1}}
 	arg := App{ID: appId, Images: []string{}, Services: []string{}, RefCnt: 2}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)

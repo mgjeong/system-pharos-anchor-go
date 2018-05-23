@@ -20,9 +20,10 @@ import (
 	"commons/errors"
 	"commons/logger"
 	"commons/results"
+	"commons/util"
 	appDB "db/mongo/app"
-	nodeDB "db/mongo/node"
 	groupDB "db/mongo/group"
+	nodeDB "db/mongo/node"
 )
 
 type Command interface {
@@ -114,7 +115,7 @@ func filterByGroupId(nodes []map[string]interface{}, groupId string) ([]map[stri
 		if group["id"] == groupId {
 			members := group["members"]
 			for _, node := range nodes {
-				if doesContain(members.([]string), node["id"].(string)) {
+				if util.IsContainedStringInList(members.([]string), node["id"].(string)) {
 					filteredNodes = append(filteredNodes, node)
 				}
 			}
@@ -128,7 +129,7 @@ func filterByAppId(nodes []map[string]interface{}, appId string) []map[string]in
 	filteredNodes := make([]map[string]interface{}, 0)
 
 	for _, node := range nodes {
-		if doesContain(node["apps"].([]string), appId) {
+		if util.IsContainedStringInList(node["apps"].([]string), appId) {
 			filteredNodes = append(filteredNodes, node)
 		}
 	}
@@ -147,7 +148,7 @@ func filterByImageName(nodes []map[string]interface{}, imageName string) ([]map[
 				logger.Logging(logger.ERROR, err.Error())
 				return nil, err
 			}
-			if doesContain(app["images"].([]string), imageName) {
+			if util.IsContainedStringInList(app["images"].([]string), imageName) {
 				filteredNodes = append(filteredNodes, node)
 				break
 			}
@@ -175,13 +176,4 @@ func doesContainInvalidQuery(query map[string][]string) bool {
 	} else {
 		return true
 	}
-}
-
-func doesContain(arr []string, item string) bool {
-	for _, val := range arr {
-		if val == item {
-			return true
-		}
-	}
-	return false
 }

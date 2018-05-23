@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017 Samsung Electronics All Rights Reserved.
+ * Copyright 2018 Samsung Electronics All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,23 @@
  *
  *******************************************************************************/
 
-package node
+// Package health provides logic of checking health status of pharos-anchor.
+package health
 
 import (
-	"sync"
+	"commons/logger"
+	"commons/results"
 )
 
-var common context
-
-type context struct {
-	sync.Mutex
-	timers map[string]chan bool
+type Command interface {
+	Ping() (int, error)
 }
 
-func init() {
-	common.timers = make(map[string]chan bool)
+type Executor struct{}
+
+func (Executor) Ping() (int, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	return results.OK, nil
 }

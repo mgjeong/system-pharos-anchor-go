@@ -9,6 +9,8 @@ info:
 schemes:
   - http
 tags:
+  - name: Health
+    description: Health check of Pharos Anchor
   - name: Application Deployment
     description: Distribution & Control Apps
   - name: Group Management
@@ -16,7 +18,19 @@ tags:
   - name: Resource Monitoring
     description: Resource information collector
 paths:
-  /api/v1/management/groups:
+  '/api/v1/ping':
+    post:
+      tags:
+        - Health
+      description: Check whether Pharos Anchor is up and responding to requests.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation.
+  '/api/v1/management/groups':
     get:
       tags:
         - Group Management
@@ -31,7 +45,7 @@ paths:
           description: Application get succeeds
           schema:
             $ref: '#/definitions/response_of_get_groups'
-  /api/v1/management/groups/create:
+  '/api/v1/management/groups/create':
     post:
       tags:
         - Group Management
@@ -453,7 +467,7 @@ definitions:
       services:
         type: array
         example:
-          - {"name":"container name", "ports":[], "state":{"exitcode": "0","status": "running"}}
+          - {"cid": "container id", "name":"container name", "ports":[], "state":{"exitcode": "0","status": "running"}}
   apps:
     required:
       - id
@@ -468,9 +482,9 @@ definitions:
           - node_id_sample2
   response_of_get_app:
     required:
-      - members
+      - responses
     properties:
-      members:
+      responses:
         type: array
         items:
           $ref: '#/definitions/app'

@@ -9,6 +9,8 @@ info:
 schemes:
   - http
 tags:
+  - name: Health
+    description: Health check of Pharos Anchor
   - name: Application Deployment
     description: Distribution & Control Apps
   - name: Pharos Node Management
@@ -18,6 +20,18 @@ tags:
   - name: Configuration
     description: Properties and configurations of Pharos Node
 paths:
+  '/api/v1/ping':
+    post:
+      tags:
+        - Health
+      description: Check whether Pharos Anchor is up and responding to requests.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation.
   '/api/v1/management/nodes/register':
     post:
       tags:
@@ -329,12 +343,34 @@ paths:
       responses:
         '200':
           description: Application stop succeeds
+  '/api/v1/monitoring/nodes/{node_id}/apps/{app_id}/resource':
+    get:
+      tags:
+        - Resource Monitoring
+      description: >-
+        Request to get app's resource usage.
+      parameters:
+        - name: node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+        - name: app_id
+          in: path
+          description: ID of the app assigned by Pharos
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful operation.
+          schema:
+            $ref: "#/definitions/response_of_app_resource"
   '/api/v1/monitoring/nodes/{node_id}/resource':
-    post:
+    get:
       tags:
         - Resource Monitoring
       description: |
-        Request to get the device information (os, processor model name, cpu/memory/disk usage)
+        Request to get the device information (cpu/memory/disk usage)
       consumes:
         - application/json
       produces:
@@ -421,19 +457,19 @@ definitions:
   node:
     required:
       - id
-      - host
-      - port
+      - ip
+      - status
       - apps
     properties:
       id:
         type: string
         example: node_id_sample
-      host:
+      ip:
         type: string
         example: 192.168.0.1
-      port:
+      status:
         type: string
-        example: 8080
+        example: connected
       apps:
         example:
           - app_id_sample1
@@ -450,7 +486,7 @@ definitions:
     example: ["8.00%", "3.03%", "7.07%", "16.16%", "9.90%", "18.00%", "11.22%", "4.12%"]
   mem:
     description: Information about memory usage of edge device where Pharos Node exists
-    example: {"free":"0KB", "total":"0KB", "used":"0KB", "usedpercnet":"0%"}
+    example: {"free":"0KB", "total":"0KB", "used":"0KB", "usedpercent":"0%"}
   disk:
     description: Information about disk usage of edge device where Pharos Node exists
     example: [{"free":"0G", "path":"/root", "total":"0G", "used":"0G", "usedpercent":"0%"}]
@@ -552,6 +588,14 @@ definitions:
         $ref: '#/definitions/mem'
       disk:
         $ref: '#/definitions/disk'
+  response_of_app_resource:
+    required:
+      - services
+    properties:
+      services:
+        type: array
+        example:
+          - {"blockinput": "0.000B", "blockoutput": "0.000B", "cid": "abcd1234", "cname": "service1", "cpu": "0.000%",      "mem": "0.00%", "memlimit": "0.000B", "memusage": "0.000B", "networkinput": "0.000B", "networkoutput": "0.000B", "pids": 0}
   response_of_get_configuration:
     required:
       - properties
