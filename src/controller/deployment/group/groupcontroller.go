@@ -30,6 +30,7 @@ import (
 	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
 	"messenger"
+	"strconv"
 )
 
 const (
@@ -529,7 +530,7 @@ func makeSeparateResponses(members []map[string]interface{}, codes []int,
 	for i, node := range members {
 		respValue[i] = make(map[string]interface{})
 		respValue[i][ID] = node[ID].(string)
-		respValue[i][RESPONSE_CODE] = codes[i]
+		respValue[i][RESPONSE_CODE] = strconv.Itoa(codes[i])
 
 		if !util.IsSuccessCode(codes[i]) {
 			respValue[i][ERROR_MESSAGE] = respMap[i][ERROR_MESSAGE]
