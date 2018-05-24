@@ -231,11 +231,11 @@ func TestCalledDeployAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -453,12 +453,12 @@ func TestCalledGetAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testing
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":          nodeId,
-				"code":        results.OK,
+				"code":        "200",
 				"description": "description",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -592,11 +592,11 @@ func TestCalledUpdateAppInfoWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -730,11 +730,11 @@ func TestCalledUpdateAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -868,11 +868,11 @@ func TestCalledStartAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testi
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -1006,11 +1006,11 @@ func TestCalledStopAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *testin
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
@@ -1152,11 +1152,11 @@ func TestCalledDeleteAppWhenMessengerReturnsPartialSuccess_ExpectSuccess(t *test
 		"responses": []map[string]interface{}{
 			map[string]interface{}{
 				"id":   nodeId,
-				"code": results.OK,
+				"code": "200",
 			},
 			map[string]interface{}{
 				"id":      nodeId,
-				"code":    results.ERROR,
+				"code":    "500",
 				"message": "errorMsg",
 			},
 		},
