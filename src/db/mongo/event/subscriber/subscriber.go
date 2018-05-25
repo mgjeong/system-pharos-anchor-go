@@ -26,7 +26,8 @@ import (
 
 type Command interface {
 	// AddSubscriber insert new Subscriber.
-	AddSubscriber(id string, eventType string, URL string, Status []string, eventId []string) error
+	AddSubscriber(id, eventType, url string, status, eventId []string, queries map[string][]string) error
+	GetSubscribers() ([]map[string]interface{}, error)
 	GetSubscriber(id string) (map[string]interface{}, error)
 	DeleteSubscriber(id string) error
 }
@@ -43,6 +44,7 @@ type Subscriber struct {
 	URL     string
 	Status  []string
 	EventId []string
+	Query   map[string][]string
 }
 
 type Executor struct {
@@ -86,12 +88,12 @@ func (subscriber Subscriber) convertToMap() map[string]interface{} {
 		"type":    subscriber.Type,
 		"url":     subscriber.URL,
 		"status":  subscriber.Status,
-		"eventId": subscriber.EventId,
+		"eventid": subscriber.EventId,
+		"query":   subscriber.Query,
 	}
 }
 
-func (Executor) AddSubscriber(id string, eventType string, url string, status []string,
-	eventId []string) error {
+func (Executor) AddSubscriber(id, eventType, url string, status, eventId []string, queries map[string][]string) error {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -116,6 +118,7 @@ func (Executor) AddSubscriber(id string, eventType string, url string, status []
 				URL:     url,
 				Status:  status,
 				EventId: eventId,
+				Query:   queries,
 			}
 
 			err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Insert(subscriber)
@@ -124,9 +127,38 @@ func (Executor) AddSubscriber(id string, eventType string, url string, status []
 			}
 			return nil
 		}
+	} else {
+		update := bson.M{"$set": bson.M{"eventid": eventId}}
+		err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Update(query, update)
+		if err != nil {
+			return ConvertMongoError(err, "")
+		}
+		return nil
+	}
+	return err
+}
+
+func (Executor) GetSubscribers() ([]map[string]interface{}, error) {
+	logger.Logging(logger.DEBUG, "IN")
+	defer logger.Logging(logger.DEBUG, "OUT")
+
+	session, err := connect(DB_URL)
+	if err != nil {
+		return nil, err
+	}
+	defer close(session)
+
+	subscribers := []Subscriber{}
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Find(nil).All(&subscribers)
+	if err != nil {
+		return nil, ConvertMongoError(err)
 	}
 
-	return nil
+	result := make([]map[string]interface{}, len(subscribers))
+	for i, subscriber := range subscribers {
+		result[i] = subscriber.convertToMap()
+	}
+	return result, err
 }
 
 func (Executor) GetSubscriber(id string) (map[string]interface{}, error) {

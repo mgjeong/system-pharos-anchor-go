@@ -135,6 +135,12 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		return results.ERROR, nil, err
 	}
 
+	// Send notification to subscribers.
+	go func() {
+		notiExecutor.UpdateSubscriber()
+		sendNotification(node[ID].(string), STATUS_CONNECTED)
+	}()
+
 	res := make(map[string]interface{})
 	res[ID] = node[ID]
 	return results.OK, res, err

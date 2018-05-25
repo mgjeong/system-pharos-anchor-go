@@ -38,6 +38,7 @@ import (
 type Command interface {
 	Register(body string, query map[string][]string) (int, map[string]interface{}, error)
 	UnRegister(eventId string) (int, error)
+	UpdateSubscriber()
 	NotificationHandler(eventType string, body string)
 }
 
@@ -118,6 +119,27 @@ func (Executor) Register(body string,
 			return results.ERROR, nil, err
 		}
 		return result, resp, err
+	}
+}
+
+func (Executor) UpdateSubscriber() {
+	subscribers, err := subsDbExecutor.GetSubscribers()
+	if err != nil {
+		logger.Logging(logger.ERROR, err.Error())
+		return
+	}
+
+	for _, subscriber := range subscribers {
+		status := make([]interface{}, len(subscriber["status"].([]string)))
+		for i, v := range subscriber["status"].([]string) {
+			status[i] = v
+		}
+		subscriber["status"] = status
+
+		switch subscriber["type"] {
+		case NODE:
+			registerNodeEvent(subscriber["url"].(string), subscriber, subscriber["query"].(map[string][]string))
+		}
 	}
 }
 
@@ -312,12 +334,12 @@ func registerAppEvent(url string, event map[string]interface{},
 		resp[RESPONSES] = makeSeparateResponses(nodes["nodes"].([]map[string]interface{}),
 			codes, respMap)
 
-		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
+		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId, query)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
 	} else {
-		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
+		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId, query)
 		if err != nil {
 			return results.ERROR, nil, err
 		}
@@ -348,7 +370,7 @@ func registerNodeEvent(url string, event map[string]interface{},
 
 	eventStatus := parseEventStatus(event)
 	subsId := generateSubsId(generateEventId(query), url, eventStatus)
-	err = subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList)
+	err = subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList, query)
 	if err != nil {
 		return results.ERROR, nil, err
 	}

@@ -115,7 +115,8 @@ func (Executor) DeployApp(nodeId string, body string, query map[string]interface
 		eventId := generateRandStringBytes(39)
 		subsId := generateRandStringBytes(39)
 
-		err = subsDbExecutor.AddSubscriber(subsId, APP, eventUrl.([]string)[0], []string{PULLED, CREATED, STARTED}, []string{eventId})
+		err = subsDbExecutor.AddSubscriber(subsId, APP, eventUrl.([]string)[0],
+			[]string{PULLED, CREATED, STARTED}, []string{eventId}, make(map[string][]string))
 		if err != nil {
 			logger.Logging(logger.ERROR, err.Error())
 			return results.ERROR, nil, err

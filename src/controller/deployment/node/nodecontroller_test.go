@@ -86,7 +86,8 @@ func TestCalledDeployAppWithEventQuery_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
-		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(nil),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0],
+			[]string{PULLED, CREATED, STARTED}, gomock.Any(), make(map[string][]string)).Return(nil),
 		appEventDbMockObj.EXPECT().AddEvent(gomock.Any(), gomock.Any(), []string{nodeId}).Return(nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, gomock.Any(), []byte(body)).Return(respCode, respStr),
 		subsDbMockObj.EXPECT().DeleteSubscriber(gomock.Any()),
@@ -130,7 +131,8 @@ func TestCalledDeployAppWithEventQueryWhenAddSubscriberFailed_ExpectReturnError(
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
-		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(errors.Unknown{}),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0],
+			[]string{PULLED, CREATED, STARTED}, gomock.Any(), make(map[string][]string)).Return(errors.Unknown{}),
 	)
 	// pass mockObj to a real object.
 	subsDbExecutor = subsDbMockObj
@@ -160,7 +162,8 @@ func TestCalledDeployAppWithEventQueryWhenAddEventFailed_ExpectReturnError(t *te
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
-		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0], []string{PULLED, CREATED, STARTED}, gomock.Any()).Return(nil),
+		subsDbMockObj.EXPECT().AddSubscriber(gomock.Any(), APP, testEventUrl[0],
+			[]string{PULLED, CREATED, STARTED}, gomock.Any(), make(map[string][]string)).Return(nil),
 		appEventDbMockObj.EXPECT().AddEvent(gomock.Any(), gomock.Any(), []string{nodeId}).Return(errors.Unknown{}),
 		subsDbMockObj.EXPECT().DeleteSubscriber(gomock.Any()).Return(nil),
 	)
