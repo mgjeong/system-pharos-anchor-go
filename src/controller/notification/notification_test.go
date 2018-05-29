@@ -201,7 +201,7 @@ func TestCalledRegisterWithAppEventBody_ExpectSuccess(t *testing.T) {
 	gomock.InOrder(
 		nodeSearchExecutorMockObj.EXPECT().SearchNodes(allQuery).Return(results.OK, nodes, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, respStr),
-		subsDbMockObj.EXPECT().AddSubscriber(appsubsId, APP, TEST_URL, appState, []string{eventId}).Return(nil),
+		subsDbMockObj.EXPECT().AddSubscriber(appsubsId, APP, TEST_URL, appState, []string{eventId}, allQuery).Return(nil),
 		appEventDbMockObj.EXPECT().AddEvent(eventId, appsubsId, nodeIds).Return(nil),
 	)
 
@@ -236,7 +236,7 @@ func TestCalledRegisterWithNodeEventBody_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		nodeSearchExecutorMockObj.EXPECT().SearchNodes(allQuery).Return(results.OK, nodes, nil),
-		subsDbMockObj.EXPECT().AddSubscriber(nodesubsId, NODE, TEST_URL, nodeState, nodeIds).Return(nil),
+		subsDbMockObj.EXPECT().AddSubscriber(nodesubsId, NODE, TEST_URL, nodeState, nodeIds, allQuery).Return(nil),
 		nodeEventDbMockObj.EXPECT().AddEvent(NODE_ID, nodesubsId).Return(nil).AnyTimes(),
 	)
 
