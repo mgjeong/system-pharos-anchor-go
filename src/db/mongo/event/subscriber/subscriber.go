@@ -39,7 +39,7 @@ const (
 )
 
 type Subscriber struct {
-	ID      string `bson:"_id,omitempty"`
+	ID      string
 	Type    string
 	URL     string
 	Status  []string
