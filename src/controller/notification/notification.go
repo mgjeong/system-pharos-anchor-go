@@ -38,26 +38,27 @@ import (
 type Command interface {
 	Register(body string, query map[string][]string) (int, map[string]interface{}, error)
 	UnRegister(eventId string) (int, error)
-	NotificationHandler(eventType string, body string)
+	NotificationHandler(eventType string, body string) (int, error)
 }
 
 const (
-	ID            = "id"
-	GROUP_ID      = "groupId"
-	NODE_ID       = "nodeId"
-	APP_ID        = "appid"
-	IMAGE_NAME    = "imagename"
-	APP           = "app"
-	NODE          = "node"
-	NODES         = "nodes"
-	SUBS          = "subscriber"
-	EVENT         = "event"
-	EVENT_ID      = "eventid"
-	RESPONSES     = "response"
-	RESPONSE_CODE = "code"
-	ERROR_MESSAGE = "message"
-	TYPE          = "type"
-	STATUS        = "status"
+	ID                = "id"
+	GROUP_ID          = "groupid"
+	NODE_ID           = "nodeid"
+	APP_ID            = "appid"
+	IMAGE_NAME        = "imagename"
+	APP               = "app"
+	NODE              = "node"
+	NODES             = "nodes"
+	SUBS              = "subscriber"
+	EVENT             = "event"
+	EVENT_ID          = "eventid"
+	RESPONSES         = "response"
+	DEFAULT_NODE_PORT = "48098"
+	RESPONSE_CODE     = "code"
+	ERROR_MESSAGE     = "message"
+	TYPE              = "type"
+	STATUS            = "status"
 )
 
 // Executor implements the Command interface.
@@ -88,7 +89,6 @@ func (Executor) Register(body string,
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
 	}
-
 	// Check whether 'URL' is included.
 	url, exists := bodyMap["url"].(string)
 	if !exists {
@@ -183,27 +183,27 @@ func (Executor) UnRegister(eventId string) (int, error) {
 	return results.OK, nil
 }
 
-func (Executor) NotificationHandler(eventType string, body string) {
+func (Executor) NotificationHandler(eventType string, body string) (int, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
 	bodyMap, err := convertJsonToMap(body)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
-		return
+		return results.ERROR, err
 	}
 	// Check whether 'EventId' is included.
 	eventIds, exists := bodyMap[EVENT_ID]
 	if !exists {
 		logger.Logging(logger.ERROR, "eventid field is required")
-		return
+		return results.ERROR, nil
 	}
 
 	// Check whether 'Event' is included.
 	event, exists := bodyMap[EVENT]
 	if !exists {
 		logger.Logging(logger.ERROR, "event field is required")
-		return
+		return results.ERROR, nil
 	}
 
 	switch eventType {
@@ -212,13 +212,13 @@ func (Executor) NotificationHandler(eventType string, body string) {
 			appEvent, err := appEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
-				return
+				return results.ERROR, err
 			}
 			for _, subscriberId := range appEvent[SUBS].([]string) {
 				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
-					return
+					return results.ERROR, err
 				}
 
 				for _, status := range subs[STATUS].([]string) {
@@ -230,9 +230,10 @@ func (Executor) NotificationHandler(eventType string, body string) {
 						body, err := convertMapToJson(reqBody)
 						if err != nil {
 							logger.Logging(logger.ERROR, err.Error())
-							return
+							return results.ERROR, err
 						}
 						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+						return results.OK, nil
 					}
 				}
 			}
@@ -242,14 +243,14 @@ func (Executor) NotificationHandler(eventType string, body string) {
 			nodeEvent, err := nodeEventDbExecutor.GetEvent(eventId.(string))
 			if err != nil {
 				logger.Logging(logger.ERROR, err.Error())
-				return
+				return results.ERROR, err
 			}
 
 			for _, subscriberId := range nodeEvent[SUBS].([]string) {
 				subs, err := subsDbExecutor.GetSubscriber(subscriberId)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
-					return
+					return results.ERROR, err
 				}
 
 				for _, status := range subs[STATUS].([]string) {
@@ -260,14 +261,16 @@ func (Executor) NotificationHandler(eventType string, body string) {
 						reqBody[EVENT] = event
 						body, err := convertMapToJson(reqBody)
 						if err != nil {
-							return
+							return results.ERROR, err
 						}
 						httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+						return results.OK, nil
 					}
 				}
 			}
 		}
 	}
+	return results.ERROR, nil
 }
 
 func registerAppEvent(url string, event map[string]interface{},
@@ -281,14 +284,14 @@ func registerAppEvent(url string, event map[string]interface{},
 	eventId := make([]string, 0)
 	eventId = append(eventId, generateEventId(query))
 
-	address := getNodesAddress(nodes["nodes"].([]map[string]interface{}))
+	address := getNodesAddress(nodes[NODES].([]map[string]interface{}))
 	urls := util.MakeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
+
 	reqBody := makeRequestBody(query, eventId[0])
 	body, err := convertMapToJson(reqBody)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
-
 	// Request register event target application.
 	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
 
@@ -309,7 +312,7 @@ func registerAppEvent(url string, event map[string]interface{},
 		return results.ERROR, nil, err
 	} else if result == results.MULTI_STATUS {
 		// Make separate responses to represent partial failure case.
-		resp[RESPONSES] = makeSeparateResponses(nodes["nodes"].([]map[string]interface{}),
+		resp[RESPONSES] = makeSeparateResponses(nodes[NODES].([]map[string]interface{}),
 			codes, respMap)
 
 		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId)
@@ -323,7 +326,7 @@ func registerAppEvent(url string, event map[string]interface{},
 		}
 	}
 
-	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(nodes["nodes"].([]map[string]interface{}), codes))
+	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(nodes[NODES].([]map[string]interface{}), codes))
 	if err != nil {
 		return results.ERROR, nil, err
 	}
@@ -342,7 +345,7 @@ func registerNodeEvent(url string, event map[string]interface{},
 	}
 
 	nodeIdList := make([]string, 0)
-	for _, node := range nodes["nodes"].([]map[string]interface{}) {
+	for _, node := range nodes[NODES].([]map[string]interface{}) {
 		nodeIdList = append(nodeIdList, node["id"].(string))
 	}
 
@@ -380,7 +383,7 @@ func getTargetNodes(query map[string][]string) (map[string]interface{}, error) {
 	}
 	if nodes == nil {
 		logger.Logging(logger.DEBUG, "No matched nodes with query")
-		return nil, errors.InvalidParam{"invalid query"}
+		return nil, errors.NotFound{"No matched nodes with query"}
 	}
 
 	return nodes, err
