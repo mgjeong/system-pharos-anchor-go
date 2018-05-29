@@ -285,7 +285,7 @@ func registerAppEvent(url string, event map[string]interface{},
 	eventId = append(eventId, generateEventId(query))
 
 	address := getNodesAddress(nodes[NODES].([]map[string]interface{}))
-	urls := makeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
+	urls := util.MakeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
 
 	reqBody := makeRequestBody(query, eventId[0])
 	body, err := convertMapToJson(reqBody)

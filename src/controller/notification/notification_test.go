@@ -375,18 +375,33 @@ func TestCalledNotificationHandlerWithNodeEvent_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
+	eventIds := make([]string, 0)
+	eventIds = append(eventIds, NODE_ID)
+	event := make(map[string]interface{})
+	event[ID] = NODE_ID
+	event[STATUS] = nodeState[0]
+
+	notification := make(map[string]interface{})
+	notification[EVENT_ID] = eventIds
+	notification[EVENT] = event
+
+	notiStr, _ := convertMapToJson(notification)
+
+	reqBody := make(map[string]interface{})
+	reqBody[EVENT] = event
+	body, _ := convertMapToJson(reqBody)
+
+	urls := make([]string, 0)
+	urls = append(urls, nodeSubs[URL_KEY].(string))
+
 	subsDbMockObj := subsDBmocks.NewMockCommand(ctrl)
 	nodeEventDbMockObj := nodeEventDBmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 
-	reqBody := makeRequestBody(nil, eventId)
-	body, _ := convertMapToJson(reqBody)
-
 	gomock.InOrder(
-		nodeEventDbMockObj.EXPECT().GetEvent(eventId).Return(nodeEvent, nil),
-		subsDbMockObj.EXPECT().GetSubscriber(nodesubsId).Return(appSubs, nil),
-		msgMockObj.EXPECT().SendHttpRequest("DELETE", lastAppEvent[NODES].([]string), nil, []byte(body)),
-		subsDbMockObj.EXPECT().DeleteSubscriber(eventId).Return(nil),
+		nodeEventDbMockObj.EXPECT().GetEvent(NODE_ID).Return(nodeEvent, nil),
+		subsDbMockObj.EXPECT().GetSubscriber(nodesubsId).Return(nodeSubs, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", urls, nil, []byte(body)),
 	)
 
 	// pass mockObj to a real object.
@@ -394,17 +409,47 @@ func TestCalledNotificationHandlerWithNodeEvent_ExpectSuccess(t *testing.T) {
 	nodeEventDbExecutor = nodeEventDbMockObj
 	httpExecutor = msgMockObj
 
+	executor.NotificationHandler(NODE, notiStr)
+}
+
+func TestCalledNotificationHandlerWithAppEvent_ExpectSuccess(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	eventIds := make([]string, 0)
-	eventIds = append(eventIds, nodeId)
+	eventIds = append(eventIds, eventId)
 	event := make(map[string]interface{})
-	event[ID] = nodeId
-	event[STATUS] = status
+	event[ID] = eventId
+	event[STATUS] = appState[0]
 
 	notification := make(map[string]interface{})
 	notification[EVENT_ID] = eventIds
 	notification[EVENT] = event
 
-	notiStr, err := convertMapToJson(notification)
+	notiStr, _ := convertMapToJson(notification)
 
-	executor.NotificationHandler(NODE, notiStr)
+	reqBody := make(map[string]interface{})
+	reqBody[EVENT] = event
+	body, _ := convertMapToJson(reqBody)
+
+	urls := make([]string, 0)
+	urls = append(urls, appSubs[URL_KEY].(string))
+
+	subsDbMockObj := subsDBmocks.NewMockCommand(ctrl)
+	appEventDbMockObj := appEventDBmocks.NewMockCommand(ctrl)
+	msgMockObj := msgmocks.NewMockCommand(ctrl)
+
+	gomock.InOrder(
+		appEventDbMockObj.EXPECT().GetEvent(eventId).Return(appEvent, nil),
+		subsDbMockObj.EXPECT().GetSubscriber(appsubsId).Return(appSubs, nil),
+		msgMockObj.EXPECT().SendHttpRequest("POST", urls, nil, []byte(body)),
+	)
+
+	// pass mockObj to a real object.
+	subsDbExecutor = subsDbMockObj
+	appEventDbExecutor = appEventDbMockObj
+	httpExecutor = msgMockObj
+
+	executor.NotificationHandler(APP, notiStr)
 }
+
