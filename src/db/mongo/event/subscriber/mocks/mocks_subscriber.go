@@ -50,15 +50,28 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 }
 
 // AddSubscriber mocks base method
-func (m *MockCommand) AddSubscriber(id, eventType, URL string, Status, eventId []string) error {
-	ret := m.ctrl.Call(m, "AddSubscriber", id, eventType, URL, Status, eventId)
+func (m *MockCommand) AddSubscriber(id, eventType, url string, status, eventId []string, queries map[string][]string) error {
+	ret := m.ctrl.Call(m, "AddSubscriber", id, eventType, url, status, eventId, queries)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // AddSubscriber indicates an expected call of AddSubscriber
-func (mr *MockCommandMockRecorder) AddSubscriber(id, eventType, URL, Status, eventId interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSubscriber", reflect.TypeOf((*MockCommand)(nil).AddSubscriber), id, eventType, URL, Status, eventId)
+func (mr *MockCommandMockRecorder) AddSubscriber(id, eventType, url, status, eventId, queries interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSubscriber", reflect.TypeOf((*MockCommand)(nil).AddSubscriber), id, eventType, url, status, eventId, queries)
+}
+
+// GetSubscribers mocks base method
+func (m *MockCommand) GetSubscribers() ([]map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "GetSubscribers")
+	ret0, _ := ret[0].([]map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSubscribers indicates an expected call of GetSubscribers
+func (mr *MockCommandMockRecorder) GetSubscribers() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSubscribers", reflect.TypeOf((*MockCommand)(nil).GetSubscribers))
 }
 
 // GetSubscriber mocks base method

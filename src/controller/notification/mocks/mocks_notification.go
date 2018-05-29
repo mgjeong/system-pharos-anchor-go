@@ -76,6 +76,16 @@ func (mr *MockCommandMockRecorder) UnRegister(eventId interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnRegister", reflect.TypeOf((*MockCommand)(nil).UnRegister), eventId)
 }
 
+// UpdateSubscriber mocks base method
+func (m *MockCommand) UpdateSubscriber() {
+	m.ctrl.Call(m, "UpdateSubscriber")
+}
+
+// UpdateSubscriber indicates an expected call of UpdateSubscriber
+func (mr *MockCommandMockRecorder) UpdateSubscriber() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSubscriber", reflect.TypeOf((*MockCommand)(nil).UpdateSubscriber))
+}
+
 // NotificationHandler mocks base method
 func (m *MockCommand) NotificationHandler(eventType, body string) (int, error) {
 	ret := m.ctrl.Call(m, "NotificationHandler", eventType, body)
