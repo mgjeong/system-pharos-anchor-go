@@ -56,9 +56,11 @@ const (
 	APPS                        = "apps"         // used to indicate a list of apps.
 	EVENT                       = "event"        // used to indicate an event.
 	EVENT_ID                    = "eventid"      // used to indicate an event id.
+	TIMESTAMP                   = "timestamp"    // used to indicate the time at which the event was created.
 	HOST                        = "host"         // used to indicate an node address.
 	PORT                        = "port"         // used to indicate an node port.
 	STATUS                      = "status"       // used to update node status.
+	STATUS_REGISTERED           = "registered"   // used to update node status with registered.
 	STATUS_CONNECTED            = "connected"    // used to update node status with connected.
 	STATUS_DISCONNECTED         = "disconnected" // used to update node status with disconnected.
 	INTERVAL                    = "interval"     // a period between two healthcheck message.
@@ -138,7 +140,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	// Send notification to subscribers.
 	go func() {
 		notiExecutor.UpdateSubscriber()
-		sendNotification(node[ID].(string), STATUS_CONNECTED)
+		sendNotification(node[ID].(string), STATUS_REGISTERED)
 	}()
 
 	res := make(map[string]interface{})
