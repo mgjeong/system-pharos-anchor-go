@@ -28,6 +28,7 @@ import (
 	appEventDB "db/mongo/event/app"
 	nodeEventDB "db/mongo/event/node"
 	subsDB "db/mongo/event/subscriber"
+	nodeDB "db/mongo/node"
 	"encoding/hex"
 	"encoding/json"
 	"messenger"
@@ -70,6 +71,7 @@ var appEventDbExecutor appEventDB.Command
 var nodeEventDbExecutor nodeEventDB.Command
 var nodeSearchExecutor nodeSearch.Command
 var httpExecutor messenger.Command
+var nodeDbExecutor nodeDB.Command
 
 func init() {
 	subsDbExecutor = subsDB.Executor{}
@@ -77,6 +79,7 @@ func init() {
 	nodeEventDbExecutor = nodeEventDB.Executor{}
 	nodeSearchExecutor = nodeSearch.Executor{}
 	httpExecutor = messenger.NewExecutor()
+	nodeDbExecutor = nodeDB.Executor{}
 }
 
 func (Executor) Register(body string,
@@ -139,6 +142,8 @@ func (Executor) UpdateSubscriber() {
 		switch subscriber["type"] {
 		case NODE:
 			registerNodeEvent(subscriber["url"].(string), subscriber, subscriber["query"].(map[string][]string))
+		case APP:
+			registerAppEvent(subscriber["url"].(string), subscriber, subscriber["query"].(map[string][]string))
 		}
 	}
 }
@@ -298,24 +303,62 @@ func (Executor) NotificationHandler(eventType string, body string) (int, error) 
 func registerAppEvent(url string, event map[string]interface{},
 	query map[string][]string) (int, map[string]interface{}, error) {
 
-	nodes, err := getTargetNodes(query)
-	if err != nil {
-		return results.ERROR, nil, err
-	}
-
 	eventId := make([]string, 0)
 	eventId = append(eventId, generateEventId(query))
 
-	address := getNodesAddress(nodes[NODES].([]map[string]interface{}))
-	urls := util.MakeRequestUrl(address, URL.Notification(), URL.Apps(), URL.Watch())
-
-	reqBody := makeRequestBody(query, eventId[0])
-	body, err := convertMapToJson(reqBody)
+	nodes, err := getTargetNodes(query)
 	if err != nil {
-		return results.ERROR, nil, err
+		switch err.(type) {
+		default:
+			return results.ERROR, nil, err
+		case errors.NotFound:
+			break
+		}
 	}
+
+	nodeIds := make([]string, 0)
+	for _, node := range nodes[NODES].([]map[string]interface{}) {
+		nodeIds = append(nodeIds, node["id"].(string))
+	}
+
+	addedNodes := make([]map[string]interface{}, 0)
+	removedNodes := make([]map[string]interface{}, 0)
+
+	eventInfo, err := appEventDbExecutor.GetEvent(eventId[0])
+	if err != nil {
+		switch err.(type) {
+		default:
+			return results.ERROR, nil, err
+		case errors.NotFound:
+			addedNodes = nodes[NODES].([]map[string]interface{})
+		}
+	} else {
+		for _, node := range nodes[NODES].([]map[string]interface{}) {
+			if !util.IsContainedStringInList(eventInfo["nodes"].([]string), node["id"].(string)) {
+				addedNodes = append(addedNodes, node)
+			}
+		}
+
+		for _, id := range eventInfo["nodes"].([]string) {
+			if !util.IsContainedStringInList(nodeIds, id) {
+				node, err := nodeDbExecutor.GetNode(id)
+				if err != nil {
+					logger.Logging(logger.ERROR, err.Error())
+				}
+				removedNodes = append(removedNodes, node)
+			}
+		}
+	}
+
+	// Request unregister event target application.
+	removedNodeAddress := getNodesAddress(removedNodes)
+	urls := util.MakeRequestUrl(removedNodeAddress, URL.Notification(), URL.Apps(), URL.Watch())
+	requestUnRegisterAppEvent(urls, eventId[0])
+
 	// Request register event target application.
-	codes, respStr := httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+	addedNodeAddress := getNodesAddress(addedNodes)
+	urls = util.MakeRequestUrl(addedNodeAddress, URL.Notification(), URL.Apps(), URL.Watch())
+	codes, respStr := requestRegisterAppEvent(urls, query, eventId[0])
 
 	// Convert the received response from string to map.
 	respMap, err := convertRespToMap(respStr)
@@ -334,21 +377,25 @@ func registerAppEvent(url string, event map[string]interface{},
 		return results.ERROR, nil, err
 	} else if result == results.MULTI_STATUS {
 		// Make separate responses to represent partial failure case.
-		resp[RESPONSES] = makeSeparateResponses(nodes[NODES].([]map[string]interface{}),
-			codes, respMap)
+		resp[RESPONSES] = makeSeparateResponses(nodes[NODES].([]map[string]interface{}), codes, respMap)
+	}
 
-		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId, query)
-		if err != nil {
-			return results.ERROR, nil, err
-		}
-	} else {
-		err := subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId, query)
-		if err != nil {
-			return results.ERROR, nil, err
+	err = subsDbExecutor.AddSubscriber(subsId, APP, url, eventStatus, eventId, query)
+	if err != nil {
+		return results.ERROR, nil, err
+	}
+
+	for i, node := range addedNodes {
+		if !util.IsSuccessCode(codes[i]) {
+			for _, id := range nodeIds {
+				if strings.Compare(id, node["id"].(string)) == 0 {
+					nodeIds = append(nodeIds[:i], nodeIds[i+1:]...)
+				}
+			}
 		}
 	}
 
-	err = appEventDbExecutor.AddEvent(eventId[0], subsId, getSucceedNodesId(nodes[NODES].([]map[string]interface{}), codes))
+	err = appEventDbExecutor.AddEvent(eventId[0], subsId, nodeIds)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
@@ -366,19 +413,19 @@ func registerNodeEvent(url string, event map[string]interface{},
 		return results.ERROR, nil, err
 	}
 
-	nodeIdList := make([]string, 0)
+	nodeIds := make([]string, 0)
 	for _, node := range nodes[NODES].([]map[string]interface{}) {
-		nodeIdList = append(nodeIdList, node["id"].(string))
+		nodeIds = append(nodeIds, node["id"].(string))
 	}
 
 	eventStatus := parseEventStatus(event)
 	subsId := generateSubsId(generateEventId(query), url, eventStatus)
-	err = subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIdList, query)
+	err = subsDbExecutor.AddSubscriber(subsId, NODE, url, eventStatus, nodeIds, query)
 	if err != nil {
 		return results.ERROR, nil, err
 	}
 
-	for _, nodeId := range nodeIdList {
+	for _, nodeId := range nodeIds {
 		err = nodeEventDbExecutor.AddEvent(nodeId, subsId)
 		if err != nil {
 			return results.ERROR, nil, err
@@ -390,7 +437,23 @@ func registerNodeEvent(url string, event map[string]interface{},
 	return results.OK, resp, err
 }
 
+func requestRegisterAppEvent(urls []string, query map[string][]string, eventId string) ([]int, []string) {
+	if len(urls) == 0 {
+		return nil, nil
+	}
+	reqBody := makeRequestBody(query, eventId)
+	body, err := convertMapToJson(reqBody)
+	if err != nil {
+		return nil, nil
+	}
+	// Request register event target application.
+	return httpExecutor.SendHttpRequest("POST", urls, nil, []byte(body))
+}
+
 func requestUnRegisterAppEvent(urls []string, eventId string) {
+	if len(urls) == 0 {
+		return
+	}
 	reqBody := makeRequestBody(nil, eventId)
 	body, _ := convertMapToJson(reqBody)
 

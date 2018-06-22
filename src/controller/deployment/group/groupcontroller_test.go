@@ -19,6 +19,7 @@ package group
 import (
 	"commons/errors"
 	"commons/results"
+	notificationmocks "controller/notification/mocks"
 	appdbmocks "db/mongo/app/mocks"
 	groupdbmocks "db/mongo/group/mocks"
 	nodedbmocks "db/mongo/node/mocks"
@@ -86,6 +87,7 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	notiMockObj := notificationmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembers(groupId).Return(members, nil),
@@ -94,12 +96,14 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
 		appDbExecutorMockObj.EXPECT().AddApp(appId, gomock.Any()).Return(nil),
 		nodeDbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+		notiMockObj.EXPECT().UpdateSubscriber(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
+	notiExecutor = notiMockObj
 
 	code, res, err := executor.DeployApp(groupId, body)
 
@@ -1052,6 +1056,7 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	nodeDbExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 	appDbExecutorMockObj := appdbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
+	notiMockObj := notificationmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		groupDbExecutorMockObj.EXPECT().GetGroupMembersByAppID(groupId, appId).Return(members, nil),
@@ -1060,12 +1065,14 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 		appDbExecutorMockObj.EXPECT().DeleteApp(appId).Return(nil),
 		nodeDbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 		appDbExecutorMockObj.EXPECT().DeleteApp(appId).Return(nil).AnyTimes(),
+		notiMockObj.EXPECT().UpdateSubscriber(),
 	)
 	// pass mockObj to a real object.
 	groupDbExecutor = groupDbExecutorMockObj
 	appDbExecutor = appDbExecutorMockObj
 	nodeDbExecutor = nodeDbExecutorMockObj
 	httpExecutor = msgMockObj
+	notiExecutor = notiMockObj
 
 	code, _, err := executor.DeleteApp(groupId, appId)
 

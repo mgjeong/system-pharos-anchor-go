@@ -17,7 +17,7 @@
 package notification
 
 import (
-	//	"commons/errors"
+	"commons/errors"
 	"commons/results"
 	nodeSearchmocks "controller/search/node/mocks"
 	appEventDBmocks "db/mongo/event/app/mocks"
@@ -200,6 +200,7 @@ func TestCalledRegisterWithAppEventBody_ExpectSuccess(t *testing.T) {
 
 	gomock.InOrder(
 		nodeSearchExecutorMockObj.EXPECT().SearchNodes(allQuery).Return(results.OK, nodes, nil),
+		appEventDbMockObj.EXPECT().GetEvent(eventId).Return(nil, errors.NotFound{}),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, respStr),
 		subsDbMockObj.EXPECT().AddSubscriber(appsubsId, APP, TEST_URL, appState, []string{eventId}, allQuery).Return(nil),
 		appEventDbMockObj.EXPECT().AddEvent(eventId, appsubsId, nodeIds).Return(nil),
@@ -452,4 +453,3 @@ func TestCalledNotificationHandlerWithAppEvent_ExpectSuccess(t *testing.T) {
 
 	executor.NotificationHandler(APP, notiStr)
 }
-

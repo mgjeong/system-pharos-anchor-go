@@ -130,8 +130,9 @@ func (Executor) AddEvent(id string, subscriberId string, nodeId []string) error 
 			return nil
 		}
 	} else {
-		appEvent.Subscriber = append(appEvent.Subscriber, subscriberId)
-		err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Update(query, appEvent)
+		appEvent.Nodes = nodeId
+		update := bson.M{"$addToSet": bson.M{"subscriber": subscriberId}, "$set": bson.M{"nodes": appEvent.Nodes}}
+		err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Update(query, update)
 		if err != nil {
 			return ConvertMongoError(err, "")
 		}
