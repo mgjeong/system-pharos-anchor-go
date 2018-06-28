@@ -104,7 +104,7 @@ func (Executor) AddSubscriber(id, eventType, url string, status, eventId []strin
 	defer close(session)
 
 	subscriber := Subscriber{}
-	query := bson.M{"_id": id}
+	query := bson.M{"id": id}
 	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Find(query).One(&subscriber)
 	if err != nil {
 		err = ConvertMongoError(err)
@@ -172,7 +172,7 @@ func (Executor) GetSubscriber(id string) (map[string]interface{}, error) {
 	defer close(session)
 
 	subscriber := Subscriber{}
-	query := bson.M{"_id": id}
+	query := bson.M{"id": id}
 	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Find(query).One(&subscriber)
 	if err != nil {
 		return nil, ConvertMongoError(err, id)
@@ -197,7 +197,7 @@ func (Executor) DeleteSubscriber(id string) error {
 	}
 	defer close(session)
 
-	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Remove(bson.M{"_id": id})
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Remove(bson.M{"id": id})
 	if err != nil {
 		errMsg := "Failed to remove a subscriber by " + id
 		return ConvertMongoError(err, errMsg)
