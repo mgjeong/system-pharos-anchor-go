@@ -344,8 +344,9 @@ func registerAppEvent(url string, event map[string]interface{},
 				node, err := nodeDbExecutor.GetNode(id)
 				if err != nil {
 					logger.Logging(logger.ERROR, err.Error())
+				} else {
+					removedNodes = append(removedNodes, node)
 				}
-				removedNodes = append(removedNodes, node)
 			}
 		}
 	}
