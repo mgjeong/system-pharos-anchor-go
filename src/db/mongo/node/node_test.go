@@ -27,20 +27,18 @@ import (
 )
 
 const (
-	validUrl        = "127.0.0.1:27017"
-	ip              = "127.0.0.1"
-	dbName          = "DeploymentManagerDB"
-	collectionName  = "NODE"
-	status          = "connected"
-	appId           = "000000000000000000000000"
-	nodeId          = "000000000000000000000001"
-	invalidObjectId = ""
+	validUrl       = "127.0.0.1:27017"
+	ip             = "127.0.0.1"
+	dbName         = "DeploymentManagerDB"
+	collectionName = "NODE"
+	status         = "connected"
+	appId          = "000000000000000000000000"
+	nodeId         = "54919CA5-4101-4AE4-595B-353C51AA983C"
 )
 
 var (
 	dummySession       = mgomocks.MockSession{}
 	connectionError    = errors.DBConnectionError{}
-	invalidObjectError = errors.InvalidObjectId{invalidObjectId}
 
 	configuration = map[string]interface{}{
 		"devicename":   "Edge Device #1",
@@ -136,14 +134,20 @@ func TestCalledAddNode_ExpectSuccess(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	ip := "192.168.0.1"
+	query := bson.M{"_id": nodeId}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(dbName).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
 		sessionMockObj.EXPECT().DB(dbName).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
 		collectionMockObj.EXPECT().Insert(gomock.Any()).Return(nil),
@@ -153,7 +157,7 @@ func TestCalledAddNode_ExpectSuccess(t *testing.T) {
 	mgoDial = connectionMockObj
 	executor := Executor{}
 
-	_, err := executor.AddNode(ip, status, configuration, []string{})
+	_, err := executor.AddNode(nodeId, ip, status, configuration, []string{})
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -165,14 +169,20 @@ func TestCalledAddNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	ip := "192.168.0.1"
+	query := bson.M{"_id": nodeId}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
 	dbMockObj := mgomocks.NewMockDatabase(mockCtrl)
 	collectionMockObj := mgomocks.NewMockCollection(mockCtrl)
+	queryMockObj := mgomocks.NewMockQuery(mockCtrl)
 
 	gomock.InOrder(
 		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
+		sessionMockObj.EXPECT().DB(dbName).Return(dbMockObj),
+		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
+		collectionMockObj.EXPECT().Find(query).Return(queryMockObj),
+		queryMockObj.EXPECT().One(gomock.Any()).Return(mgo.ErrNotFound),
 		sessionMockObj.EXPECT().DB(gomock.Any()).Return(dbMockObj),
 		dbMockObj.EXPECT().C(gomock.Any()).Return(collectionMockObj),
 		collectionMockObj.EXPECT().Insert(gomock.Any()).Return(mgo.ErrNotFound),
@@ -181,7 +191,7 @@ func TestCalledAddNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 
 	mgoDial = connectionMockObj
 	executor := Executor{}
-	_, err := executor.AddNode(ip, status, configuration, []string{})
+	_, err := executor.AddNode(nodeId, ip, status, configuration, []string{})
 
 	if err == nil {
 		t.Errorf("Expected err: %s, actual err: %s", "NotFound", "nil")
@@ -198,7 +208,7 @@ func TestCalledUpdateNodeAddress_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"host": "192.168.0.1", "port": "48098"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -223,37 +233,11 @@ func TestCalledUpdateNodeAddress_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateNodeAddressWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-
-	err := executor.UpdateNodeAddress(invalidObjectId, "192.168.0.1", "48098")
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledUpdateNodeAddressWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"host": "192.168.0.1", "port": "48098"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -288,7 +272,7 @@ func TestCalledUpdateNodeStatus_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"status": "connected"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -313,36 +297,11 @@ func TestCalledUpdateNodeStatus_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledUpdateNodeStatusWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	err := executor.UpdateNodeStatus(invalidObjectId, "connected")
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledUpdateNodeStatusWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"status": "connected"}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -377,8 +336,8 @@ func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
-	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+	query := bson.M{"_id": nodeId}
+	arg := Node{ID: nodeId, IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
 		"id":     nodeId,
 		"ip":     "192.168.0.1",
@@ -415,36 +374,11 @@ func TestCalledGetNode_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledGetNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	_, err := executor.GetNode(invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledGetNodeWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -480,7 +414,7 @@ func TestCalledGetNodes_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	args := []Node{{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}}
+	args := []Node{{ID: nodeId, IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}}
 	expectedRes := []map[string]interface{}{{
 		"id":     nodeId,
 		"ip":     "192.168.0.1",
@@ -555,8 +489,8 @@ func TestCalledGetNodeByAppID_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
-	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+	query := bson.M{"_id": nodeId, "apps": bson.M{"$in": []string{appId}}}
+	arg := Node{ID: nodeId, IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 	expectedRes := map[string]interface{}{
 		"id":     nodeId,
 		"ip":     "192.168.0.1",
@@ -597,7 +531,7 @@ func TestCalledGetNodeByAppIDWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testin
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
+	query := bson.M{"_id": nodeId, "apps": bson.M{"$in": []string{appId}}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -629,37 +563,12 @@ func TestCalledGetNodeByAppIDWhenDBHasNotMatchedNode_ExpectErrorReturn(t *testin
 	}
 }
 
-func TestCalledGetNodeByAppIDWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	_, err := executor.GetNodeByAppID(invalidObjectId, appId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledGetNodeByIPWhenDBHasMatchedNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
 	query := bson.M{"ip": ip}
-	arg := Node{ID: bson.ObjectIdHex(nodeId), IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
+	arg := Node{ID: nodeId, IP: "192.168.0.1", Apps: []string{}, Status: status, Config: configuration}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -689,7 +598,7 @@ func TestCalledAddAppToNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$addToSet": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -714,36 +623,11 @@ func TestCalledAddAppToNode_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledAddAppToNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	err := executor.AddAppToNode(invalidObjectId, appId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledAddAppToNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$addToSet": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -778,7 +662,7 @@ func TestCalledDeleteAppFromNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$pull": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -803,36 +687,11 @@ func TestCalledDeleteAppFromNode_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledDeleteAppFromNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	err := executor.DeleteAppFromNode(invalidObjectId, appId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledDeleteAppFromNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$pull": bson.M{"apps": appId}}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
@@ -867,7 +726,7 @@ func TestCalledDeleteNode_ExpectSuccess(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
@@ -891,36 +750,11 @@ func TestCalledDeleteNode_ExpectSuccess(t *testing.T) {
 	}
 }
 
-func TestCalledDeleteNodeWithInvalidObjectId_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	err := executor.DeleteNode(invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledDeleteNodeWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
 
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 
 	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
 	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
