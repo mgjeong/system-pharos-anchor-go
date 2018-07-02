@@ -171,7 +171,8 @@ func getMemberAddress(members []map[string]interface{}) []map[string]interface{}
 	result := make([]map[string]interface{}, len(members))
 	for i, node := range members {
 		result[i] = map[string]interface{}{
-			"ip": node["ip"],
+			"ip":    node["ip"],
+			"config": node["config"],
 		}
 	}
 	return result

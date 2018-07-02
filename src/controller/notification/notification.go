@@ -425,7 +425,8 @@ func getNodesAddress(nodes []map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, len(nodes))
 	for i, node := range nodes {
 		result[i] = map[string]interface{}{
-			"ip": node["ip"],
+			"ip":     node["ip"],
+			"config": node["config"],
 		}
 	}
 	return result
