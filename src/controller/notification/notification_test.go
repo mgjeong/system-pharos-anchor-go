@@ -84,11 +84,24 @@ var (
 		APP_ID:     []string{"appid"},
 		IMAGE_NAME: []string{"imagename"},
 	}
+	property = map[string]interface{}{
+		"key": "value",
+	}
+	reverseproxy = map[string]interface{}{
+		"reverseproxy": map[string]interface{}{
+			"enabled": "false",
+		},
+	}
+	properties = []interface{}{property, reverseproxy}
+	config     = map[string]interface{}{
+		"properties": properties,
+	}
 	node = map[string]interface{}{
-		"apps": []string{"appid"},
-		ID:     "nodeid",
-		"ip":   IP,
-		STATUS: "status",
+		"apps":   []string{"appid"},
+		ID:       "nodeid",
+		"ip":     IP,
+		STATUS:   "status",
+		"config": config,
 	}
 	appSubs = map[string]interface{}{
 		ID:       appsubsId,
@@ -452,4 +465,3 @@ func TestCalledNotificationHandlerWithAppEvent_ExpectSuccess(t *testing.T) {
 
 	executor.NotificationHandler(APP, notiStr)
 }
-

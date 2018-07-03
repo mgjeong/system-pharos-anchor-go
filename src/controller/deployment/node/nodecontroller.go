@@ -413,7 +413,8 @@ func (Executor) StopApp(nodeId string, appId string) (int, map[string]interface{
 func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		"ip": node["ip"],
+		"ip":     node["ip"],
+		"config": node["config"],
 	}
 	return result
 }

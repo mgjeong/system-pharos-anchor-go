@@ -24,7 +24,7 @@ import (
 	"commons/logger"
 	"commons/url"
 	"encoding/json"
-	"os"
+	"net"
 	"strings"
 )
 
@@ -34,51 +34,6 @@ const (
 	SECURED_NODE_PORT_WITH_REVERSE_PROXY   = "443"
 	NODE_URL_PREFIX                        = "/pharos-node"
 )
-
-var (
-	nodePort string
-	baseUrl  string
-)
-
-func init() {
-	secured := getEnv("SECURED")
-	reverseProxy := getEnv("REVERSE_PROXY")
-
-	err := "Invalid environment variable"
-	switch reverseProxy {
-	case "true":
-		baseUrl = NODE_URL_PREFIX + url.Base()
-
-		switch secured {
-		case "true":
-			nodePort = SECURED_NODE_PORT_WITH_REVERSE_PROXY
-		case "false":
-			nodePort = UNSECURED_NODE_PORT_WITH_REVERSE_PROXY
-		default:
-			panic(err)
-		}
-	case "false":
-		baseUrl = url.Base()
-
-		switch secured {
-		case "false":
-			nodePort = DEFAULT_NODE_PORT
-		case "true":
-			fallthrough
-		default:
-			panic(err)
-		}
-	default:
-		panic(err)
-	}
-}
-
-func getEnv(key string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return "false"
-}
 
 // convertJsonToMap converts JSON data into a map.
 // If successful, this function returns an error as nil.
@@ -133,7 +88,46 @@ func MakeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 
 	for i := range address {
 		full_url.Reset()
-		full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + nodePort + baseUrl)
+
+		ipTest := net.ParseIP(address[i]["ip"].(string))
+		if ipTest == nil {
+			logger.Logging(logger.ERROR, address[i]["ip"].(string), "Validation check on anchor's ip  failed")
+			urls = append(urls, "")
+			continue
+		}
+
+		config := address[i]["config"].(map[string]interface{})
+		properties := config["properties"].([]interface{})
+
+		reverseproxy := make(map[string]interface{}, 0)
+		for i := range properties {
+			property := make(map[string]interface{}, 0)
+
+			marshaled, _ := json.Marshal(properties[i])
+			err := json.Unmarshal(marshaled, &property)
+			if err != nil {
+				logger.Logging(logger.ERROR, "Unmarshal configuration property failed")
+				urls = append(urls, "")
+				continue
+			}
+
+			if _, exists := property["reverseproxy"]; exists {
+				reverseproxy = property["reverseproxy"].(map[string]interface{})
+			}
+		}
+
+		if reverseproxy["enabled"] == nil {
+			logger.Logging(logger.ERROR, "No node's reverse proxy environment")
+			urls = append(urls, "")
+			continue
+		}
+
+		if reverseproxy["enabled"] == "true" {
+			full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + UNSECURED_NODE_PORT_WITH_REVERSE_PROXY + url.PharosNode() + url.Base())
+		} else {
+			full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + DEFAULT_NODE_PORT + url.Base())
+		}
+
 		for _, api_part := range api_parts {
 			full_url.WriteString(api_part)
 		}

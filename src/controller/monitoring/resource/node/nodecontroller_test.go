@@ -34,10 +34,23 @@ const (
 )
 
 var (
+	property = map[string]interface{}{
+		"key": "value",
+	}
+	reverseproxy = map[string]interface{}{
+		"reverseproxy": map[string]interface{}{
+			"enabled": "false",
+		},
+	}
+	properties = []interface{}{property, reverseproxy}
+	config     = map[string]interface{}{
+		"properties": properties,
+	}
 	node = map[string]interface{}{
-		"id":   nodeId,
-		"ip":   testIp,
-		"apps": []string{},
+		"id":     nodeId,
+		"ip":     testIp,
+		"apps":   []string{},
+		"config": config,
 	}
 
 	respCode         = []int{results.OK}

@@ -27,8 +27,9 @@ import (
 )
 
 const (
-	IP  = "ip"
-	GET = "GET"
+	IP     = "ip"
+	CONFIG = "config"
+	GET    = "GET"
 )
 
 type Command interface {
@@ -113,7 +114,8 @@ func (Executor) GetAppResourceInfo(nodeId string, appId string) (int, map[string
 func getNodeAddress(node map[string]interface{}) []map[string]interface{} {
 	result := make([]map[string]interface{}, 1)
 	result[0] = map[string]interface{}{
-		IP: node[IP],
+		IP:     node[IP],
+		CONFIG: node[CONFIG],
 	}
 	return result
 }

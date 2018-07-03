@@ -44,14 +44,23 @@ var (
 		"services": []string{},
 		"refcnt":   refcnt,
 	}
+	property = map[string]interface{}{
+		"key": "value",
+	}
+	reverseproxy = map[string]interface{}{
+		"reverseproxy": map[string]interface{}{
+			"enabled": "false",
+		},
+	}
+	properties = []interface{}{property, reverseproxy}
+	config     = map[string]interface{}{
+		"properties": properties,
+	}
 	node = map[string]interface{}{
 		"id":     nodeId,
 		"ip":     ip,
 		"apps":   []string{},
-		"config": configuration,
-	}
-	configuration = map[string]interface{}{
-		"key": "value",
+		"config": config,
 	}
 	registryModel = map[string]interface{}{
 		"id": registryId,

@@ -39,24 +39,28 @@ const (
 )
 
 var (
-	properties = []map[string]interface{}{{
-		"name":   "name",
-		"policy": []string{"readable"},
-		"value":  "value",
-	}}
-	configuration = map[string]interface{}{
-		"properties": properties,
-	}
 	registrationBody = map[string]interface{}{
 		"ip":     ip,
-		"config": configuration,
+		"config": config,
 		"apps":   []string{},
+	}
+	property = map[string]interface{}{
+		"key": "value",
+	}
+	reverseproxy = map[string]interface{}{
+		"reverseproxy": map[string]interface{}{
+			"enabled": "false",
+		},
+	}
+	properties = []interface{}{property, reverseproxy}
+	config     = map[string]interface{}{
+		"properties": properties,
 	}
 	node = map[string]interface{}{
 		"id":     nodeId,
 		"ip":     ip,
 		"apps":   []string{},
-		"config": configuration,
+		"config": config,
 	}
 	nodeWithoutConfig = map[string]interface{}{
 		"id":   nodeId,
@@ -377,7 +381,6 @@ func TestCalledGetNodesWithAppId_ExpectSuccess(t *testing.T) {
 	defer ctrl.Finish()
 
 	nodes := []map[string]interface{}{node}
-	nodesWithoutConfig := []map[string]interface{}{nodeWithoutConfig}
 
 	//make the query
 	query := make(map[string]interface{})
@@ -402,7 +405,7 @@ func TestCalledGetNodesWithAppId_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodesWithoutConfig) {
+	if !reflect.DeepEqual(res["nodes"].([]map[string]interface{}), nodes) {
 		t.Error()
 	}
 }
@@ -599,7 +602,7 @@ func TestCalledGetNodeConfiguration_ExpectSuccess(t *testing.T) {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
 	}
 
-	if !reflect.DeepEqual(res, configuration) {
+	if !reflect.DeepEqual(res, config) {
 		t.Error()
 	}
 }
@@ -755,7 +758,7 @@ func TestCalledSetNodeConfiguration_ExpectSuccess(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	nodedDBExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
-	jsonBody, _ := json.Marshal(configuration)
+	jsonBody, _ := json.Marshal(config)
 	jsonNodeData, _ := json.Marshal(node)
 	nodeDataMap, _ := util.ConvertJsonToMap(string(jsonNodeData))
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}
@@ -794,7 +797,7 @@ func TestCalledSetNodeConfigurationWhenDBHasNotMatchedNode_ExpectErrorReturn(t *
 	httpExecutor = msgMockObj
 	nodeDbExecutor = nodedDBExecutorMockObj
 
-	body, _ := json.Marshal(configuration)
+	body, _ := json.Marshal(config)
 	code, err := manager.SetNodeConfiguration(nodeId, string(body))
 
 	if code != results.ERROR {
@@ -819,7 +822,7 @@ func TestCalledSetNodeConfigurationWhenFailedToUpdateConfiguration_ExpectErrorRe
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	nodedDBExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
-	jsonBody, _ := json.Marshal(configuration)
+	jsonBody, _ := json.Marshal(config)
 	jsonNodeData, _ := json.Marshal(node)
 	nodeDataMap, _ := util.ConvertJsonToMap(string(jsonNodeData))
 	expectedUrl := []string{"http://" + ip + ":" + port + "/api/v1/management/device/configuration"}

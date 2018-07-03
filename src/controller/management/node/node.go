@@ -268,20 +268,8 @@ func (Executor) GetNodesWithAppID(appID string) (int, map[string]interface{}, er
 		return results.ERROR, nil, err
 	}
 
-	copiedNodes := make([]map[string]interface{}, 0)
-	for _, node := range nodes {
-		// Copy from the original map to the target map, except "config" field.
-		res := make(map[string]interface{})
-		for key, value := range node {
-			if strings.Compare(key, "config") != 0 {
-				res[key] = value
-			}
-		}
-		copiedNodes = append(copiedNodes, res)
-	}
-
 	res := make(map[string]interface{})
-	res[NODES] = copiedNodes
+	res[NODES] = nodes
 
 	return results.OK, res, err
 }
@@ -435,7 +423,8 @@ func getNodeAddress(node map[string]interface{}) ([]map[string]interface{}, erro
 	}
 
 	result[0] = map[string]interface{}{
-		"ip": node["ip"],
+		"ip":     node["ip"],
+		"config": node["config"],
 	}
 	return result, nil
 }

@@ -21,6 +21,9 @@ package url
 // Base returns the base url as a type of string.
 func Base() string { return "/api/v1" }
 
+// Base returns the pharos node url as a type of string.
+func PharosNode() string { return "/pharos-node" }
+
 // Base returns the deploy url as a type of string.
 func Deploy() string { return "/deploy" }
 
@@ -98,4 +101,3 @@ func Reboot() string { return "/reboot" }
 
 // Returning Restore url as string.
 func Restore() string { return "/restore" }
-
