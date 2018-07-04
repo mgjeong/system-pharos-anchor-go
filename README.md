@@ -3,6 +3,16 @@ System Management - Pharos Anchor
 
 This provides functionalities to deploy, update, terminate a container or containers to a certain edge device or a group of edge devices. Also, this provides APIs to create, update, and delete a group of edge devices which container(s) can be deployed at the same time.
 
+![](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/tree/master/screenshots/system_arch.png?raw=true)
+
+- Pharos Node
+    - This container is running on every edge device to handle service deployment requests
+    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-node-go) to know how to build and run Pharos Node service
+
+- Pharos Web Client
+    - A web based GUI-Tool for Pharos
+    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-web-client) to know how to build and run Web Client
+
 ## Prerequisites ##
 - docker-ce
     - Version: 17.09
@@ -31,6 +41,22 @@ $ sudo docker images
 REPOSITORY                         TAG        IMAGE ID        CREATED           SIZE
 system-pharos-anchor-go-ubuntu     latest     fcbbd4c401c2    31 seconds ago    157MB
 ```
+## How to download docker image without building project ##
+This provides how to download pre-built Docker image.
+
+#### 1. Download Docker image ####
+Please visit [Downloads-ubuntu](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/releases/download/alpha-1.1_rel/pharos_anchor_ubuntu_x86_64.tar)
+
+#### 2. Load Docker image from tar file ####
+```shell
+$ docker load -i pharos_anchor_ubuntu_x86_64.tar
+```
+If it succeeds, you can see the Docker image as follows:
+```shell
+$ sudo docker images
+REPOSITORY                                                                TAG      IMAGE ID        CREATED        SIZE
+docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64    alpha    899dd9fc0f3b    7 weeks ago    156MB
+```
 
 ## How to run with Docker image ##
 Required options to run Docker image
@@ -41,11 +67,11 @@ Required options to run Docker image
 
 You can execute it with a Docker image as follows:
 ```shell
-$ docker run -it -p 48099:48099 -v /data/db:/data/db system-pharos-anchor-go-ubuntu
+$ docker run -it -p 48099:48099 -v /pharos-anchor/data/db:/data/db system-pharos-anchor-go-ubuntu
 ```
 If it succeeds, you can see log messages on your screen as follows:
 ```shell
-$ docker run -it -p 48099:48099 -v /data/db:/data/db system-pharos-anchor-go-ubuntu
+$ docker run -it -p 48099:48099 -v /pharos-anchor/data/db:/data/db system-pharos-anchor-go-ubuntu
 2018-01-17T10:29:52.410+0000 I CONTROL  [initandlisten] MongoDB starting : pid=6 port=27017 dbpath=/data/db 64-bit host=d0a6b9ae16a5
 2018-01-17T10:29:52.410+0000 I CONTROL  [initandlisten] db version v3.4.4
 2018-01-17T10:29:52.410+0000 I CONTROL  [initandlisten] git version: 888390515874a9debd1b6c5d36559ca86b44babd
