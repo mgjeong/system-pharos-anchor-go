@@ -3,7 +3,7 @@ System Management - Pharos Anchor
 
 This provides functionalities to deploy, update, terminate a container or containers to a certain edge device or a group of edge devices. Also, this provides APIs to create, update, and delete a group of edge devices which container(s) can be deployed at the same time.
 
-![](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/tree/master/screenshots/system_arch.png?raw=true)
+![](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/tree/master/doc/images/system_arch.png?raw=true)
 
 - Pharos Node
     - This container is running on every edge device to handle service deployment requests
