@@ -33,7 +33,7 @@ const (
 	status       = "connected"
 	appId        = "000000000000000000000000"
 	invalidAppId = "000000000000000000000001"
-	nodeId       = "000000000000000000000001"
+	nodeId       = "54919CA5-4101-4AE4-595B-353C51AA983C"
 	ip           = "127.0.0.1"
 	port         = "48098"
 )
@@ -86,21 +86,17 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expectedRes := map[string]interface{}{
-		"id": "000000000000000000000001",
-	}
-
 	nodedDBExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodedDBExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
-		nodedDBExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any(), []string{}).Return(node, nil),
+		nodedDBExecutorMockObj.EXPECT().GetNode(gomock.Any()).Return(nil, notFoundError),
+		nodedDBExecutorMockObj.EXPECT().AddNode(gomock.Any(), ip, status, gomock.Any(), []string{}).Return(node, nil),
 	)
 	// pass mockObj to a real object.
 	nodeDbExecutor = nodedDBExecutorMockObj
 
 	jsonString, _ := json.Marshal(registrationBody)
-	code, res, err := manager.RegisterNode(string(jsonString))
+	code, _, err := manager.RegisterNode(string(jsonString))
 
 	if err != nil {
 		t.Errorf("Unexpected err: %s", err.Error())
@@ -108,10 +104,6 @@ func TestCalledRegisterNodeWithValidBody_ExpectSuccess(t *testing.T) {
 
 	if code != results.OK {
 		t.Errorf("Expected code: %d, actual code: %d", results.OK, code)
-	}
-
-	if !reflect.DeepEqual(res, expectedRes) {
-		t.Error()
 	}
 }
 
@@ -168,8 +160,8 @@ func TestCalledRegisterNodeWhenFailedToInsertNewNodeToDB_ExpectErrorReturn(t *te
 	nodedDBExecutorMockObj := nodedbmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
-		nodedDBExecutorMockObj.EXPECT().GetNodeByIP(ip).Return(nil, errors.NotFound{}),
-		nodedDBExecutorMockObj.EXPECT().AddNode(ip, status, gomock.Any(), []string{}).Return(nil, notFoundError),
+		nodedDBExecutorMockObj.EXPECT().GetNode(gomock.Any()).Return(nil, notFoundError),
+		nodedDBExecutorMockObj.EXPECT().AddNode(gomock.Any(), ip, status, gomock.Any(), []string{}).Return(nil, notFoundError),
 	)
 
 	// pass mockObj to a real object.

@@ -32,16 +32,16 @@ func (m *MockCommand) EXPECT() *MockCommandMockRecorder {
 }
 
 // AddNode mocks base method
-func (m *MockCommand) AddNode(ip, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error) {
-	ret := m.ctrl.Call(m, "AddNode", ip, status, config, apps)
+func (m *MockCommand) AddNode(id, ip, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error) {
+	ret := m.ctrl.Call(m, "AddNode", id, ip, status, config, apps)
 	ret0, _ := ret[0].(map[string]interface{})
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // AddNode indicates an expected call of AddNode
-func (mr *MockCommandMockRecorder) AddNode(ip, status, config, apps interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNode", reflect.TypeOf((*MockCommand)(nil).AddNode), ip, status, config, apps)
+func (mr *MockCommandMockRecorder) AddNode(id, ip, status, config, apps interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNode", reflect.TypeOf((*MockCommand)(nil).AddNode), id, ip, status, config, apps)
 }
 
 // UpdateNodeAddress mocks base method

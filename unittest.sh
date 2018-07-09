@@ -3,6 +3,7 @@
 export GOPATH=$PWD
 
 go get github.com/golang/mock/gomock
+go get github.com/satori/go.uuid
 
 pkg_list=("api" "api/common" "api/health" "api/management" "api/monitoring" "api/management/node" "api/management/group" "api/management/registry" "api/management/node/apps" "api/management/group/apps" "api/monitoring/resource" "api/notification" "api/search" "api/search/app" "api/search/node" "api/search/group" "commons/errors" "commons/logger" "commons/url" "controller/deployment/node" "controller/deployment/group" "controller/management/node" "controller/management/group" "controller/management/app" "controller/management/registry" "controller/monitoring/resource/node" "controller/search/node" "controller/search/group" "controller/search/app" "controller/notification" "db/mongo/app" "db/mongo/group" "db/mongo/node" "db/mongo/registry" "db/mongo/event/app" "db/mongo/event/node" "db/mongo/event/subscriber" "messenger")
 

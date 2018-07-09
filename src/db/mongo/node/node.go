@@ -25,7 +25,7 @@ import (
 
 type Command interface {
 	// AddNode insert new Node.
-	AddNode(ip string, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error)
+	AddNode(id, ip, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error)
 
 	// UpdateNodeAddress updates ip,port of node from db related to node.
 	UpdateNodeAddress(nodeId string, host string, port string) error
@@ -65,7 +65,7 @@ const (
 )
 
 type Node struct {
-	ID     bson.ObjectId `bson:"_id,omitempty"`
+	ID     string `bson:"_id,omitempty"`
 	IP     string
 	Apps   []string
 	Status string
@@ -108,7 +108,7 @@ func getCollection(mgoSession Session, dbname string, collectionName string) Col
 // convertToMap converts Node object into a map.
 func (node Node) convertToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"id":     node.ID.Hex(),
+		"id":     node.ID,
 		"ip":     node.IP,
 		"apps":   node.Apps,
 		"status": node.Status,
@@ -119,7 +119,7 @@ func (node Node) convertToMap() map[string]interface{} {
 // AddNode inserts new node to 'node' collection.
 // If successful, this function returns an error as nil.
 // otherwise, an appropriate error will be returned.
-func (Executor) AddNode(ip string, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error) {
+func (Executor) AddNode(id, ip, status string, config map[string]interface{}, apps []string) (map[string]interface{}, error) {
 	logger.Logging(logger.DEBUG, "IN")
 	defer logger.Logging(logger.DEBUG, "OUT")
 
@@ -129,22 +129,41 @@ func (Executor) AddNode(ip string, status string, config map[string]interface{},
 	}
 	defer close(session)
 
-	node := Node{
-		ID:     bson.NewObjectId(),
-		IP:     ip,
-		Apps:   apps,
-		Status: status,
-		Config: config,
+	node := Node{}
+	query := bson.M{"_id": id}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
+	if err != nil {
+		err = ConvertMongoError(err)
+		switch err.(type) {
+		default:
+			return nil, err
+		case errors.NotFound:
+			node = Node{
+				ID:     id,
+				IP:     ip,
+				Apps:   apps,
+				Status: status,
+				Config: config,
+			}
+
+			err = getCollection(session, DB_NAME, NODE_COLLECTION).Insert(node)
+			if err != nil {
+				return nil, ConvertMongoError(err)
+			}
+			return node.convertToMap(), nil
+		}
 	}
 
-	err = getCollection(session, DB_NAME, NODE_COLLECTION).Insert(node)
-
+	node.IP = ip
+	node.Apps = apps
+	node.Status = status
+	node.Config = config
+	update := bson.M{"$set": bson.M{"ip": node.IP, "apps": node.Apps, "status": node.Status, "config": node.Config}}
+	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
 		return nil, ConvertMongoError(err)
 	}
-
-	result := node.convertToMap()
-	return result, err
+	return node.convertToMap(), nil
 }
 
 // UpdateNodeAddress updates ip,port of node specified by nodeId parameter.
@@ -160,13 +179,7 @@ func (Executor) UpdateNodeAddress(nodeId string, host string, port string) error
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err := errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"host": host, "port": port}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
@@ -188,13 +201,7 @@ func (Executor) UpdateNodeStatus(nodeId string, status string) error {
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"status": status}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
@@ -213,13 +220,7 @@ func (Executor) UpdateNodeConfiguration(nodeId string, config map[string]interfa
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$set": bson.M{"config": config}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
@@ -241,14 +242,8 @@ func (Executor) GetNode(nodeId string) (map[string]interface{}, error) {
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err := errors.InvalidObjectId{nodeId}
-		return nil, err
-	}
-
 	node := Node{}
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
 		return nil, ConvertMongoError(err, nodeId)
@@ -306,14 +301,8 @@ func (Executor) GetNodeByAppID(nodeId string, appId string) (map[string]interfac
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return nil, err
-	}
-
 	node := Node{}
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId), "apps": bson.M{"$in": []string{appId}}}
+	query := bson.M{"_id": nodeId, "apps": bson.M{"$in": []string{appId}}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Find(query).One(&node)
 	if err != nil {
 		return nil, ConvertMongoError(err, nodeId)
@@ -361,13 +350,7 @@ func (Executor) AddAppToNode(nodeId string, appId string) error {
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err := errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$addToSet": bson.M{"apps": appId}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
@@ -389,13 +372,7 @@ func (Executor) DeleteAppFromNode(nodeId string, appId string) error {
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	update := bson.M{"$pull": bson.M{"apps": appId}}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Update(query, update)
 	if err != nil {
@@ -417,13 +394,7 @@ func (Executor) DeleteNode(nodeId string) error {
 	}
 	defer close(session)
 
-	// Verify id is ObjectId, otherwise fail
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return err
-	}
-
-	query := bson.M{"_id": bson.ObjectIdHex(nodeId)}
+	query := bson.M{"_id": nodeId}
 	err = getCollection(session, DB_NAME, NODE_COLLECTION).Remove(query)
 	if err != nil {
 		return ConvertMongoError(err, nodeId)

@@ -29,6 +29,7 @@ import (
 	groupSearch "controller/search/group"
 	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
+	"github.com/satori/go.uuid"
 	"messenger"
 	"strings"
 	"time"
@@ -106,7 +107,7 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 	}
 
 	// Check whether 'config' is included.
-	config, exists := bodyMap["config"]
+	config, exists := bodyMap["config"].(map[string]interface{})
 	if !exists {
 		return results.ERROR, nil, errors.InvalidJSON{"config field is required"}
 	}
@@ -119,17 +120,34 @@ func (Executor) RegisterNode(body string) (int, map[string]interface{}, error) {
 		}
 	}
 
-	// check whether device already exists.
-	node, err := nodeDbExecutor.GetNodeByIP(ip)
-	if err == nil {
-		logger.Logging(logger.DEBUG, "This device is already registered")
-		res := make(map[string]interface{})
-		res[ID] = node[ID]
-		return results.OK, res, err
+	// check whether deviceId already exists.
+	var deviceId string
+	for _, prop := range config["properties"].([]interface{}) {
+		if value, exists := prop.(map[string]interface{})["deviceid"]; exists {
+			deviceId = value.(string)
+		}
+	}
+
+	// Generate a unique deviceId.
+	for len(deviceId) == 0 {
+		uuid, err := generateUUIDv4()
+		if err != nil {
+			return results.ERROR, nil, err
+		}
+
+		_, err = nodeDbExecutor.GetNode(uuid)
+		if err != nil {
+			switch err.(type) {
+			default:
+				return results.ERROR, nil, err
+			case errors.NotFound:
+				deviceId = uuid
+			}
+		}
 	}
 
 	// Add new node to database with given ip, port, status.
-	node, err = nodeDbExecutor.AddNode(ip, STATUS_CONNECTED, config.(map[string]interface{}), appIds)
+	node, err := nodeDbExecutor.AddNode(deviceId, ip, STATUS_CONNECTED, config, appIds)
 	if err != nil {
 		logger.Logging(logger.ERROR, err.Error())
 		return results.ERROR, nil, err
@@ -427,4 +445,13 @@ func getNodeAddress(node map[string]interface{}) ([]map[string]interface{}, erro
 		"config": node["config"],
 	}
 	return result, nil
+}
+
+// generateUUIDv4 generates a random UUID.
+func generateUUIDv4() (string, error) {
+	ret, err := uuid.NewV4()
+	if err != nil {
+		return "", errors.IOError{"generating uuid is fail"}
+	}
+	return ret.String(), nil
 }
