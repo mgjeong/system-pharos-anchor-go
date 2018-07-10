@@ -121,6 +121,7 @@ func sendNotification(nodeId string, status string) {
 	event := make(map[string]interface{})
 	event[ID] = nodeId
 	event[STATUS] = status
+	event[TIMESTAMP] = time.Now().String()
 
 	notification := make(map[string]interface{})
 	notification[EVENT_ID] = eventIds

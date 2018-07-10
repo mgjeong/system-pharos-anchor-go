@@ -19,6 +19,7 @@ package node
 import (
 	"commons/errors"
 	"commons/results"
+	notificationmocks "controller/notification/mocks"
 	appdbmocks "db/mongo/app/mocks"
 	appeventdbmocks "db/mongo/event/app/mocks"
 	subsdbmocks "db/mongo/event/subscriber/mocks"
@@ -95,6 +96,7 @@ func TestCalledDeployAppWithEventQuery_ExpectSuccess(t *testing.T) {
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	appDbMockObj := appdbmocks.NewMockCommand(ctrl)
 	appEventDbMockObj := appeventdbmocks.NewMockCommand(ctrl)
+	notiMockObj := notificationmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
@@ -106,6 +108,7 @@ func TestCalledDeployAppWithEventQuery_ExpectSuccess(t *testing.T) {
 		appEventDbMockObj.EXPECT().DeleteEvent(gomock.Any()),
 		appDbMockObj.EXPECT().AddApp(appId, []byte("description")).Return(nil),
 		dbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+		notiMockObj.EXPECT().UpdateSubscriber(),
 	)
 	// pass mockObj to a real object.
 	subsDbExecutor = subsDbMockObj
@@ -113,6 +116,7 @@ func TestCalledDeployAppWithEventQuery_ExpectSuccess(t *testing.T) {
 	appDbExecutor = appDbMockObj
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
+	notiExecutor = notiMockObj
 
 	code, res, err := executor.DeployApp(nodeId, body, testQuery)
 
@@ -207,17 +211,20 @@ func TestCalledDeployApp_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	appDbMockObj := appdbmocks.NewMockCommand(ctrl)
+	notiMockObj := notificationmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNode(nodeId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("POST", expectedUrl, nil, []byte(body)).Return(respCode, respStr),
 		appDbMockObj.EXPECT().AddApp(appId, []byte("description")).Return(nil),
 		dbExecutorMockObj.EXPECT().AddAppToNode(nodeId, appId).Return(nil),
+		notiMockObj.EXPECT().UpdateSubscriber(),
 	)
 	// pass mockObj to a real object.
 	appDbExecutor = appDbMockObj
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
+	notiExecutor = notiMockObj
 
 	code, res, err := executor.DeployApp(nodeId, body, nil)
 
@@ -913,17 +920,20 @@ func TestCalledDeleteApp_ExpectSuccess(t *testing.T) {
 	dbExecutorMockObj := dbmocks.NewMockCommand(ctrl)
 	msgMockObj := msgmocks.NewMockCommand(ctrl)
 	appDbMockObj := appdbmocks.NewMockCommand(ctrl)
+	notiMockObj := notificationmocks.NewMockCommand(ctrl)
 
 	gomock.InOrder(
 		dbExecutorMockObj.EXPECT().GetNodeByAppID(nodeId, appId).Return(node, nil),
 		msgMockObj.EXPECT().SendHttpRequest("DELETE", expectedUrl, nil).Return(respCode, respStr),
 		dbExecutorMockObj.EXPECT().DeleteAppFromNode(nodeId, appId).Return(nil),
 		appDbMockObj.EXPECT().DeleteApp(appId).Return(nil),
+		notiMockObj.EXPECT().UpdateSubscriber(),
 	)
 	// pass mockObj to a real object.
 	appDbExecutor = appDbMockObj
 	nodeDbExecutor = dbExecutorMockObj
 	httpExecutor = msgMockObj
+	notiExecutor = notiMockObj
 
 	code, _, err := executor.DeleteApp(nodeId, appId)
 

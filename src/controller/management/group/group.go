@@ -23,6 +23,7 @@ import (
 	"commons/logger"
 	"commons/results"
 	"commons/util"
+	noti "controller/notification"
 	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
 )
@@ -57,10 +58,12 @@ type Executor struct{}
 
 var groupDbExecutor groupDB.Command
 var nodeDbExecutor nodeDB.Command
+var notiExecutor noti.Command
 
 func init() {
 	groupDbExecutor = groupDB.Executor{}
 	nodeDbExecutor = nodeDB.Executor{}
+	notiExecutor = noti.Executor{}
 }
 
 // CreateGroup inserts a new group to databases.
@@ -162,6 +165,8 @@ func (Executor) JoinGroup(groupId string, body string) (int, map[string]interfac
 		}
 	}
 
+	notiExecutor.UpdateSubscriber()
+
 	return results.OK, nil, err
 }
 
@@ -191,6 +196,8 @@ func (Executor) LeaveGroup(groupId string, body string) (int, map[string]interfa
 			return results.ERROR, nil, err
 		}
 	}
+
+	notiExecutor.UpdateSubscriber()
 
 	return results.OK, nil, err
 }

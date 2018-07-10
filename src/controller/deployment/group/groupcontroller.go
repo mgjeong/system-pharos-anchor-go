@@ -29,6 +29,7 @@ import (
 	appDB "db/mongo/app"
 	groupDB "db/mongo/group"
 	nodeDB "db/mongo/node"
+	noti "controller/notification"
 	"messenger"
 	"strconv"
 )
@@ -51,12 +52,14 @@ var appDbExecutor appDB.Command
 var nodeDbExecutor nodeDB.Command
 var groupDbExecutor groupDB.Command
 var httpExecutor messenger.Command
+var notiExecutor noti.Command
 
 func init() {
 	appDbExecutor = appDB.Executor{}
 	nodeDbExecutor = nodeDB.Executor{}
 	groupDbExecutor = groupDB.Executor{}
 	httpExecutor = messenger.NewExecutor()
+	notiExecutor = noti.Executor{}
 }
 
 // Command is an interface of group deployment operations.
@@ -147,6 +150,8 @@ func (Executor) DeployApp(groupId string, body string) (int, map[string]interfac
 	resp := make(map[string]interface{})
 	resp[ID] = installedAppId
 
+	notiExecutor.UpdateSubscriber()
+	
 	return result, resp, err
 }
 
@@ -346,7 +351,9 @@ func (Executor) DeleteApp(groupId string, appId string) (int, map[string]interfa
 		resp[RESPONSES] = makeSeparateResponses(members, codes, respMap)
 		return result, resp, err
 	}
-
+	
+	notiExecutor.UpdateSubscriber()
+	
 	return result, nil, err
 }
 

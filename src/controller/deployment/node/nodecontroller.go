@@ -25,6 +25,7 @@ import (
 	"commons/results"
 	"commons/url"
 	"commons/util"
+	noti "controller/notification"
 	appDB "db/mongo/app"
 	appEventDB "db/mongo/event/app"
 	subsDB "db/mongo/event/subscriber"
@@ -51,6 +52,7 @@ var nodeDbExecutor nodeDB.Command
 var appEventDbExecutor appEventDB.Command
 var subsDbExecutor subsDB.Command
 var httpExecutor messenger.Command
+var notiExecutor noti.Command
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -60,6 +62,7 @@ func init() {
 	httpExecutor = messenger.NewExecutor()
 	appEventDbExecutor = appEventDB.Executor{}
 	subsDbExecutor = subsDB.Executor{}
+	notiExecutor = noti.Executor{}
 }
 
 // Command is an interface of node deployment operations.
@@ -170,6 +173,8 @@ func (Executor) DeployApp(nodeId string, body string, query map[string]interface
 			return results.ERROR, nil, err
 		}
 	}
+
+	notiExecutor.UpdateSubscriber()
 
 	return result, respMap, err
 }
@@ -312,6 +317,8 @@ func (Executor) DeleteApp(nodeId string, appId string) (int, map[string]interfac
 		return results.ERROR, nil, err
 	}
 
+	notiExecutor.UpdateSubscriber()
+	
 	return result, nil, err
 }
 
