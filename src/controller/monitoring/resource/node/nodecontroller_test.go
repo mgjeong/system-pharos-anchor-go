@@ -39,7 +39,7 @@ var (
 	}
 	reverseproxy = map[string]interface{}{
 		"reverseproxy": map[string]interface{}{
-			"enabled": "false",
+			"enabled": false,
 		},
 	}
 	properties = []interface{}{property, reverseproxy}

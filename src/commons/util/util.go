@@ -116,13 +116,20 @@ func MakeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 			}
 		}
 
-		if reverseproxy["enabled"] == nil {
+		v, exists := reverseproxy["enabled"]
+		if !exists {
 			logger.Logging(logger.ERROR, "No node's reverse proxy environment")
 			urls = append(urls, "")
 			continue
 		}
 
-		if reverseproxy["enabled"] == "true" {
+		switch v.(type) {
+		case bool:
+		default:
+			logger.Logging(logger.ERROR, "Invalid type for reverseproxy value")
+		}
+
+		if reverseproxy["enabled"].(bool) == true {
 			full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + UNSECURED_NODE_PORT_WITH_REVERSE_PROXY + url.PharosNode() + url.Base())
 		} else {
 			full_url.WriteString(httpTag + address[i]["ip"].(string) + ":" + DEFAULT_NODE_PORT + url.Base())
