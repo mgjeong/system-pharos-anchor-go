@@ -3,17 +3,48 @@ System Management - Pharos Anchor
 
 This provides functionalities to deploy, update, terminate a container or containers to a certain edge device or a group of edge devices. Also, this provides APIs to create, update, and delete a group of edge devices which container(s) can be deployed at the same time.
 
-![](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/tree/master/doc/images/system_arch.png?raw=true)
+![](./doc/images/system_arch.png?raw=true)
 
 - Pharos Node
     - This container is running on every edge device to handle service deployment requests
     - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-node-go) to know how to build and run Pharos Node service
 
-- Pharos Web Client
+- GUI Tool
     - A web based GUI-Tool for Pharos
-    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-web-client) to know how to build and run Web Client
+    - Please visit [Pharos Web Client project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-web-client) to know how to build and run Web Client
 
-## Prerequisites ##
+## Quick start ##
+This provides how to download and run pre-built Docker image without building project.
+
+#### 1. Install docker-ce ####
+- docker-ce
+  - Version: 17.09
+  - [How to install](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
+
+#### 2. Download Docker image ####
+Please visit [Downloads-ubuntu](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/releases/download/alpha-1.1_rel/pharos_anchor_ubuntu_x86_64.tar)
+
+#### 3. Load Docker image from tar file ####
+```shell
+$ docker load -i pharos_anchor_ubuntu_x86_64.tar
+```
+If it succeeds, you can see the Docker image as follows:
+```shell
+$ sudo docker images
+REPOSITORY                                                                TAG      IMAGE ID        CREATED        SIZE
+docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64    alpha    899dd9fc0f3b    7 weeks ago    156MB
+```
+
+#### 4. Run with Docker image ####
+You can execute it with a Docker image as follows:
+```shell
+$ docker run -it \
+	-p 48099:48099 \
+	-v /pharos-anchor/data/db:/data/db \
+	docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64:alpha
+```
+
+## Build Prerequisites ##
 - docker-ce
     - Version: 17.09
     - [How to install](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
@@ -40,22 +71,6 @@ If it succeeds, you can see the built image as follows:
 $ sudo docker images
 REPOSITORY                         TAG        IMAGE ID        CREATED           SIZE
 system-pharos-anchor-go-ubuntu     latest     fcbbd4c401c2    31 seconds ago    157MB
-```
-## How to download docker image without building project ##
-This provides how to download pre-built Docker image.
-
-#### 1. Download Docker image ####
-Please visit [Downloads-ubuntu](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/releases/download/alpha-1.1_rel/pharos_anchor_ubuntu_x86_64.tar)
-
-#### 2. Load Docker image from tar file ####
-```shell
-$ docker load -i pharos_anchor_ubuntu_x86_64.tar
-```
-If it succeeds, you can see the Docker image as follows:
-```shell
-$ sudo docker images
-REPOSITORY                                                                TAG      IMAGE ID        CREATED        SIZE
-docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64    alpha    899dd9fc0f3b    7 weeks ago    156MB
 ```
 
 ## How to run with Docker image ##
@@ -127,8 +142,6 @@ $ docker run -it -p 48098:48098 -e ANCHOR_ADDRESS=<Pharos Anchor IP> -e NODE_ADD
 ```
 
 #### 2. Register Pharos Node to Pharos Anchor ####
-***TO BE UPDATED***
-
 If you want to verify if the Node is successfully registered to the Anchor, you can send a request as below:
 
 ```shell
