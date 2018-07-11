@@ -127,6 +127,8 @@ func MakeRequestUrl(address []map[string]interface{}, api_parts ...string) (urls
 		case bool:
 		default:
 			logger.Logging(logger.ERROR, "Invalid type for reverseproxy value")
+			urls = append(urls, "")
+			continue
 		}
 
 		if reverseproxy["enabled"].(bool) == true {
