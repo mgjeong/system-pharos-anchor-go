@@ -127,15 +127,14 @@ func (Executor) AddSubscriber(id, eventType, url string, status, eventId []strin
 			}
 			return nil
 		}
-	} else {
-		update := bson.M{"$set": bson.M{"eventid": eventId}}
-		err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Update(query, update)
-		if err != nil {
-			return ConvertMongoError(err, "")
-		}
-		return nil
 	}
-	return err
+
+	update := bson.M{"$set": bson.M{"eventid": eventId}}
+	err = getCollection(session, DB_NAME, SUBSCRIBER_COLLECTION).Update(query, update)
+	if err != nil {
+		return ConvertMongoError(err, "")
+	}
+	return nil
 }
 
 func (Executor) GetSubscribers() ([]map[string]interface{}, error) {

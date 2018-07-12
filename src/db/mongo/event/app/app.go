@@ -129,16 +129,15 @@ func (Executor) AddEvent(id string, subscriberId string, nodeId []string) error 
 			}
 			return nil
 		}
-	} else {
-		appEvent.Nodes = nodeId
-		update := bson.M{"$addToSet": bson.M{"subscriber": subscriberId}, "$set": bson.M{"nodes": appEvent.Nodes}}
-		err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Update(query, update)
-		if err != nil {
-			return ConvertMongoError(err, "")
-		}
-		return nil
 	}
-	return err
+
+	appEvent.Nodes = nodeId
+	update := bson.M{"$addToSet": bson.M{"subscriber": subscriberId}, "$set": bson.M{"nodes": appEvent.Nodes}}
+	err = getCollection(session, DB_NAME, APP_EVENT_COLLECTION).Update(query, update)
+	if err != nil {
+		return ConvertMongoError(err, "")
+	}
+	return nil
 }
 
 func (Executor) GetEvent(id string) (map[string]interface{}, error) {
