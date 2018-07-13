@@ -35,6 +35,8 @@ tags:
     description: Control a device with Pharos Node. These are available when there is a system container which can control devices
   - name: Search
     description: Search groups/nodes/apps which match given conditions
+  - name: Registry Management
+    description: Manage registries to receive events
 paths:
   '/api/v1/ping':
     post:
@@ -619,7 +621,73 @@ paths:
       responses:
         '200':
           description: Successful operation.
+  '/api/v1/management/registries':
+    post:
+      tags:
+        - Registry Management
+      description: |
+        Add a registry to receive events
+      parameters: 
+        - name: ip
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/registry_ip'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/response_of_add_registries'
+    get:
+      tags:
+        - Registry Management
+      description: |
+        Get a list of added registries
+      produces:
+        - applicaion/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/response_of_get_registries'
+  '/api/v1/management/registries/{registry_id}':
+    delete:
+      tags:
+        - Registry Management
+      parameters:
+        - name: registry_id
+          in: path
+          description: ID of an added registry
+          required: true
+          type: string
+      description: |
+        Delete an added registry
+      responses:
+        '200':
+          description: Successful operation
 definitions:
+  registry_ip:
+    required:
+      - ip
+    properties:
+      ip:
+        type: string
+        example: registry_ip
+  registry:
+    required:
+      - id
+      - url
+    properties:
+      id:
+        type: string
+        example: registry_id_sample
+      url:
+        type: string
+        example: url_sample
   service_name:
     required:
       - image
@@ -754,6 +822,21 @@ definitions:
       name:
         type: string
         example: EdgeGroup
+  response_of_get_registries:
+    required:
+      - registries
+    properties:
+      registries:
+        type: array
+        items:
+          $ref: '#/definitions/registry'
+  response_of_add_registries:
+    required:
+      - id
+    properties:
+      id:
+       type: string
+       example: registry_id_sample
   request_of_node_register:
     required:
       - ip
