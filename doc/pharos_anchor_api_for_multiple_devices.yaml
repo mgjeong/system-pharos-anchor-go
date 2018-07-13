@@ -5,6 +5,16 @@ info:
     Pharos Anchor provides service deployment and device management functionalities to an edge device with a container-based edge S/W platform.
     This description explains how to use Pharos Anchor Group APIs to deploy, update,
     start, stop, delete service and manage a group of edge devices.
+        
+    Pharos Anchor's base url should be changed depending on whether Pharos Anchor is behind a reverse proxy.
+    
+    
+    Case)
+    
+    1. Default Pharos Anchor's base url  - http://'IP':48099/api/v1/~
+    
+    2. Pharos Anchor's base url behind a reverse proxy - http://'IP':80/pharos-anchor/api/v1/~
+    
   version: v1-20180110
 schemes:
   - http

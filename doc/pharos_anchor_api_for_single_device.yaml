@@ -5,6 +5,16 @@ info:
     Pharos Anchor provides service deployment and device management functionalities to an edge device with a container-based edge S/W platform.
     This description explains how to use Pharos Anchor Agent APIs to deploy, update,
     start, stop, delete service and manage edge devices.
+    
+    Pharos Anchor's base url should be changed depending on whether Pharos Anchor is behind a reverse proxy.
+    
+    
+    Case)
+    
+    1. Default Pharos Anchor's base url  - http://'IP':48099/api/v1/~
+    
+    2. Pharos Anchor's base url behind a reverse proxy - http://'IP':80/pharos-anchor/api/v1/~
+    
   version: v1-20180523
 schemes:
   - http
@@ -21,6 +31,12 @@ tags:
     description: Properties and configurations of Pharos Node
   - name: Notification
     description: Pharos Node and Service status event monitoring
+  - name: Device Control
+    description: Control a device with Pharos Node. These are available when there is a system container which can control devices
+  - name: Search
+    description: Search groups/nodes/apps which match given conditions
+  - name: Registry Management
+    description: Manage registries to receive events
 paths:
   '/api/v1/ping':
     post:
@@ -472,7 +488,206 @@ paths:
       responses:
         '200':
           description: Subscriber unregistration succeeds
+  '/api/v1/search/groups':
+    get:
+      tags:
+        - Search
+      description: 'Search groups which matched given query conditions'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: groupId
+          in: query
+          description: An ID of the group to find
+          required: false
+          type: string
+        - name: nodeId
+          in: query
+          description: An ID of the node to find
+          required: false
+          type: string
+        - name: appId
+          in: query
+          description: An ID of the app to find
+          required: false
+          type: string
+        - name: imageName
+          in: query
+          description: A name of the image to find
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Search succeeds
+          schema:
+            $ref: '#/definitions/response_of_search_groups'
+  '/api/v1/search/nodes':
+    get:
+      tags:
+        - Search
+      description: 'Search nodes which matched given query conditions'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: groupId
+          in: query
+          description: An ID of the group to find
+          required: false
+          type: string
+        - name: nodeId
+          in: query
+          description: An ID of the node to find
+          required: false
+          type: string
+        - name: appId
+          in: query
+          description: An ID of the app to find
+          required: false
+          type: string
+        - name: imageName
+          in: query
+          description: A name of the image to find
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Search succeeds
+          schema:
+            $ref: '#/definitions/response_of_search_nodes'
+  '/api/v1/search/apps':
+    get:
+      tags:
+        - Search
+      description: 'Search apps which matched given query conditions'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: groupId
+          in: query
+          description: An ID of the group to find
+          required: false
+          type: string
+        - name: nodeId
+          in: query
+          description: An ID of the node to find
+          required: false
+          type: string
+        - name: appId
+          in: query
+          description: An ID of the app to find
+          required: false
+          type: string
+        - name: imageName
+          in: query
+          description: A name of the image to find
+          required: false
+          type: string
+      responses:
+        '200':
+          description: Search succeeds
+          schema:
+            $ref: '#/definitions/response_of_search_apps'
+  '/api/v1/management/nodes/{node_id}/reboot':
+    post:
+      tags:
+        - Device Control
+      description: Reboot a device
+      parameters:
+        - name : node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful operation.
+  '/api/v1/management/nodes/{node_id}/restore':
+    post:
+      tags:
+        - Device Control
+      description: Reset a device to initial state
+      parameters:
+        - name : node_id
+          in: path
+          description: ID of registered node
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Successful operation.
+  '/api/v1/management/registries':
+    post:
+      tags:
+        - Registry Management
+      description: |
+        Add a registry to receive events
+      parameters: 
+        - name: ip
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/registry_ip'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/response_of_add_registries'
+    get:
+      tags:
+        - Registry Management
+      description: |
+        Get a list of added registries
+      produces:
+        - applicaion/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/response_of_get_registries'
+  '/api/v1/management/registries/{registry_id}':
+    delete:
+      tags:
+        - Registry Management
+      parameters:
+        - name: registry_id
+          in: path
+          description: ID of an added registry
+          required: true
+          type: string
+      description: |
+        Delete an added registry
+      responses:
+        '200':
+          description: Successful operation
 definitions:
+  registry_ip:
+    required:
+      - ip
+    properties:
+      ip:
+        type: string
+        example: registry_ip
+  registry:
+    required:
+      - id
+      - url
+    properties:
+      id:
+        type: string
+        example: registry_id_sample
+      url:
+        type: string
+        example: url_sample
   service_name:
     required:
       - image
@@ -554,6 +769,74 @@ definitions:
         type: string
         description: Event type(node or app) and status
         example: {"type":"node", "status":["connected", "disconnected"]}
+  search_app_return:
+    required:
+      - id
+      - images
+      - services
+    properties:
+      id:
+        type: string
+        example: app_id_sample
+      images:
+        type: string
+        example: image_name_sample(Without tag)
+      services:
+        type: string
+        example: service_name_sample
+  search_node_return:
+    required:
+      - id
+      - ip
+      - status
+      - apps
+      - config
+    properties:
+      id:
+        type: string
+        example: node_id_sample
+      ip:
+        type: string
+        example: 192.168.0.1
+      status:
+        type: string
+        example: connected
+      apps:
+        example:
+          - app_id_sample1
+          - app_id_sample2
+      config:
+        $ref: '#/definitions/response_of_get_configuration'
+  search_group_return:
+    required:
+      - id
+      - members
+      - name
+    properties:
+      id:
+        type: string
+        example: gropu_id_sample
+      members:
+        type: array
+        example: ["node_id_sample", "node_id_sample2"]
+      name:
+        type: string
+        example: EdgeGroup
+  response_of_get_registries:
+    required:
+      - registries
+    properties:
+      registries:
+        type: array
+        items:
+          $ref: '#/definitions/registry'
+  response_of_add_registries:
+    required:
+      - id
+    properties:
+      id:
+       type: string
+       example: registry_id_sample
   request_of_node_register:
     required:
       - ip
@@ -564,6 +847,30 @@ definitions:
         example: 192.168.0.1
       config:
         $ref: '#/definitions/response_of_get_configuration'
+  response_of_search_groups:
+    required:
+      - groups
+    properties:
+      groups:
+        type: array
+        items:
+          $ref: '#/definitions/search_group_return'
+  response_of_search_nodes:
+    required:
+      - nodes
+    properties:
+      nodes:
+        type: array
+        items:
+          $ref: '#/definitions/search_node_return'
+  response_of_search_apps:
+    required:
+      - apps
+    properties:
+      apps:
+        type: array
+        items:
+          $ref: '#/definitions/search_app_return'
   response_of_node_register:
     required:
       - id
@@ -658,11 +965,13 @@ definitions:
       properties:
         type: array
         example:
+          - {"deviceid": "00000000-0000-0000-0000-000000000000", "readOnly":true}
           - {"devicename":"EdgeDevice", "readOnly":false}
           - {"pinginterval":"10", "readOnly":false}
           - {"os":"linux", "readOnly":true}
-          - {"platform":{"family":"debian","platform":"ubuntu","version":"14.04"}, "readOnly":true}
           - {"processor":[{"cpu":"0", "modelname":"Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz"}], "readOnly":true}
+          - {"platform":"Ubuntu 16.04.3 LTS", "readOnly":true}
+          - {"reverseproxy":{"enabled":true}, "readOnly":true}
   response_of_notification:
     required:
       - id
