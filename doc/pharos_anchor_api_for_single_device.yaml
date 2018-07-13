@@ -591,7 +591,7 @@ paths:
           description: Search succeeds
           schema:
             $ref: '#/definitions/response_of_search_apps'
-  '/api/v1/nodes/{node_id}/reboot':
+  '/api/v1/management/nodes/{node_id}/reboot':
     post:
       tags:
         - Device Control
@@ -605,7 +605,7 @@ paths:
       responses:
         '200':
           description: Successful operation.
-  '/api/v1/nodes/{node_id}/restore':
+  '/api/v1/management/nodes/{node_id}/restore':
     post:
       tags:
         - Device Control
