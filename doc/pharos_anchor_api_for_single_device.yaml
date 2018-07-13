@@ -965,7 +965,7 @@ definitions:
       properties:
         type: array
         example:
-          - {"deviceid": "device_id_sample", "readOnly":true}
+          - {"deviceid": "00000000-0000-0000-0000-000000000000", "readOnly":true}
           - {"devicename":"EdgeDevice", "readOnly":false}
           - {"pinginterval":"10", "readOnly":false}
           - {"os":"linux", "readOnly":true}
