@@ -237,11 +237,7 @@ func (Executor) LeaveGroup(groupId string, nodeId string) error {
 		err = errors.InvalidObjectId{groupId}
 		return err
 	}
-	if !bson.IsObjectIdHex(nodeId) {
-		err = errors.InvalidObjectId{nodeId}
-		return err
-	}
-
+	
 	query := bson.M{"_id": bson.ObjectIdHex(groupId)}
 	update := bson.M{"$pull": bson.M{"members": nodeId}}
 	err = getCollection(session, DB_NAME, GROUP_COLLECTION).Update(query, update)
