@@ -37,7 +37,6 @@ WORKDIR $APP_DIR
 
 # make mogodb volume
 RUN mkdir /data && mkdir /data/db
-VOLUME /data/db
 
 # kick off the pharos-anchor container
 CMD ["sh", "run.sh"]
