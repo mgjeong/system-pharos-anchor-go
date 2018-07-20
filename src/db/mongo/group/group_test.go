@@ -480,31 +480,6 @@ func TestCalledLeaveGroupWithInvalidObjectIdAboutGroup_ExpectErrorReturn(t *test
 	}
 }
 
-func TestCalledLeaveGroupWithInvalidObjectIdAboutNode_ExpectErrorReturn(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	defer mockCtrl.Finish()
-
-	connectionMockObj := mgomocks.NewMockConnection(mockCtrl)
-	sessionMockObj := mgomocks.NewMockSession(mockCtrl)
-
-	gomock.InOrder(
-		connectionMockObj.EXPECT().Dial(validUrl).Return(sessionMockObj, nil),
-		sessionMockObj.EXPECT().Close(),
-	)
-
-	mgoDial = connectionMockObj
-	executor := Executor{}
-	err := executor.LeaveGroup(groupId, invalidObjectId)
-
-	if err == nil {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), "nil")
-	}
-
-	if err.Error() != invalidObjectError.Error() {
-		t.Errorf("Expected err: %s, actual err: %s", invalidObjectError.Error(), err.Error())
-	}
-}
-
 func TestCalledLeaveGroupWhenDBReturnsError_ExpectErrorReturn(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	defer mockCtrl.Finish()
