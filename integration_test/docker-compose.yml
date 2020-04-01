@@ -14,7 +14,7 @@ services:
       - integration-network
 
   pharos-node:
-    image: docker.sec.samsung.net:5000/edge/system-pharos-node-go/ubuntu_x86_64:latest
+    image: system-pharos-node-go:latest
     hostname: pharos-node
     ports:
       - "48098"

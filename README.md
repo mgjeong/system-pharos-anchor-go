@@ -7,42 +7,11 @@ This provides functionalities to deploy, update, terminate a container or contai
 
 - Pharos Node
     - This container is running on every edge device to handle service deployment requests
-    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-node-go) to know how to build and run Pharos Node service
+    - Please visit [Pharos Node project](https://github.com/edgexfoundry-holding/system-pharos-node-go) to know how to build and run Pharos Node service
 
 - GUI Tool
     - A web based GUI-Tool for Pharos
-    - Please visit [Pharos Web Client project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-web-client) to know how to build and run Web Client
-
-## Quick start ##
-This provides how to download and run pre-built Docker image without building project.
-
-#### 1. Install docker-ce ####
-- docker-ce
-  - Version: 17.09
-  - [How to install](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/)
-
-#### 2. Download Docker image ####
-Please visit [Downloads-ubuntu](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/releases/download/alpha-1.1_rel/pharos_anchor_ubuntu_x86_64.tar)
-
-#### 3. Load Docker image from tar file ####
-```shell
-$ docker load -i pharos_anchor_ubuntu_x86_64.tar
-```
-If it succeeds, you can see the Docker image as follows:
-```shell
-$ sudo docker images
-REPOSITORY                                                                TAG      IMAGE ID        CREATED        SIZE
-docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64    alpha    899dd9fc0f3b    7 weeks ago    156MB
-```
-
-#### 4. Run with Docker image ####
-You can execute it with a Docker image as follows:
-```shell
-$ docker run -it \
-	-p 48099:48099 \
-	-v /pharos-anchor/data/db:/data/db \
-	docker.sec.samsung.net:5000/edge/system-pharos-anchor-go/ubuntu_x86_64:alpha
-```
+    - Please visit [Pharos Web Client project](https://github.com/edgexfoundry-holding/system-pharos-web-client) to know how to build and run Web Client
 
 ## Build Prerequisites ##
 - docker-ce
@@ -116,9 +85,9 @@ $ docker run -it -p 48099:48099 -v /pharos-anchor/data/db:/data/db system-pharos
 ```
 ## API Document ##
 Pharos Anchor provides a set of REST APIs for its operations. Descriptions for the APIs are stored in <root>/doc folder.
-- **[pharos_anchor_api_for_single_device.yaml](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_single_device.yaml)**
+- **[pharos_anchor_api_for_single_device.yaml](https://github.com/edgexfoundry-holding/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_single_device.yaml)**
   - Describes APIs of service deployment for single device
-- **[pharos_anchor_api_for_multiple_devices.yaml](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_multiple_devices.yaml)**
+- **[pharos_anchor_api_for_multiple_devices.yaml](https://github.com/edgexfoundry-holding/system-pharos-anchor-go/blob/master/doc/pharos_anchor_api_for_multiple_devices.yaml)**
   - Describes APIs of group management with a number of devices and service deployment in a group manner
 
 Note that you can visit [Swagger Editor](https://editor.swagger.io/) to graphically investigate the REST APIs in YAML.
@@ -129,7 +98,7 @@ Note that you can visit [Swagger Editor](https://editor.swagger.io/) to graphica
   - Pharos Anchor Docker image
     - Please see the above explaination to know how to build Pharos Anchor Docker image
   - Pharos Node Docker image
-    - Please visit [Pharos Node project](https://github.sec.samsung.net/RS7-EdgeComputing/system-pharos-node-go) to know how to build Pharos Node Docker image
+    - Please visit [Pharos Node project](https://github.com/edgexfoundry-holding/system-pharos-node-go) to know how to build Pharos Node Docker image
 
 #### 1. Run Pharos Anchor and Pharos Node containers ####
 Run Pharos Anchor container:
